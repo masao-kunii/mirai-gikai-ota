@@ -5,32 +5,32 @@ import {
 } from "./estimate-interview-cost";
 
 describe("estimateInterviewCostUsd", () => {
-  it("GPT-4o miniの推定コストを正しく算出する", () => {
-    // input: 0.15 * 85000 / 1M = 0.01275
-    // output: 0.6 * 3000 / 1M = 0.0018
-    // total: 0.01455
-    const cost = estimateInterviewCostUsd("openai/gpt-4o-mini");
-    expect(cost).toBeCloseTo(0.01455, 4);
+  it("Gemini 2.5 Flash Liteの推定コストを正しく算出する", () => {
+    // input: 0.1 * 85000 / 1M = 0.0085
+    // output: 0.4 * 3000 / 1M = 0.0012
+    // total: 0.0097
+    const cost = estimateInterviewCostUsd("gemini-2.5-flash-lite");
+    expect(cost).toBeCloseTo(0.0097, 4);
   });
 
-  it("Claude Opus 4.6の推定コストを正しく算出する", () => {
-    // input: 5 * 85000 / 1M = 0.425
-    // output: 25 * 3000 / 1M = 0.075
-    // total: 0.50
-    const cost = estimateInterviewCostUsd("anthropic/claude-opus-4.6");
-    expect(cost).toBeCloseTo(0.5, 4);
+  it("Gemini 2.5 Proの推定コストを正しく算出する", () => {
+    // input: 1.25 * 85000 / 1M = 0.10625
+    // output: 10 * 3000 / 1M = 0.03
+    // total: 0.13625
+    const cost = estimateInterviewCostUsd("gemini-2.5-pro");
+    expect(cost).toBeCloseTo(0.13625, 4);
   });
 
-  it("Gemini 3 Flashの推定コストを正しく算出する", () => {
-    // input: 0.5 * 85000 / 1M = 0.0425
-    // output: 3 * 3000 / 1M = 0.009
-    // total: 0.0515
-    const cost = estimateInterviewCostUsd("google/gemini-3-flash");
-    expect(cost).toBeCloseTo(0.0515, 4);
+  it("Gemini 2.5 Flashの推定コストを正しく算出する", () => {
+    // input: 0.3 * 85000 / 1M = 0.0255
+    // output: 2.5 * 3000 / 1M = 0.0075
+    // total: 0.033
+    const cost = estimateInterviewCostUsd("gemini-2.5-flash");
+    expect(cost).toBeCloseTo(0.033, 4);
   });
 
   it("不明なモデルに対してnullを返す", () => {
-    expect(estimateInterviewCostUsd("unknown/model")).toBeNull();
+    expect(estimateInterviewCostUsd("unknown-model")).toBeNull();
   });
 });
 

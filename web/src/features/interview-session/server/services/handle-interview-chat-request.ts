@@ -5,7 +5,7 @@ import {
   type LanguageModel,
   Output,
   streamText,
-} from "ai";
+} from "@mirai-gikai/shared/ai/sdk";
 import { getBillByIdAdmin } from "@/features/bills/server/loaders/get-bill-by-id-admin";
 import { getInterviewConfigAdmin } from "@/features/interview-config/server/loaders/get-interview-config-admin";
 import { getInterviewQuestions } from "@/features/interview-config/server/loaders/get-interview-questions";

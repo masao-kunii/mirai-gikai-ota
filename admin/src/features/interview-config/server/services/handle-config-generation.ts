@@ -1,6 +1,10 @@
 import "server-only";
 
-import { convertToModelMessages, Output, streamText } from "ai";
+import {
+  convertToModelMessages,
+  Output,
+  streamText,
+} from "@mirai-gikai/shared/ai/sdk";
 import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id";
 import { getBillContents } from "@/features/bills-edit/server/loaders/get-bill-contents";
 import { AI_MODELS } from "@/lib/ai/models";

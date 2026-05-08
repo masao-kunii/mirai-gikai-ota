@@ -11,10 +11,22 @@
       "types": "./src/ai/models.ts",
       "default": "./src/ai/models.ts"
     },
+    "./ai/get-model": {
+      "types": "./src/ai/get-model.ts",
+      "default": "./src/ai/get-model.ts"
+    },
+    "./ai/sdk": {
+      "types": "./src/ai/sdk.ts",
+      "default": "./src/ai/sdk.ts"
+    },
     "./stream/inject-json-fields": {
       "types": "./src/stream/inject-json-fields.ts",
       "default": "./src/stream/inject-json-fields.ts"
     }
+  },
+  "dependencies": {
+    "@ai-sdk/google-vertex": "^4.0.124",
+    "ai": "^6.0.3"
   },
   "devDependencies": {
     "typescript": "~5.8.0",

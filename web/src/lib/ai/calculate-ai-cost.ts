@@ -1,5 +1,4 @@
 import type { LanguageModelUsage } from "ai";
-import { AI_MODELS } from "./models";
 
 export type ModelPricing = {
   inputTokensPerMillionUsd: number;
@@ -12,89 +11,24 @@ export type SanitizedUsage = {
   totalTokens: number;
 };
 
+/**
+ * Vertex AI Gemini モデルの単価（USD / 100万トークン）
+ *
+ * 出典: https://cloud.google.com/vertex-ai/generative-ai/pricing
+ * （長文/短文プロンプトで料金が変わるが、ここでは標準価格を採用）
+ */
 export const modelPricing: Record<string, ModelPricing> = {
-  // --- OpenAI ---
-  [AI_MODELS.gpt4o]: {
-    inputTokensPerMillionUsd: 2.5,
-    outputTokensPerMillionUsd: 10,
+  "gemini-2.5-flash": {
+    inputTokensPerMillionUsd: 0.3,
+    outputTokensPerMillionUsd: 2.5,
   },
-  [AI_MODELS.gpt4o_mini]: {
-    inputTokensPerMillionUsd: 0.15,
-    outputTokensPerMillionUsd: 0.6,
-  },
-  [AI_MODELS.gpt4_1]: {
-    inputTokensPerMillionUsd: 2,
-    outputTokensPerMillionUsd: 8,
-  },
-  [AI_MODELS.gpt4_1_mini]: {
-    inputTokensPerMillionUsd: 0.4,
-    outputTokensPerMillionUsd: 1.6,
-  },
-  [AI_MODELS.gpt4_1_nano]: {
+  "gemini-2.5-flash-lite": {
     inputTokensPerMillionUsd: 0.1,
     outputTokensPerMillionUsd: 0.4,
   },
-  [AI_MODELS.o3_mini]: {
-    inputTokensPerMillionUsd: 1.1,
-    outputTokensPerMillionUsd: 4.4,
-  },
-  [AI_MODELS.o4_mini]: {
-    inputTokensPerMillionUsd: 1.1,
-    outputTokensPerMillionUsd: 4.4,
-  },
-  [AI_MODELS.gpt5]: {
+  "gemini-2.5-pro": {
     inputTokensPerMillionUsd: 1.25,
     outputTokensPerMillionUsd: 10,
-  },
-  [AI_MODELS.gpt5_mini]: {
-    inputTokensPerMillionUsd: 0.25,
-    outputTokensPerMillionUsd: 2,
-  },
-  [AI_MODELS.gpt5_nano]: {
-    inputTokensPerMillionUsd: 0.05,
-    outputTokensPerMillionUsd: 0.4,
-  },
-  [AI_MODELS.gpt5_chat]: {
-    inputTokensPerMillionUsd: 1.25,
-    outputTokensPerMillionUsd: 10,
-  },
-  [AI_MODELS.gpt5_1_instant]: {
-    inputTokensPerMillionUsd: 1.25,
-    outputTokensPerMillionUsd: 10,
-  },
-  [AI_MODELS.gpt5_1_thinking]: {
-    inputTokensPerMillionUsd: 1.25,
-    outputTokensPerMillionUsd: 10,
-  },
-  [AI_MODELS.gpt5_2]: {
-    inputTokensPerMillionUsd: 1.75,
-    outputTokensPerMillionUsd: 14,
-  },
-  // --- Google ---
-  [AI_MODELS.gemini3_flash]: {
-    inputTokensPerMillionUsd: 0.5,
-    outputTokensPerMillionUsd: 3,
-  },
-  [AI_MODELS.gemini3_flash_preview]: {
-    inputTokensPerMillionUsd: 0.5,
-    outputTokensPerMillionUsd: 3,
-  },
-  [AI_MODELS.gemini3_1_pro_preview]: {
-    inputTokensPerMillionUsd: 2,
-    outputTokensPerMillionUsd: 12,
-  },
-  // --- Anthropic ---
-  [AI_MODELS.claude_haiku_4_5]: {
-    inputTokensPerMillionUsd: 1,
-    outputTokensPerMillionUsd: 5,
-  },
-  [AI_MODELS.claude_sonnet_4_6]: {
-    inputTokensPerMillionUsd: 3,
-    outputTokensPerMillionUsd: 15,
-  },
-  [AI_MODELS.claude_opus_4_6]: {
-    inputTokensPerMillionUsd: 5,
-    outputTokensPerMillionUsd: 25,
   },
 };
 

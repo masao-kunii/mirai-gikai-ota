@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { getModel } from "@mirai-gikai/shared/ai/get-model";
 import type { Database } from "@mirai-gikai/supabase";
 import {
   convertToModelMessages,
@@ -85,7 +85,7 @@ export async function handleChatRequest({
     promptProvider
   );
   // Model configuration
-  const model = deps?.model ?? openai("gpt-4o");
+  const model = deps?.model ?? getModel(AI_MODELS.flash);
   const modelName =
     typeof model === "string" ? model : (model.modelId ?? "unknown");
 
@@ -408,12 +408,14 @@ function buildSystemPromptWithInterviewInstructions(
 
 /**
  * チャットで使用するツール一覧を構築
+ *
+ * NOTE: 旧版にあった `openai.tools.webSearch()` は Vertex AI Gemini への
+ * 移行時に削除した。Gemini で Web 検索が必要になったら provider option の
+ * `useSearchGrounding: true` で有効化できる。
  */
 function buildTools(shouldSuggestInterview: boolean) {
-  // biome-ignore lint/suspicious/noExplicitAny: OpenAI web_search tool type incompatibility
-  const tools: Record<string, any> = {
-    web_search: openai.tools.webSearch(),
-  };
+  // biome-ignore lint/suspicious/noExplicitAny: tool 型の互換確保のため
+  const tools: Record<string, any> = {};
 
   if (shouldSuggestInterview) {
     tools[SUGGEST_INTERVIEW_TOOL_NAME] = tool({

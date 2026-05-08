@@ -15,7 +15,7 @@ describe("calculateUsageCostUsd", () => {
       totalTokens: 0,
     };
 
-    expect(calculateUsageCostUsd(AI_MODELS.gpt4o, usage)).toBe(0);
+    expect(calculateUsageCostUsd(AI_MODELS.flash, usage)).toBe(0);
   });
 
   it("calculates cost for known model", () => {
@@ -25,8 +25,8 @@ describe("calculateUsageCostUsd", () => {
       totalTokens: 1500,
     };
 
-    // 500 input tokens * $2.50/M + 1000 output tokens * $10.00/M = 0.00125 + 0.01 = 0.01125
-    expect(calculateUsageCostUsd(AI_MODELS.gpt4o, usage)).toBeCloseTo(0.01125);
+    // gemini-2.5-flash: 500 * $0.30/M + 1000 * $2.50/M = 0.00015 + 0.0025 = 0.00265
+    expect(calculateUsageCostUsd(AI_MODELS.flash, usage)).toBeCloseTo(0.00265);
   });
 
   it("calculates cost for new models", () => {
@@ -36,16 +36,12 @@ describe("calculateUsageCostUsd", () => {
       totalTokens: 2_000_000,
     };
 
-    // GPT-5.2: $1.75 input + $14.00 output = $15.75
-    expect(calculateUsageCostUsd(AI_MODELS.gpt5_2, usage)).toBeCloseTo(15.75);
-    // Claude Sonnet 4.6: $3.00 input + $15.00 output = $18.00
-    expect(
-      calculateUsageCostUsd(AI_MODELS.claude_sonnet_4_6, usage)
-    ).toBeCloseTo(18);
-    // Gemini 3.1 Pro Preview: $2.00 input + $12.00 output = $14.00
-    expect(
-      calculateUsageCostUsd(AI_MODELS.gemini3_1_pro_preview, usage)
-    ).toBeCloseTo(14);
+    // Gemini 2.5 Pro: $1.25 input + $10.00 output = $11.25
+    expect(calculateUsageCostUsd(AI_MODELS.pro, usage)).toBeCloseTo(11.25);
+    // Gemini 2.5 Flash: $0.30 input + $2.50 output = $2.80
+    expect(calculateUsageCostUsd(AI_MODELS.flash, usage)).toBeCloseTo(2.8);
+    // Gemini 2.5 Flash Lite: $0.10 input + $0.40 output = $0.50
+    expect(calculateUsageCostUsd(AI_MODELS.flash_lite, usage)).toBeCloseTo(0.5);
   });
 
   it("throws for unknown model", () => {
