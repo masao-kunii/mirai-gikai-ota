@@ -94,70 +94,99 @@ export const councilSessionMinutes: CouncilSessionMinutesInsert[] = [
 ];
 
 // 会派データ
+// alternative_names は議事録など外部ソースで使われる正式名・別表記を登録する。
+// AI 抽出時の自動マッチングに使われる（admin の faction-matching ロジック参照）。
 export const factions: FactionInsert[] = [
   {
     name: "jimin-musho",
     display_name: "自民党・無所属の会",
+    alternative_names: [
+      "自由民主党大田区議団・無所属の会",
+      "自由民主党大田区議団",
+      "自民党大田区議団",
+    ],
     sort_order: 1,
     is_active: true,
   },
   {
     name: "komei",
     display_name: "公明党",
+    alternative_names: ["大田区議会公明党", "公明党大田区議団"],
     sort_order: 2,
     is_active: true,
   },
   {
     name: "tsubasa",
     display_name: "つばさ",
+    alternative_names: ["つばさ大田区議団"],
     sort_order: 3,
     is_active: true,
   },
   {
     name: "kyosan",
     display_name: "共産党",
+    alternative_names: ["日本共産党大田区議団", "日本共産党"],
     sort_order: 4,
     is_active: true,
   },
   {
     name: "rikken",
     display_name: "立憲民主党",
+    alternative_names: ["立憲民主党大田区議団", "立憲民主党・無所属"],
     sort_order: 5,
     is_active: true,
   },
   {
     name: "ishin",
     display_name: "維新の会",
+    alternative_names: [
+      "日本維新の会大田区議団",
+      "日本維新の会",
+      "維新の会大田区議団",
+    ],
     sort_order: 6,
     is_active: true,
   },
   {
     name: "tofa-kokumin",
     display_name: "都ファ・国民",
+    alternative_names: [
+      "都民ファースト・国民民主党",
+      "都民ファースト",
+      "国民民主党",
+    ],
     sort_order: 7,
     is_active: true,
   },
   {
     name: "fair-min",
     display_name: "フェアな民主主義",
+    alternative_names: ["フェアな民主主義大田区議団"],
     sort_order: 8,
     is_active: true,
   },
   {
     name: "reiwa",
     display_name: "れいわ新選組",
+    alternative_names: [
+      "ＯＴＡれいわ新選組",
+      "OTAれいわ新選組",
+      "れいわ新選組大田区議団",
+    ],
     sort_order: 9,
     is_active: true,
   },
   {
     name: "kodomo-bosai",
     display_name: "子ども防災会",
+    alternative_names: ["大田子ども防災会"],
     sort_order: 10,
     is_active: true,
   },
   {
     name: "soshi",
     display_name: "未来創志会",
+    alternative_names: ["おおた未来創志会", "大田未来創志会"],
     sort_order: 11,
     is_active: true,
   },
