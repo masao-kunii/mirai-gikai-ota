@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { findMinuteById } from "../repositories/minutes-repository";
+import { ExtractBillsButton } from "../../client/components/extract-bills-button";
 import { ExtractMinuteButton } from "../../client/components/extract-minute-button";
 
 type Props = { id: string };
@@ -39,6 +40,7 @@ export async function MinuteDetailPage({ id }: Props) {
             </a>
           </Button>
           <ExtractMinuteButton id={minute.id} />
+          <ExtractBillsButton minuteId={minute.id} />
           {minute.extracted_at && (
             <span className="text-muted-foreground">
               最終抽出: {new Date(minute.extracted_at).toLocaleString("ja-JP")}

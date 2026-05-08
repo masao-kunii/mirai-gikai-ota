@@ -1,6 +1,6 @@
 export type CollectionStatus = "running" | "completed" | "failed" | "paused";
 
-export type CollectionMode = "full" | "status_check";
+export type CollectionMode = "full" | "status_check" | "minutes";
 
 export type FactionMatchStatus = {
   factionName: string;
