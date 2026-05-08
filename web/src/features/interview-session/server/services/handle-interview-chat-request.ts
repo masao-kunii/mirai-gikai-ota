@@ -3,16 +3,10 @@ import "server-only";
 import {
   convertToModelMessages,
   type LanguageModel,
-  type LanguageModelUsage,
   Output,
   streamText,
 } from "ai";
 import { getBillByIdAdmin } from "@/features/bills/server/loaders/get-bill-by-id-admin";
-import {
-  isWithinDailyCostLimit,
-  recordChatUsage,
-} from "@/features/chat/server/services/cost-tracker";
-import { ChatError, ChatErrorCode } from "@/features/chat/shared/types/errors";
 import { getInterviewConfigAdmin } from "@/features/interview-config/server/loaders/get-interview-config-admin";
 import { getInterviewQuestions } from "@/features/interview-config/server/loaders/get-interview-questions";
 import { createInterviewSession } from "@/features/interview-session/server/actions/create-interview-session";
@@ -29,8 +23,7 @@ import type {
   InterviewMessage,
   InterviewSession,
 } from "@/features/interview-session/shared/types";
-import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
-import { env } from "@/lib/env";
+import { AI_MODELS, DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
 import { logger } from "@/lib/logger";
 import { mergeMessagesWithIds } from "../../shared/utils/merge-messages-with-ids";
 import {
@@ -73,21 +66,8 @@ export async function handleInterviewChatRequest({
   billId,
   currentStage,
   isRetry = false,
-  userId,
   deps,
-}: InterviewChatRequestParams & {
-  userId: string;
-  deps?: InterviewChatDeps;
-}) {
-  // 日次コスト制限チェック（fail-closed: エラー時もリクエストをブロック）
-  const isWithinLimit = await isWithinDailyCostLimit(
-    userId,
-    env.chat.dailyUserCostLimitUsd
-  );
-  if (!isWithinLimit) {
-    throw new ChatError(ChatErrorCode.DAILY_COST_LIMIT_REACHED);
-  }
-
+}: InterviewChatRequestParams & { deps?: InterviewChatDeps }) {
   // リクエスト単位のトレースID（同一リクエスト内のLLM呼び出しをまとめる）
   const traceId = crypto.randomUUID();
 
@@ -190,8 +170,6 @@ export async function handleInterviewChatRequest({
     systemPrompt,
     messages,
     sessionId: session.id,
-    userId,
-    billId,
     isSummaryPhase,
     chatModel: deps?.chatModel,
     summaryModel: deps?.summaryModel,
@@ -215,8 +193,6 @@ async function generateStreamingResponse({
   systemPrompt,
   messages,
   sessionId,
-  userId,
-  billId,
   isSummaryPhase,
   chatModel,
   summaryModel,
@@ -226,8 +202,6 @@ async function generateStreamingResponse({
   systemPrompt: string;
   messages: { role: string; content: string }[];
   sessionId: string;
-  userId: string;
-  billId: string;
   isSummaryPhase: boolean;
   chatModel?: LanguageModel;
   summaryModel?: LanguageModel;
@@ -239,13 +213,10 @@ async function generateStreamingResponse({
     stage: string;
   };
 }) {
-  // summaryフェーズもchatフェーズと同じモデルを使用（インタビューAIとモデルを揃える）
+  // summaryフェーズはGemini固定、chatフェーズは設定のモデルを優先
   const model = isSummaryPhase
-    ? (summaryModel ?? configChatModel ?? DEFAULT_INTERVIEW_CHAT_MODEL)
+    ? (summaryModel ?? AI_MODELS.gemini3_flash)
     : (chatModel ?? configChatModel ?? DEFAULT_INTERVIEW_CHAT_MODEL);
-
-  const modelName =
-    typeof model === "string" ? model : (model.modelId ?? "unknown");
 
   const handleError = (error: unknown) => {
     console.error("LLM generation error:", error);
@@ -254,11 +225,7 @@ async function generateStreamingResponse({
     );
   };
 
-  const handleFinish = async (event: {
-    text?: string;
-    totalUsage: LanguageModelUsage;
-    providerMetadata?: unknown;
-  }) => {
+  const handleFinish = async (event: { text?: string }) => {
     try {
       if (event.text) {
         await saveInterviewMessage({
@@ -269,27 +236,6 @@ async function generateStreamingResponse({
       }
     } catch (err) {
       console.error("Failed to save interview message:", err);
-    }
-
-    // LLM利用コストを記録
-    try {
-      const providerCost = extractGatewayCost(event);
-      await recordChatUsage({
-        userId,
-        sessionId,
-        promptName: isSummaryPhase ? "interview-summary" : "interview-chat",
-        model: modelName,
-        usage: event.totalUsage,
-        costUsd: providerCost,
-        metadata: {
-          pageType: "interview",
-          billId,
-          finishReason: null,
-          stepCount: 0,
-        },
-      });
-    } catch (usageError) {
-      console.error("Failed to record interview usage:", usageError);
     }
   };
 
@@ -345,23 +291,4 @@ async function generateStreamingResponse({
     handleError(error);
     throw error;
   }
-}
-
-function extractGatewayCost(event: {
-  providerMetadata?: unknown;
-}): number | undefined {
-  const providerMetadata = event.providerMetadata;
-  if (!providerMetadata || typeof providerMetadata !== "object") {
-    return undefined;
-  }
-
-  const gatewayCost = (
-    providerMetadata as {
-      gateway?: { cost?: unknown };
-    }
-  ).gateway?.cost;
-
-  const numericCost = Number(gatewayCost);
-
-  return Number.isFinite(numericCost) ? numericCost : undefined;
 }

@@ -1,7 +1,5 @@
-import type { Route } from "next";
 import Link from "next/link";
-import { EXTERNAL_LINKS } from "@/config/external-links";
-import { routes } from "@/lib/routes";
+import { siteConfig } from "@/config/site.config";
 
 type FooterLinkItem = {
   label: string;
@@ -10,25 +8,29 @@ type FooterLinkItem = {
 };
 
 const links: FooterLinkItem[] = [
-  {
-    label: "チームみらいについて",
-    href: EXTERNAL_LINKS.TEAM_MIRAI_ABOUT,
-    external: true,
-  },
+  ...(siteConfig.features.showTeamMiraiSection
+    ? ([
+        {
+          label: "チームみらいについて",
+          href: siteConfig.externalLinks.teamAbout,
+          external: true,
+        },
+      ] as FooterLinkItem[])
+    : []),
   {
     label: "利用規約",
-    href: routes.terms(),
+    href: "/terms",
     external: false,
   },
   {
     label: "プライバシーポリシー",
-    href: routes.privacy(),
+    href: "/privacy",
     external: false,
   },
   {
     label: "よくあるご質問",
-    href: EXTERNAL_LINKS.FAQ,
-    external: true,
+    href: "/faq",
+    external: false,
   },
 ];
 
@@ -41,7 +43,7 @@ export function DesktopMenuLinks() {
       {links.map((link) => (
         <Link
           key={link.label}
-          href={link.href as Route}
+          href={link.href}
           target={link.external ? "_blank" : undefined}
           rel={link.external ? "noreferrer" : undefined}
           className="font-medium text-xs transition-opacity hover:opacity-70"
@@ -58,7 +60,7 @@ export function DesktopMenuLinks() {
           lineHeight: "1.48em",
         }}
       >
-        © 2025 Team Mirai
+        © 2025 {siteConfig.operator.name}
       </p>
     </div>
   );

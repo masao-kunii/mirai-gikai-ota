@@ -4,7 +4,6 @@ import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/ge
 import { getBillById } from "@/features/bills/server/loaders/get-bill-by-id";
 import { BillDetailLayout } from "@/features/bills/server/components/bill-detail/bill-detail-layout";
 import { env } from "@/lib/env";
-import { routes } from "@/lib/routes";
 
 interface BillDetailPageProps {
   params: Promise<{
@@ -37,13 +36,13 @@ export async function generateMetadata({
     title: bill.name,
     description: description,
     alternates: {
-      canonical: routes.billDetail(bill.id),
+      canonical: `/bills/${bill.id}`,
     },
     openGraph: {
       title: bill.name,
       description: description,
       type: "article",
-      publishedTime: bill.submitted_date ?? undefined,
+      publishedTime: bill.published_at ?? undefined,
       modifiedTime: bill.updated_at,
       images: [
         {

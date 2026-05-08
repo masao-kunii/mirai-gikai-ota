@@ -1,14 +1,10 @@
-export type SessionStatus = "completed" | "in_progress" | "archived";
+export type SessionStatus = "completed" | "in_progress";
 
 /**
- * completed_at, archived_atの有無でセッションステータスを判定する
+ * completed_atの有無でセッションステータスを判定する
  */
 export function getSessionStatus(session: {
   completed_at: string | null;
-  archived_at: string | null;
 }): SessionStatus {
-  if (!session.completed_at && session.archived_at) {
-    return "archived";
-  }
   return session.completed_at ? "completed" : "in_progress";
 }

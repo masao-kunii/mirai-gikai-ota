@@ -1,16 +1,9 @@
-import { MessageSquare } from "lucide-react";
-import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { formatDateJST } from "@/lib/utils/date";
 import { getInterviewLPLink } from "@/features/interview-config/shared/utils/interview-links";
-import { routes } from "@/lib/routes";
-import { formatDateWithDots } from "@/lib/utils/date";
 import { BillDetailShareButton } from "../../../client/components/bill-detail/bill-detail-share-button";
-import {
-  ReviewCompleteBadge,
-  ReviewInProgressBanner,
-} from "../../../client/components/bill-detail/review-status-banner";
 import { BillStatusBadge } from "../../../client/components/bill-list/bill-status-badge";
 import { BillTag } from "../../../client/components/bill-list/bill-tag";
 import { getBillShareData } from "../../../client/utils/share";
@@ -19,13 +12,11 @@ import type { BillWithContent } from "../../../shared/types";
 interface BillDetailHeaderProps {
   bill: BillWithContent;
   hasInterviewConfig?: boolean;
-  opinionCount?: number;
 }
 
 export async function BillDetailHeader({
   bill,
   hasInterviewConfig,
-  opinionCount,
 }: BillDetailHeaderProps) {
   const displayTitle = bill.bill_content?.title;
   const displaySummary = bill.bill_content?.summary;
@@ -51,21 +42,13 @@ export async function BillDetailHeader({
 
       <div className="px-4 pt-8 mb-3">
         {displayTitle && (
-          <h1 className="text-2xl font-bold mb-3">
-            {displayTitle}
-            {bill.is_review_completed && (
-              <>
-                {" "}
-                <ReviewCompleteBadge showTooltip />
-              </>
-            )}
-          </h1>
+          <h1 className="text-2xl font-bold mb-3">{displayTitle}</h1>
         )}
         <div className="flex flex-row gap-4">
           <BillStatusBadge status={bill.status} className="w-fit" />
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            {bill.submitted_date && (
-              <time>{formatDateWithDots(bill.submitted_date)} 提出</time>
+            {bill.published_at && (
+              <time>{formatDateJST(bill.published_at)} 提出</time>
             )}
           </div>
         </div>
@@ -88,24 +71,6 @@ export async function BillDetailHeader({
         <p className="text-sm text-muted-foreground font-medium mb-4">
           {bill.name}
         </p>
-        {!bill.is_review_completed && (
-          <div className="mb-4">
-            <ReviewInProgressBanner />
-          </div>
-        )}
-
-        {opinionCount != null && opinionCount > 0 && (
-          <Link
-            href={routes.billOpinions(bill.id) as Route}
-            className="flex items-center gap-1 mb-4 text-primary-accent hover:opacity-80"
-          >
-            <MessageSquare className="size-4 relative top-[1px]" />
-            <span className="text-[14px] font-bold leading-[14px] tracking-[0.14px]">
-              {opinionCount}
-              件のご意見
-            </span>
-          </Link>
-        )}
         <div className="flex items-center gap-2">
           {hasInterviewConfig && (
             <Button
@@ -114,7 +79,7 @@ export async function BillDetailHeader({
               asChild
               className="bg-mirai-light-gradient text-[13px] font-bold text-gray-800 gap-1.5 py-1 px-3"
             >
-              <Link href={getInterviewLPLink(bill.id) as Route}>
+              <Link href={getInterviewLPLink(bill.id)}>
                 <Image
                   src="/icons/interview-cooperation.svg"
                   alt=""

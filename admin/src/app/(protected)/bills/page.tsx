@@ -5,11 +5,16 @@ interface BillsPageProps {
   searchParams: Promise<{
     sort?: string;
     order?: string;
+    session?: string;
+    tag?: string;
+    publishStatus?: string;
+    reviewStatus?: string;
   }>;
 }
 
 export default async function BillsPage({ searchParams }: BillsPageProps) {
-  const { sort, order } = await searchParams;
+  const { sort, order, session, tag, publishStatus, reviewStatus } =
+    await searchParams;
   const sortConfig = parseBillSortParams(sort, order);
 
   return (
@@ -19,7 +24,13 @@ export default async function BillsPage({ searchParams }: BillsPageProps) {
         <p className="text-gray-600 mt-1">議案の一覧を確認・管理できます</p>
       </div>
 
-      <BillList sortConfig={sortConfig} />
+      <BillList
+        sortConfig={sortConfig}
+        sessionId={session}
+        tagId={tag}
+        publishStatus={publishStatus}
+        reviewStatus={reviewStatus}
+      />
     </div>
   );
 }

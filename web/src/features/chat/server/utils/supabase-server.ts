@@ -9,20 +9,16 @@ import { env } from "@/lib/env";
 export async function createChatSupabaseServerClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
-    env.supabaseUrl,
-    env.supabasePublishableKey,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {
-          // Route Handlers cannot mutate cookies; ignore writes.
-        },
+  return createServerClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+      setAll() {
+        // Route Handlers cannot mutate cookies; ignore writes.
+      },
+    },
+  });
 }
 
 export async function getChatSupabaseUser() {

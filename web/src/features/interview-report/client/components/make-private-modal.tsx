@@ -4,6 +4,7 @@ import { ArrowRight, Lock } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site.config";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,7 @@ export function MakePrivateModal({
 }: MakePrivateModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="py-9">
+      <DialogContent className="max-w-sm py-9">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-primary-accent text-center leading-relaxed">
             インタビュー内容を
@@ -52,10 +53,12 @@ export function MakePrivateModal({
 
         <div className="space-y-4 mt-6">
           <CheckListItem>
-            非公開にした場合、あなたのご意見が世の中に公開されることはありません。
+            非公開にした場合、あなたのご意見が世の中に公開されることはありません
           </CheckListItem>
           <CheckListItem>
-            チームみらい党内での政策検討に最大限活用させていただきます。
+            {siteConfig.managingParty
+              ? `${siteConfig.managingParty}の政策検討に最大限活用させていただきます。`
+              : "政策検討に最大限活用させていただきます。"}
           </CheckListItem>
         </div>
 

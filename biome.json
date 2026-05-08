@@ -45,11 +45,6 @@
     }
   },
   "files": {
-    "includes": [
-      "web/src/**/*",
-      "admin/src/**/*",
-      "tests/**/*",
-      "!.claude/worktrees"
-    ]
+    "includes": ["web/src/**/*", "admin/src/**/*", "tests/**/*"]
   }
 }

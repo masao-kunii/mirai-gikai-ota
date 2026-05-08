@@ -1,9 +1,12 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Frown, Lightbulb } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useOptimistic, useTransition } from "react";
+import { toggleReaction } from "../../server/actions/toggle-reaction";
 import type { ReactionType, ReportReactionData } from "../../shared/types";
-import { useReactionToggle } from "../hooks/use-reaction-toggle";
+import { computeOptimisticState } from "../../shared/utils/compute-optimistic-state";
 
 interface ReactionButtonsInlineProps {
   reportId: string;
@@ -14,12 +17,27 @@ export function ReactionButtonsInline({
   reportId,
   initialData,
 }: ReactionButtonsInlineProps) {
-  const { data, isPending, toggle } = useReactionToggle(reportId, initialData);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [optimistic, setOptimistic] = useOptimistic(
+    initialData,
+    computeOptimisticState
+  );
 
   const handleClick = (e: React.MouseEvent, reactionType: ReactionType) => {
     e.preventDefault();
     e.stopPropagation();
-    toggle(reactionType);
+    startTransition(async () => {
+      setOptimistic(reactionType);
+      try {
+        const result = await toggleReaction(reportId, reactionType);
+        if (!result.success) {
+          router.refresh();
+        }
+      } catch {
+        router.refresh();
+      }
+    });
   };
 
   return (
@@ -27,10 +45,18 @@ export function ReactionButtonsInline({
       <InlineReactionButton
         type="helpful"
         label="参考になる"
-        count={data.counts.helpful}
-        isActive={data.userReaction === "helpful"}
+        count={optimistic.counts.helpful}
+        isActive={optimistic.userReaction === "helpful"}
         disabled={isPending}
         onClick={(e) => handleClick(e, "helpful")}
+      />
+      <InlineReactionButton
+        type="hmm"
+        label="うーん..."
+        count={optimistic.counts.hmm}
+        isActive={optimistic.userReaction === "hmm"}
+        disabled={isPending}
+        onClick={(e) => handleClick(e, "hmm")}
       />
     </div>
   );
@@ -53,7 +79,7 @@ function InlineReactionButton({
   disabled,
   onClick,
 }: InlineReactionButtonProps) {
-  const Icon = Lightbulb;
+  const Icon = type === "helpful" ? Lightbulb : Frown;
   const colorClass = isActive
     ? "text-mirai-reaction-active"
     : "text-mirai-reaction-inactive";
@@ -61,21 +87,18 @@ function InlineReactionButton({
   return (
     <Button
       variant="ghost"
-      size="sm"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={isActive}
       aria-label={`${label} ${count}`}
-      className="flex items-center gap-1 h-auto !px-0 py-0 hover:bg-transparent"
+      className="flex items-center gap-1 h-auto px-0 py-0 hover:bg-transparent"
     >
-      <Icon size={24} className={`transition-colors ${colorClass}`} />
-      <span className={`text-sm font-medium transition-colors ${colorClass}`}>
+      <Icon size={16} className={`transition-colors ${colorClass}`} />
+      <span className={`text-xs font-medium transition-colors ${colorClass}`}>
         {label}
       </span>
       {count > 0 && (
-        <span
-          className={`text-[13px] font-medium transition-colors ${colorClass} ml-1`}
-        >
+        <span className={`text-xs font-medium transition-colors ${colorClass}`}>
           {count}
         </span>
       )}

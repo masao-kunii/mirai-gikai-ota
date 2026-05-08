@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site.config";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,7 @@ export function InterviewPublicConsentModal({
 }: InterviewPublicConsentModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="py-9">
+      <DialogContent className="max-w-md py-9">
         <DialogHeader>
           <p className="text-center text-primary-accent font-bold">
             あと少しです！
@@ -56,20 +57,22 @@ export function InterviewPublicConsentModal({
           <h3 className="text-lg font-bold text-primary-accent text-center leading-relaxed">
             インタビュー内容の公開を
             <br />
-            許可しますか？
+            許可しますか
           </h3>
 
           <div className="space-y-4">
             <CheckListItem>
-              公開を許可した場合、今後みらい議会にあなたのご意見の要約とインタビュー原文が匿名で掲載されることがあります。
+              公開を許可した場合、今後みらい議会ー大田区版にあなたのご意見が匿名で掲載されることがあります。
             </CheckListItem>
             <CheckListItem>
-              さまざまな意見が公開されることで、より深い法案議論が実現できます。
+              さまざまな当事者の意見が公開されることで、より深い議案議論が実現できます。
             </CheckListItem>
           </div>
 
           <p className="text-sm text-black">
-            非公開で提出した場合でも、ご意見は党内での政策検討に活用させていただきます。
+            {siteConfig.managingParty
+              ? `非公開で提出した場合でも、ご意見は${siteConfig.managingParty}の政策検討に活用させていただきます。`
+              : "非公開で提出した場合でも、ご意見は政策検討に活用させていただきます。"}
           </p>
         </div>
 

@@ -1,20 +1,17 @@
 import { ArrowRight, Undo2 } from "lucide-react";
-import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site.config";
 import type { BillWithContent } from "@/features/bills/shared/types";
-import { formatEstimatedDuration } from "@/features/interview-config/shared/utils/format-estimated-duration";
+import { InterviewStatusBadge } from "@/features/interview-session/client/components/interview-status-badge";
+import type { LatestInterviewSession } from "@/features/interview-session/server/loaders/get-latest-interview-session";
+import type { InterviewConfig } from "../../server/loaders/get-interview-config";
 import {
   getBillDetailLink,
   getInterviewDisclosureLink,
 } from "@/features/interview-config/shared/utils/interview-links";
-import { PastReportsSection } from "@/features/interview-report/client/components/past-reports-section";
-import type { UserReportsResult } from "@/features/interview-report/server/loaders/get-user-reports-by-interview-config";
-import { InterviewStatusBadge } from "@/features/interview-session/client/components/interview-status-badge";
-import { NewInterviewButton } from "@/features/interview-session/client/components/new-interview-button";
-import type { LatestInterviewSession } from "@/features/interview-session/server/loaders/get-latest-interview-session";
-import type { InterviewConfig } from "../../server/loaders/get-interview-config";
+import { formatEstimatedDuration } from "@/features/interview-config/shared/utils/format-estimated-duration";
 import { InterviewActionButtons } from "./interview-action-buttons";
 
 interface InterviewLPPageProps {
@@ -22,7 +19,6 @@ interface InterviewLPPageProps {
   interviewConfig: InterviewConfig;
   sessionInfo: LatestInterviewSession | null;
   previewToken?: string;
-  userReports?: UserReportsResult | null;
 }
 
 const FEATURES: {
@@ -33,23 +29,29 @@ const FEATURES: {
   {
     iconSrc: "/icons/interview-ear.svg",
     iconSize: { w: 21, h: 29 },
-    text: "あなたの経験や考えをAIがチャットで深掘りします",
+    text: "AIがあなたの課題感や\nご経験をお聞きします",
   },
   {
     iconSrc: "/icons/interview-messages.svg",
     iconSize: { w: 33, h: 26 },
-    text: "寄せられた回答はチームみらいの政策検討に活用します",
+    text: siteConfig.managingParty
+      ? `ご意見は${siteConfig.managingParty}の\n政策検討に活かします`
+      : "ご意見は\n政策検討に活かします",
   },
-  {
-    iconSrc: "/icons/interview-landmark.svg",
-    iconSize: { w: 30, h: 29 },
-    text: "ご意見はチームみらいを通じて国会に届けられる可能性があります",
-  },
+  ...(siteConfig.managingParty
+    ? [
+        {
+          iconSrc: "/icons/interview-landmark.svg",
+          iconSize: { w: 30, h: 29 },
+          text: `あなたの声が${siteConfig.managingParty}を通じて${siteConfig.councilName}に届けられる可能性があります`,
+        },
+      ]
+    : []),
 ];
 
 function _InterviewLPHeader({ bill }: { bill: BillWithContent }) {
   return (
-    <div className="relative w-full h-50 md:h-80">
+    <div className="relative w-full h-72 md:h-80">
       {bill.thumbnail_url ? (
         <Image
           src={bill.thumbnail_url}
@@ -82,17 +84,17 @@ function _InterviewLPHero({
   return (
     <div className="flex flex-col items-center gap-6 px-4">
       <div className="flex flex-col items-center gap-3">
-        <div className="inline-flex items-center justify-center gap-2 px-6 py-1 mb-3 bg-primary rounded-2xl">
-          <span className="text-[13px] font-medium text-white leading-tight">
+        <div className="inline-flex items-center justify-center gap-2 px-6 py-2 mb-3 bg-primary rounded-2xl">
+          <span className="text-[15px] font-medium text-white leading-tight">
             当事者・有識者の方へ
           </span>
         </div>
         <h1 className="text-2xl font-bold text-center leading-[1.5]">
-          法案についてのAIインタビュー
+          議案についてのAIインタビュー
         </h1>
-        <Link href={billLink as Route}>
+        <Link href={billLink}>
           <div className="inline-flex items-center justify-center gap-2.5 px-4 py-2 bg-white rounded-xl hover:bg-gray-50 transition-opacity cursor-pointer">
-            <span className="text-[13px] font-medium text-black leading-[1.87]">
+            <span className="text-[15px] font-bold text-black leading-[1.87]">
               {bill.bill_content?.title ?? bill.name}
             </span>
           </div>
@@ -118,15 +120,13 @@ function _InterviewLPHero({
         ))}
       </div>
 
-      {sessionInfo?.status !== "completed" && (
-        <div className="w-full max-w-[560px] mt-2 flex flex-col gap-3">
-          <InterviewActionButtons
-            billId={billId}
-            sessionInfo={sessionInfo}
-            previewToken={previewToken}
-          />
-        </div>
-      )}
+      <div className="w-full max-w-[370px] mt-2 flex flex-col gap-3">
+        <InterviewActionButtons
+          billId={billId}
+          sessionInfo={sessionInfo}
+          previewToken={previewToken}
+        />
+      </div>
     </div>
   );
 }
@@ -143,32 +143,33 @@ function _InterviewOverviewSection({
   const billLink = getBillDetailLink(billId, previewToken);
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[370px] mx-auto bg-white rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         インタビュー概要
       </h2>
       <div className="space-y-4 text-[15px] font-normal text-black leading-[1.87]">
         <p>
-          国会で検討されている
+          {siteConfig.councilName}で検討されている
           <Link
-            href={billLink as Route}
+            href={billLink}
             className="text-primary underline underline-offset-2 hover:opacity-70 transition-opacity"
           >
             {billName}
           </Link>
-          について、AIがあなたの考えを深掘りするチャット型インタビューです
+          について、AIがあなたの考えを深堀りするチャット型インタビューです
         </p>
         <p>
-          いただいたご意見は、政策研究や国会での審議に活用し、みらい議会上に公開される可能性があります。
+          いただいたご意見は、政策検討や市議会での審議に活用し、
+          {siteConfig.siteName}上に公開される可能性があります。
         </p>
       </div>
       <div>
-        <Link href={billLink as Route}>
+        <Link href={billLink}>
           <Button
             variant="outline"
             className="w-full border border-black rounded-[100px] h-[48px] px-6 font-bold text-[15px] hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
           >
-            <span>法案詳細はこちら</span>
+            <span>議案詳細はこちら</span>
             <ArrowRight className="size-4" />
           </Button>
         </Link>
@@ -189,7 +190,7 @@ function _InterviewDurationSection({
   }
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-2">
+    <div className="w-full max-w-[370px] mx-auto bg-white rounded-2xl p-6 space-y-2">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         予定時間
       </h2>
@@ -210,7 +211,7 @@ function _InterviewThemesSection({
   }
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[370px] mx-auto bg-white rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         質問テーマ
       </h2>
@@ -238,7 +239,7 @@ function _InterviewThemesSection({
 
 function _InterviewNoticeSection() {
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[370px] mx-auto bg-white rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         注意事項
       </h2>
@@ -265,9 +266,9 @@ function _InterviewDisclosureLink({
   const disclosureLink = getInterviewDisclosureLink(billId, previewToken);
 
   return (
-    <div className="w-full max-w-[560px] mx-auto">
+    <div className="w-full max-w-[370px] mx-auto">
       <Link
-        href={disclosureLink as Route}
+        href={disclosureLink}
         className="text-xs text-black leading-[1.83] underline underline-offset-2 hover:opacity-70 transition-opacity"
       >
         AIインタビューに関する情報開示
@@ -294,10 +295,10 @@ function _InterviewFooterActions({
         sessionInfo={sessionInfo}
         previewToken={previewToken}
       />
-      <Link href={billLink as Route}>
+      <Link href={billLink}>
         <Button variant="outline" className="w-full">
           <Undo2 className="size-5" />
-          <span>法案詳細に戻る</span>
+          <span>議案詳細に戻る</span>
         </Button>
       </Link>
     </div>
@@ -309,7 +310,6 @@ export function InterviewLPPage({
   interviewConfig,
   sessionInfo,
   previewToken,
-  userReports,
 }: InterviewLPPageProps) {
   return (
     <div className="flex flex-col gap-8 pb-8 bg-mirai-light-gradient">
@@ -321,14 +321,6 @@ export function InterviewLPPage({
           sessionInfo={sessionInfo}
           previewToken={previewToken}
         />
-        {userReports && userReports.reports.length > 0 && (
-          <PastReportsSection reports={userReports.reports} />
-        )}
-        {sessionInfo?.status === "completed" && sessionInfo?.reportId && (
-          <div className="w-full max-w-[560px]">
-            <NewInterviewButton billId={bill.id} previewToken={previewToken} />
-          </div>
-        )}
         <_InterviewOverviewSection
           billId={bill.id}
           billName={bill.bill_content?.title ?? bill.name}

@@ -10,7 +10,17 @@ import type {
 type BillContentInsert =
   Database["public"]["Tables"]["bill_contents"]["Insert"];
 
-export async function findBillsWithDietSessions(sortConfig?: BillSortConfig) {
+type BillFilters = {
+  sessionId?: string;
+  tagId?: string;
+  publishStatus?: string;
+  reviewStatus?: string;
+};
+
+export async function findBillsWithCouncilSessions(
+  sortConfig?: BillSortConfig,
+  filters?: BillFilters
+) {
   const supabase = createAdminClient();
   const field = sortConfig?.field ?? "created_at";
   const ascending = (sortConfig?.order ?? "desc") === "asc";
@@ -19,14 +29,54 @@ export async function findBillsWithDietSessions(sortConfig?: BillSortConfig) {
     ascending,
   };
 
-  if (field === "submitted_date") {
+  if (field === "published_at") {
     orderOptions.nullsFirst = false;
   }
 
-  const { data, error } = await supabase
-    .from("bills")
-    .select("*, diet_sessions(name)")
-    .order(field, orderOptions);
+  let query = supabase.from("bills").select("*, council_sessions(name)");
+
+  if (filters?.sessionId) {
+    query = query.eq("council_session_id", filters.sessionId);
+  }
+
+  if (filters?.publishStatus) {
+    query = query.eq(
+      "publish_status",
+      filters.publishStatus as "draft" | "published" | "coming_soon"
+    );
+  }
+
+  if (filters?.reviewStatus) {
+    query = query.eq(
+      "status",
+      filters.reviewStatus as
+        | "preparing"
+        | "submitted"
+        | "in_committee"
+        | "plenary_session"
+        | "approved"
+        | "rejected"
+    );
+  }
+
+  if (filters?.tagId) {
+    const { data: taggedBills } = await supabase
+      .from("bills_tags")
+      .select("bill_id")
+      .eq("tag_id", filters.tagId);
+    const billIds = (taggedBills ?? []).map((b) => b.bill_id);
+    query = query.in("id", billIds);
+  }
+
+  const result =
+    field === "council_session"
+      ? await query.order("created_at", {
+          referencedTable: "council_sessions",
+          ascending,
+        })
+      : await query.order(field, orderOptions);
+
+  const { data, error } = result;
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);

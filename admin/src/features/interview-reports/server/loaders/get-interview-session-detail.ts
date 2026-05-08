@@ -1,13 +1,8 @@
-import type {
-  InterviewSessionDetail,
-  ReactionCounts,
-} from "../../shared/types";
+import type { InterviewSessionDetail } from "../../shared/types";
 import {
-  findFeedbackTagsBySessionId,
   findInterviewMessagesBySessionId,
   findInterviewReportBySessionId,
   findInterviewSessionById,
-  findReactionCountsByReportId,
 } from "../repositories/interview-report-repository";
 
 export async function getInterviewSessionDetail(
@@ -39,29 +34,9 @@ export async function getInterviewSessionDetail(
     console.error("Failed to fetch interview messages:", error);
   }
 
-  // リアクション数を取得
-  let reactionCounts: ReactionCounts | null = null;
-  if (report) {
-    try {
-      reactionCounts = await findReactionCountsByReportId(report.id);
-    } catch (error) {
-      console.error("Failed to fetch reaction counts:", error);
-    }
-  }
-
-  // フィードバックタグを取得
-  let feedbackTags: string[] = [];
-  try {
-    feedbackTags = await findFeedbackTagsBySessionId(sessionId);
-  } catch (error) {
-    console.error("Failed to fetch feedback tags:", error);
-  }
-
   return {
     ...session,
     interview_report: report || null,
     interview_messages: messages || [],
-    reaction_counts: reactionCounts,
-    feedback_tags: feedbackTags,
   };
 }

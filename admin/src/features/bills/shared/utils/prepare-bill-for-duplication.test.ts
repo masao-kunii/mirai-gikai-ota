@@ -8,26 +8,21 @@ import {
 
 const baseBill: Bill = {
   id: "bill-001",
+  bill_number: "",
   name: "テスト議案",
   created_at: "2025-01-01T00:00:00Z",
   updated_at: "2025-01-02T00:00:00Z",
-  diet_session_id: "session-001",
+  council_session_id: "session-001",
+  committee_id: null,
   is_featured: true,
-  is_review_completed: true,
-  originating_house: "HR",
   publish_status: "published",
   published_at: null,
-  submitted_date: null,
   share_thumbnail_url: null,
-  shugiin_url: null,
-  slug: null,
-  status: "introduced",
+  status: "preparing",
   status_note: null,
-  status_order: BILL_STATUS_ORDER.introduced,
+  status_order: BILL_STATUS_ORDER.preparing,
   publish_status_order: 2,
   thumbnail_url: null,
-  knowledge_source: null,
-  use_knowledge_source_in_chat: false,
 };
 
 describe("prepareBillForDuplication", () => {
@@ -48,22 +43,10 @@ describe("prepareBillForDuplication", () => {
     expect(result.publish_status).toBe("draft");
   });
 
-  it("is_review_completedをfalseにリセットする", () => {
-    const result = prepareBillForDuplication(baseBill);
-    expect(result.is_review_completed).toBe(false);
-  });
-
-  it("slugをnullにリセットする", () => {
-    const billWithSlug = { ...baseBill, slug: "test-slug" };
-    const result = prepareBillForDuplication(billWithSlug);
-    expect(result.slug).toBeNull();
-  });
-
   it("その他のフィールドを保持する", () => {
     const result = prepareBillForDuplication(baseBill);
-    expect(result.diet_session_id).toBe("session-001");
+    expect(result.council_session_id).toBe("session-001");
     expect(result.is_featured).toBe(true);
-    expect(result.originating_house).toBe("HR");
   });
 });
 

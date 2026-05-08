@@ -1,4 +1,5 @@
 import { Container } from "@/components/layouts/container";
+import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
@@ -7,7 +8,7 @@ import { getPublicReportsByBillId } from "@/features/interview-report/server/loa
 import { BillDetailClient } from "../../../client/components/bill-detail/bill-detail-client";
 import { BillDisclaimer } from "../../../client/components/bill-detail/bill-disclaimer";
 import { BillStatusProgress } from "../../../client/components/bill-detail/bill-status-progress";
-import { MiraiStanceCard } from "../../../client/components/bill-detail/mirai-stance-card";
+import { FactionStanceCard } from "../../../client/components/bill-detail/faction-stance-card";
 import type { BillWithContent } from "../../../shared/types";
 import { BillShareButtons } from "../share/bill-share-buttons";
 import { BillContent } from "./bill-content";
@@ -22,7 +23,10 @@ export async function BillDetailLayout({
   bill,
   currentDifficulty,
 }: BillDetailLayoutProps) {
-  const showMiraiStance = bill.status === "preparing" || bill.mirai_stance;
+  const showStances =
+    bill.status === "preparing" ||
+    (bill.faction_stances && bill.faction_stances.length > 0);
+
   const [interviewConfig, publicReportsResult] = await Promise.all([
     getInterviewConfig(bill.id),
     getPublicReportsByBillId(bill.id),
@@ -44,14 +48,12 @@ export async function BillDetailLayout({
         <BillDetailHeader
           bill={bill}
           hasInterviewConfig={interviewConfig != null}
-          opinionCount={publicReportsResult.totalCount}
         />
         <Container>
           {/* 議案ステータス進捗 */}
           <div className="my-8">
             <BillStatusProgress
               status={bill.status}
-              originatingHouse={bill.originating_house}
               statusNote={bill.status_note}
             />
           </div>
@@ -61,6 +63,14 @@ export async function BillDetailLayout({
       </BillDetailClient>
 
       <Container>
+        {siteConfig.features.aiInterview && interviewConfig != null && (
+          <div className="my-8">
+            <InterviewLandingSection
+              billId={bill.id}
+              estimatedDuration={interviewConfig.estimated_duration}
+            />
+          </div>
+        )}
         {publicReportsResult.totalCount > 0 && (
           <div className="my-8">
             <BillInterviewOpinionsSection
@@ -70,15 +80,10 @@ export async function BillDetailLayout({
             />
           </div>
         )}
-        {interviewConfig != null && (
+        {showStances && (
           <div className="my-8">
-            <InterviewLandingSection billId={bill.id} />
-          </div>
-        )}
-        {showMiraiStance && (
-          <div className="my-8">
-            <MiraiStanceCard
-              stance={bill.mirai_stance}
+            <FactionStanceCard
+              stances={bill.faction_stances ?? []}
               billStatus={bill.status}
             />
           </div>

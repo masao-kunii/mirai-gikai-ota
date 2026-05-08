@@ -2,8 +2,6 @@ import type { ReportCardData } from "../components/report-card";
 
 export type StanceFilter = "all" | "for" | "against" | "neutral";
 
-export type StanceCounts = Record<StanceFilter, number>;
-
 export const stanceFilterLabels: Record<StanceFilter, string> = {
   all: "ALL",
   for: "期待",
@@ -17,16 +15,6 @@ export const stanceFilterOrder: StanceFilter[] = [
   "against",
   "neutral",
 ];
-
-const stanceFilterSet = new Set<string>(stanceFilterOrder);
-
-/**
- * 文字列を StanceFilter に変換。無効な値の場合は "all" を返す
- */
-export function parseStanceFilter(value: string | null): StanceFilter {
-  if (value && stanceFilterSet.has(value)) return value as StanceFilter;
-  return "all";
-}
 
 /**
  * スタンスフィルターに基づいてレポートをフィルタリング

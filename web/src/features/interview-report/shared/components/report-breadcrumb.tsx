@@ -1,25 +1,28 @@
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/breadcrumb";
-import { getBillDetailLink } from "@/features/interview-config/shared/utils/interview-links";
-import { routes } from "@/lib/routes";
+import {
+  getBillDetailLink,
+  getInterviewLPLink,
+  getInterviewReportCompleteLink,
+} from "@/features/interview-config/shared/utils/interview-links";
 
 interface ReportBreadcrumbProps {
   billId: string;
-  reportHref?: string;
+  reportId?: string;
   additionalItems?: BreadcrumbItem[];
 }
 
 export function ReportBreadcrumb({
   billId,
-  reportHref,
+  reportId,
   additionalItems = [],
 }: ReportBreadcrumbProps) {
   const baseItems: BreadcrumbItem[] = [
-    { label: "TOP", href: routes.home() },
-    { label: "法案詳細", href: getBillDetailLink(billId) },
-    { label: "レポート一覧", href: routes.billOpinions(billId) },
+    { label: "TOP", href: "/" },
+    { label: "議案詳細", href: getBillDetailLink(billId) },
+    { label: "AIインタビュー", href: getInterviewLPLink(billId) },
     {
       label: "レポート",
-      href: reportHref,
+      href: reportId ? getInterviewReportCompleteLink(reportId) : undefined,
     },
   ];
 

@@ -14,13 +14,9 @@ import {
   SUGGEST_INTERVIEW_TOOL_NAME,
   SUGGEST_INTERVIEW_TOOL_TYPE,
 } from "@/features/chat/shared/constants";
-import {
-  findBillContentByDifficulty,
-  findPublishedBillById,
-} from "@/features/bills/server/repositories/bill-repository";
 import { ChatError, ChatErrorCode } from "@/features/chat/shared/types/errors";
-import { pickChatKnowledgeSource } from "@/features/chat/shared/utils/pick-chat-knowledge-source";
 import { findPublicInterviewConfigByBillId } from "@/features/interview-config/server/repositories/interview-config-repository";
+import { findLatestNonArchivedSession } from "@/features/interview-session/server/repositories/interview-session-repository";
 import { env } from "@/lib/env";
 import {
   type CompiledPrompt,
@@ -28,11 +24,7 @@ import {
   type PromptProvider,
 } from "@/lib/prompt";
 import { AI_MODELS } from "@/lib/ai/models";
-import { isWithinDailyCostLimit, recordChatUsage } from "./cost-tracker";
-import {
-  checkSystemDailyCostLimit,
-  checkSystemMonthlyCostLimit,
-} from "./system-cost-guard";
+import { getUsageCostUsd, recordChatUsage } from "./cost-tracker";
 
 export type ChatMessageMetadata = {
   billContext?: BillWithContent;
@@ -74,18 +66,11 @@ export async function handleChatRequest({
   const context = extractChatContext(messages);
 
   try {
-    // Check per-user cost limit before processing
-    const isWithinLimit = await isWithinDailyCostLimit(
-      userId,
-      env.chat.dailyUserCostLimitUsd
-    );
+    // Check cost limit before processing
+    const isWithinLimit = await isWithinCostLimit(userId);
     if (!isWithinLimit) {
       throw new ChatError(ChatErrorCode.DAILY_COST_LIMIT_REACHED);
     }
-
-    // Check system-wide cost limits before processing
-    await checkSystemDailyCostLimit();
-    await checkSystemMonthlyCostLimit();
   } catch (error) {
     if (error instanceof ChatError) {
       throw error;
@@ -100,23 +85,21 @@ export async function handleChatRequest({
     promptProvider
   );
   // Model configuration
-  const model = deps?.model ?? AI_MODELS.gpt4o;
+  const model = deps?.model ?? openai("gpt-4o");
   const modelName =
     typeof model === "string" ? model : (model.modelId ?? "unknown");
 
   // Determine if interview suggestion should be enabled
   const shouldSuggestInterview = await determineShouldSuggestInterview(
     context,
-    messages
+    messages,
+    userId
   );
 
   // Build system prompt with interview suggestion instructions
-  const pageType =
-    context.pageContext?.type ?? (context.billContext ? "bill" : undefined);
   const systemPrompt = buildSystemPromptWithInterviewInstructions(
     promptResult.content,
-    shouldSuggestInterview,
-    pageType
+    shouldSuggestInterview
   );
 
   // Build tools configuration
@@ -181,6 +164,21 @@ function extractChatContext(
 }
 
 /**
+ * ユーザーがコストリミット内かどうかを判定
+ */
+async function isWithinCostLimit(userId: string): Promise<boolean> {
+  const jstDayRange = getJstDayRange();
+  const usedCost = await getUsageCostUsd(
+    userId,
+    jstDayRange.from,
+    jstDayRange.to
+  );
+  const limitCost = env.chat.dailyCostLimitUsd;
+
+  return usedCost < limitCost;
+}
+
+/**
  * コンテキストに基づいてプロンプトを組み立てる
  */
 async function buildPrompt(
@@ -194,30 +192,15 @@ async function buildPrompt(
       : `bill-chat-system-${context.difficultyLevel}`;
 
   // Prepare prompt variables
-  // bill 関連の変数はクライアント側のメタデータを信頼せず、必ずサーバー側で再取得した
-  // 公開済みデータのみから組み立てる（管理画面トグルの強制と非公開ナレッジ流出防止）。
-  // 公開済み bill が引けない場合は bill コンテキスト自体を空にする。
-  let variables: Record<string, string>;
-  if (context.pageContext?.type === "home") {
-    variables = {
-      billSummary: JSON.stringify(context.pageContext.bills ?? ""),
-    };
-  } else {
-    const billId = context.billContext?.id;
-    const [serverBill, serverContent] = billId
-      ? await Promise.all([
-          findPublishedBillById(billId),
-          findBillContentByDifficulty(billId, context.difficultyLevel),
-        ])
-      : [null, null];
-    variables = {
-      billName: serverBill?.name ?? "",
-      billTitle: serverContent?.title ?? "",
-      billSummary: serverContent?.summary ?? "",
-      billContent: serverContent?.content ?? "",
-      knowledgeSource: pickChatKnowledgeSource(serverBill),
-    };
-  }
+  const variables: Record<string, string> =
+    context.pageContext?.type === "home"
+      ? { billSummary: JSON.stringify(context.pageContext.bills ?? "") }
+      : {
+          billName: context.billContext?.name ?? "",
+          billTitle: context.billContext?.bill_content?.title ?? "",
+          billSummary: context.billContext?.bill_content?.summary ?? "",
+          billContent: context.billContext?.bill_content?.content ?? "",
+        };
 
   // Fetch prompt from Langfuse
   try {
@@ -230,6 +213,35 @@ async function buildPrompt(
       error instanceof Error ? error.message : String(error)
     );
   }
+}
+
+/**
+ * JST基準の1日の時間範囲を取得（UTC形式で返す）
+ */
+function getJstDayRange(): { from: string; to: string } {
+  const now = new Date();
+  const jstOffsetMs = 9 * 60 * 60 * 1000;
+  const jstNow = new Date(now.getTime() + jstOffsetMs);
+
+  const startOfJstDay = new Date(
+    Date.UTC(
+      jstNow.getUTCFullYear(),
+      jstNow.getUTCMonth(),
+      jstNow.getUTCDate(),
+      0,
+      0,
+      0,
+      0
+    )
+  );
+
+  const startUtc = new Date(startOfJstDay.getTime() - jstOffsetMs);
+  const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+
+  return {
+    from: startUtc.toISOString(),
+    to: endUtc.toISOString(),
+  };
 }
 
 /**
@@ -290,20 +302,6 @@ function extractGatewayCost(event: {
   return Number.isFinite(numericCost) ? numericCost : undefined;
 }
 
-const INTERVIEW_AWARENESS_BASE = `
-
-## AIインタビュー機能について
-みらい議会には「AIインタビュー」機能があります。これは法案ごとに提供される機能で、ユーザーがAIインタビュアーと対話形式で法案に対する意見や知見を共有できる仕組みです。インタビュー結果は分析・レポート化され、政策議論に活用されます。
-`;
-
-const INTERVIEW_AWARENESS_PROMPT_BILL = `${INTERVIEW_AWARENESS_BASE}
-この法案のインタビュー機能が現在利用可能かどうかは状況によって異なります。インタビューについて質問された場合は、この機能の存在を説明した上で、法案詳細ページでインタビューへの案内が表示されているか確認するよう案内してください。
-`;
-
-const INTERVIEW_AWARENESS_PROMPT_HOME = `${INTERVIEW_AWARENESS_BASE}
-インタビューについて質問された場合は、この機能の存在を説明した上で、利用可否は法案ごとに異なるため、興味のある法案の詳細ページでインタビューへの案内が表示されているか確認するよう案内してください。
-`;
-
 const INTERVIEW_SUGGESTION_PROMPT = `
 
 ## AIインタビュー提案について
@@ -329,12 +327,12 @@ const INTERVIEW_SUGGESTION_PROMPT = `
  * - 法案ページである
  * - サーバー側でインタビュー設定が公開状態であることを確認
  * - 会話中にまだsuggest_interviewツールが呼び出されていない
- *
- * NOTE: インタビュー回答済みでも導線を表示する（再回答の促進のため）
+ * - ユーザーがこの法案のインタビューを受けたことがない
  */
 async function determineShouldSuggestInterview(
   context: ChatMessageMetadata,
-  messages: UIMessage<ChatMessageMetadata>[]
+  messages: UIMessage<ChatMessageMetadata>[],
+  userId: string
 ): Promise<boolean> {
   if (!context.billContext) {
     return false;
@@ -348,7 +346,15 @@ async function determineShouldSuggestInterview(
   const { data: interviewConfig } = await findPublicInterviewConfigByBillId(
     context.billContext.id
   );
-  return !!interviewConfig;
+  if (!interviewConfig) {
+    return false;
+  }
+
+  const hasSession = await hasExistingInterviewSession(
+    interviewConfig.id,
+    userId
+  );
+  return !hasSession;
 }
 
 /**
@@ -368,24 +374,36 @@ function hasExistingSuggestInterview(
 }
 
 /**
+ * ユーザーがこのインタビュー設定に対するセッションを持っているか判定
+ * fail-closed: エラー時はtrue（セッションあり）を返し、誤ったバナー表示を防ぐ
+ */
+async function hasExistingInterviewSession(
+  interviewConfigId: string,
+  userId: string
+): Promise<boolean> {
+  try {
+    const session = await findLatestNonArchivedSession(
+      interviewConfigId,
+      userId
+    );
+    return session !== null;
+  } catch (error) {
+    console.error("Failed to check existing interview session:", error);
+    return true;
+  }
+}
+
+/**
  * インタビュー提案の指示をシステムプロンプトに追加
  */
 function buildSystemPromptWithInterviewInstructions(
   basePrompt: string,
-  shouldSuggestInterview: boolean,
-  pageType: "home" | "bill" | undefined
+  shouldSuggestInterview: boolean
 ): string {
-  if (pageType === "home") {
-    return basePrompt + INTERVIEW_AWARENESS_PROMPT_HOME;
-  }
-  if (pageType !== "bill") {
-    return basePrompt;
-  }
-  let prompt = basePrompt + INTERVIEW_AWARENESS_PROMPT_BILL;
   if (shouldSuggestInterview) {
-    prompt += INTERVIEW_SUGGESTION_PROMPT;
+    return basePrompt + INTERVIEW_SUGGESTION_PROMPT;
   }
-  return prompt;
+  return basePrompt;
 }
 
 /**

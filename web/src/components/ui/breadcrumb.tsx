@@ -1,4 +1,3 @@
-import type { Route } from "next";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -18,7 +17,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
         <span key={item.label} className="flex items-center gap-2">
           {index > 0 && <ChevronRight className="w-4 h-4" />}
           {item.href ? (
-            <Link href={item.href as Route} className="hover:underline">
+            <Link href={item.href} className="hover:underline">
               {item.label}
             </Link>
           ) : (

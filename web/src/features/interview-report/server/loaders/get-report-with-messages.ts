@@ -7,11 +7,6 @@ import {
 import type { InterviewMessage } from "@/features/interview-session/shared/types";
 import type { InterviewReport } from "../../shared/types";
 import {
-  canViewReportWithMessages,
-  selectPrimaryBillContent,
-} from "../../shared/utils/public-report-display";
-import {
-  countPublicReportsByBillId,
   findBillWithContentById,
   findMessagesBySessionId,
   findReportWithSessionById,
@@ -66,27 +61,11 @@ export async function getReportWithMessages(
 
   // Authorization check: public OR owner
   const isOwner = userId ? isSessionOwner(session.user_id, userId) : false;
-  const billId = session.interview_configs.bill_id;
+  const isPublic = report.is_public_by_user;
 
-  if (!isOwner) {
-    let publicReportCount: number;
-    try {
-      publicReportCount = await countPublicReportsByBillId(billId);
-    } catch (error) {
-      console.error("Failed to count public reports:", error);
-      return null;
-    }
-
-    const isPublic = canViewReportWithMessages({
-      isOwner,
-      isPublicByAdmin: report.is_public_by_admin,
-      isPublicByUser: report.is_public_by_user,
-      publicReportCount,
-    });
-
-    if (!isPublic) {
-      return null;
-    }
+  if (!isPublic && !isOwner) {
+    console.error("Unauthorized access to interview report chat log");
+    return null;
   }
 
   // Fetch messages
@@ -101,7 +80,7 @@ export async function getReportWithMessages(
   // Fetch bill info
   let bill: Awaited<ReturnType<typeof findBillWithContentById>>;
   try {
-    bill = await findBillWithContentById(billId);
+    bill = await findBillWithContentById(session.interview_configs.bill_id);
   } catch (error) {
     console.error("Failed to fetch bill:", error);
     return null;
@@ -112,7 +91,7 @@ export async function getReportWithMessages(
   return {
     report: {
       ...reportData,
-      bill_id: billId,
+      bill_id: session.interview_configs.bill_id,
       session_started_at: session.started_at,
       session_completed_at: session.completed_at,
     },
@@ -121,7 +100,11 @@ export async function getReportWithMessages(
       id: bill.id,
       name: bill.name,
       thumbnail_url: bill.thumbnail_url,
-      bill_content: selectPrimaryBillContent(bill.bill_contents),
+      bill_content: bill.bill_contents
+        ? Array.isArray(bill.bill_contents)
+          ? bill.bill_contents[0]
+          : bill.bill_contents
+        : null,
     },
   };
 }

@@ -61,7 +61,6 @@ export async function initializeInterviewChat(
       sessionId: session.id,
       billId,
       interviewConfigId,
-      userId: user.id,
       deps: { model: deps?.model },
     });
 

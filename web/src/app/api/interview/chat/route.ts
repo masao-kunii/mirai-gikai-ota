@@ -1,11 +1,5 @@
 import { getChatSupabaseUser } from "@/features/chat/server/utils/supabase-server";
-import {
-  checkSystemDailyCostLimit,
-  checkSystemMonthlyCostLimit,
-} from "@/features/chat/server/services/system-cost-guard";
-import { chatErrorToResponse } from "@/features/chat/server/utils/chat-error-response";
 import { handleInterviewChatRequest } from "@/features/interview-session/server/services/handle-interview-chat-request";
-import { jsonResponse } from "@/lib/api/response";
 import { registerNodeTelemetry } from "@/lib/telemetry/register";
 
 export async function POST(req: Request) {
@@ -32,27 +26,41 @@ export async function POST(req: Request) {
   } = await getChatSupabaseUser();
 
   if (getUserError || !user) {
-    return jsonResponse({ error: "Anonymous session required" }, 401);
+    return new Response(
+      JSON.stringify({
+        error: "Anonymous session required",
+      }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   if (!billId) {
-    return jsonResponse({ error: "billId is required" }, 400);
+    return new Response(
+      JSON.stringify({
+        error: "billId is required",
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   try {
-    // システム全体の予算上限チェック（日次・月次）
-    await checkSystemDailyCostLimit();
-    await checkSystemMonthlyCostLimit();
-
     return await handleInterviewChatRequest({
       messages,
       billId,
       currentStage,
       isRetry,
-      userId: user.id,
     });
   } catch (error) {
     console.error("Interview chat request error:", error);
-    return chatErrorToResponse(error);
+
+    return new Response(
+      error instanceof Error
+        ? error.message
+        : "エラーが発生しました。しばらく待ってから再度お試しください。",
+      {
+        status: 500,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      }
+    );
   }
 }

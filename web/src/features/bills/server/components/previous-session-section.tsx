@@ -1,15 +1,13 @@
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
-import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { DietSession } from "@/features/diet-sessions/shared/types";
-import { routes } from "@/lib/routes";
-import { CompactBillCard } from "../../client/components/bill-list/compact-bill-card";
+import type { CouncilSession } from "@/features/council-sessions/shared/types";
 import type { BillWithContent } from "../../shared/types";
+import { CompactBillCard } from "../../client/components/bill-list/compact-bill-card";
 
 interface PreviousSessionSectionProps {
-  session: DietSession;
+  session: CouncilSession;
   bills: BillWithContent[];
   totalBillCount: number;
 }
@@ -29,9 +27,9 @@ export function PreviousSessionSection({
     return null;
   }
 
-  const sessionBillsUrl = routes.kokkaiSessionBills(session.slug);
+  const sessionBillsUrl = `/sessions/${session.slug}/bills`;
   const startDate = new Date(session.start_date);
-  const endDate = new Date(session.end_date);
+  const endDate = new Date(session.end_date ?? session.start_date);
   const sessionDescription = `${startDate.getFullYear()}.${startDate.getMonth() + 1}月〜${endDate.getMonth() + 1}月に実施された${session.name}`;
 
   return (
@@ -48,18 +46,18 @@ export function PreviousSessionSection({
           />
         </h2>
         <p className="text-sm font-bold text-primary-accent">
-          過去の国会に提出された法案
+          過去の定例会に上程された議案
         </p>
       </div>
 
       {/* セクションヘッダー（リンク付き） */}
       <div className="flex flex-col gap-1.5">
-        <Link href={sessionBillsUrl as Route} className="group">
+        <Link href={sessionBillsUrl} className="group">
           <h3 className="text-[22px] font-bold text-black leading-[1.48] flex items-center gap-1.5">
             <span className="flex items-center gap-4">
               {new Date(session.start_date).getFullYear()}年 {session.name}
-              の提出法案
-              <span className="shrink-0">{totalBillCount}件</span>
+              の議案
+              <span>{totalBillCount}件</span>
             </span>
             <ChevronRight className="h-6 w-6 text-gray-600 group-hover:translate-x-0.5 transition-transform" />
           </h3>
@@ -72,7 +70,7 @@ export function PreviousSessionSection({
       {/* 議案カードリスト */}
       <div className="relative flex flex-col gap-3">
         {visibleBills.map((bill) => (
-          <Link key={bill.id} href={routes.billDetail(bill.id) as Route}>
+          <Link key={bill.id} href={`/bills/${bill.id}`}>
             <CompactBillCard bill={bill} />
           </Link>
         ))}
@@ -87,7 +85,7 @@ export function PreviousSessionSection({
                 asChild
                 className="w-[214px] h-12 text-base font-bold border-mirai-text rounded-full hover:bg-gray-50 bg-white"
               >
-                <Link href={sessionBillsUrl as Route}>もっと読む</Link>
+                <Link href={sessionBillsUrl}>もっと読む</Link>
               </Button>
             </div>
           </div>

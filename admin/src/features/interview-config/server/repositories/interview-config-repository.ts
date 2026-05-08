@@ -3,26 +3,6 @@ import "server-only";
 import { createAdminClient } from "@mirai-gikai/supabase";
 import type { InterviewConfig, InterviewQuestion } from "../../shared/types";
 
-export type InterviewConfigWithBill = InterviewConfig & {
-  bill: { id: string; name: string };
-};
-
-export async function findAllInterviewConfigs(): Promise<
-  InterviewConfigWithBill[]
-> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("interview_configs")
-    .select("*, bill:bills!inner(id, name)")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(`Failed to fetch interview configs: ${error.message}`);
-  }
-
-  return data as InterviewConfigWithBill[];
-}
-
 export async function findInterviewConfigsByBillId(
   billId: string
 ): Promise<InterviewConfig[]> {
@@ -109,10 +89,7 @@ export async function closeOtherPublicConfigs(
     query.neq("id", excludeConfigId);
   }
 
-  const { error } = await query;
-  if (error) {
-    throw new Error(`Failed to close interview configs: ${error.message}`);
-  }
+  await query;
 }
 
 export async function createInterviewConfigRecord(params: {
@@ -121,6 +98,7 @@ export async function createInterviewConfigRecord(params: {
   status: "public" | "closed";
   mode: "loop" | "bulk";
   themes: string[] | null;
+  knowledge_source: string | null;
   chat_model: string | null;
   estimated_duration: number | null;
 }): Promise<{ id: string }> {
@@ -145,6 +123,7 @@ export async function updateInterviewConfigRecord(
     status: "public" | "closed";
     mode: "loop" | "bulk";
     themes: string[] | null;
+    knowledge_source: string | null;
     chat_model: string | null;
     estimated_duration: number | null;
     updated_at: string;
@@ -163,30 +142,6 @@ export async function updateInterviewConfigRecord(
   }
 
   return data;
-}
-
-export async function countSessionsByConfigIds(
-  configIds: string[]
-): Promise<Record<string, number>> {
-  if (configIds.length === 0) return {};
-
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("count_sessions_by_config_ids", {
-    p_config_ids: configIds,
-  });
-
-  if (error) {
-    throw new Error(`Failed to count sessions: ${error.message}`);
-  }
-
-  const result: Record<string, number> = {};
-  for (const configId of configIds) {
-    result[configId] = 0;
-  }
-  for (const row of data) {
-    result[row.interview_config_id] = Number(row.session_count);
-  }
-  return result;
 }
 
 export async function deleteInterviewConfigRecord(

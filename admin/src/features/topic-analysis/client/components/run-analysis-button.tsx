@@ -1,17 +1,14 @@
 "use client";
 
 import { Loader2, Play } from "lucide-react";
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
 import { ANALYSIS_STEPS, ANALYSIS_TOTAL_STEPS } from "../../shared/constants";
 import { formatDurationMs } from "../../shared/utils/format-analysis-duration";
 
 interface RunAnalysisButtonProps {
   billId: string;
-  configId: string;
 }
 
 type AnalysisStatus = {
@@ -28,10 +25,7 @@ function getStepOrder(stepLabel: string | null): number {
   return step?.order ?? 0;
 }
 
-export function RunAnalysisButton({
-  billId,
-  configId,
-}: RunAnalysisButtonProps) {
+export function RunAnalysisButton({ billId }: RunAnalysisButtonProps) {
   const router = useRouter();
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,13 +78,7 @@ export function RunAnalysisButton({
       if (data.status === "completed") {
         stopPolling();
         setIsRunning(false);
-        router.push(
-          routes.billTopicAnalysisDetail(
-            billId,
-            configId,
-            versionIdRef.current!
-          ) as Route
-        );
+        router.push(`/bills/${billId}/topic-analysis/${versionIdRef.current}`);
         router.refresh();
       } else if (data.status === "failed") {
         stopPolling();
@@ -105,7 +93,7 @@ export function RunAnalysisButton({
         setError("ステータス取得に繰り返し失敗しました");
       }
     }
-  }, [billId, configId, router, stopPolling]);
+  }, [billId, router, stopPolling]);
 
   const handleRun = async () => {
     setIsRunning(true);

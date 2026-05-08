@@ -14,62 +14,10 @@
     "./stream/inject-json-fields": {
       "types": "./src/stream/inject-json-fields.ts",
       "default": "./src/stream/inject-json-fields.ts"
-    },
-    "./moderation/build-prompt": {
-      "types": "./src/moderation/build-moderation-prompt.ts",
-      "default": "./src/moderation/build-moderation-prompt.ts"
-    },
-    "./moderation/schemas": {
-      "types": "./src/moderation/schemas.ts",
-      "default": "./src/moderation/schemas.ts"
-    },
-    "./moderation/status": {
-      "types": "./src/moderation/moderation.ts",
-      "default": "./src/moderation/moderation.ts"
-    },
-    "./content-richness/build-prompt": {
-      "types": "./src/content-richness/build-content-richness-prompt.ts",
-      "default": "./src/content-richness/build-content-richness-prompt.ts"
-    },
-    "./content-richness/schemas": {
-      "types": "./src/content-richness/schemas.ts",
-      "default": "./src/content-richness/schemas.ts"
-    },
-    "./content-richness/instructions": {
-      "types": "./src/content-richness/content-richness-instructions.ts",
-      "default": "./src/content-richness/content-richness-instructions.ts"
-    },
-    "./report-publication/auto-publish": {
-      "types": "./src/report-publication/auto-publish.ts",
-      "default": "./src/report-publication/auto-publish.ts"
-    },
-    "./interview-prompts/types": {
-      "types": "./src/interview-prompts/types.ts",
-      "default": "./src/interview-prompts/types.ts"
-    },
-    "./interview-prompts/stage-transition-guidance": {
-      "types": "./src/interview-prompts/stage-transition-guidance.ts",
-      "default": "./src/interview-prompts/stage-transition-guidance.ts"
-    },
-    "./interview-prompts/loop-mode": {
-      "types": "./src/interview-prompts/loop-mode.ts",
-      "default": "./src/interview-prompts/loop-mode.ts"
-    },
-    "./interview-prompts/bulk-mode": {
-      "types": "./src/interview-prompts/bulk-mode.ts",
-      "default": "./src/interview-prompts/bulk-mode.ts"
-    },
-    "./interview-prompts/summary": {
-      "types": "./src/interview-prompts/summary.ts",
-      "default": "./src/interview-prompts/summary.ts"
     }
   },
-  "peerDependencies": {
-    "zod": "^4.0.0"
-  },
   "devDependencies": {
-    "typescript": "^5.6.2",
-    "vitest": "^3.2.4",
-    "zod": "^4.1.12"
+    "typescript": "~5.8.0",
+    "vitest": "^3.2.4"
   }
 }

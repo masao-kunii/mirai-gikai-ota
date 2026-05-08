@@ -1,34 +1,23 @@
 import "server-only";
 
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layouts/container";
 import { getBillById } from "@/features/bills/server/loaders/get-bill-by-id";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
 import { getReportReactionsBatch } from "@/features/report-reaction/server/loaders/get-report-reactions";
-import { routes } from "@/lib/routes";
 import { PublicOpinionsList } from "../../client/components/public-opinions-list";
-import { OpinionsBreadcrumb } from "../../shared/components/opinions-breadcrumb";
-import type { SortOrder } from "../../shared/utils/sort-order";
-import type { StanceFilter } from "../../shared/utils/stance-filter";
-import { getInitialPublicReportsByBillId } from "../loaders/get-all-public-reports-by-bill-id";
+import { getAllPublicReportsByBillId } from "../loaders/get-all-public-reports-by-bill-id";
 
 interface PublicOpinionsPageProps {
   billId: string;
-  initialFilter: StanceFilter;
-  initialSort: SortOrder;
 }
 
-export async function PublicOpinionsPage({
-  billId,
-  initialFilter,
-  initialSort,
-}: PublicOpinionsPageProps) {
-  const [bill, initialData, interviewConfig] = await Promise.all([
+export async function PublicOpinionsPage({ billId }: PublicOpinionsPageProps) {
+  const [bill, reports, interviewConfig] = await Promise.all([
     getBillById(billId),
-    getInitialPublicReportsByBillId(billId, initialFilter, initialSort),
+    getAllPublicReportsByBillId(billId),
     getInterviewConfig(billId),
   ]);
 
@@ -38,7 +27,7 @@ export async function PublicOpinionsPage({
 
   const billTitle = bill.bill_content?.title || bill.name;
 
-  const reportIds = initialData.reports.map((r) => r.id);
+  const reportIds = reports.map((r) => r.id);
   const reactionsMap = await getReportReactionsBatch(reportIds);
   const reactionsRecord: Record<
     string,
@@ -55,7 +44,7 @@ export async function PublicOpinionsPage({
     <div className="min-h-dvh bg-mirai-surface">
       {/* ヒーロー画像 */}
       {bill.thumbnail_url && (
-        <div className="relative w-full h-[200px] md:h-[320px]">
+        <div className="relative w-full h-[285px]">
           <Image
             src={bill.thumbnail_url}
             alt={billTitle}
@@ -66,13 +55,11 @@ export async function PublicOpinionsPage({
       )}
 
       <Container>
-        {/* 法案タイトル（法案詳細へのリンク） */}
+        {/* 法案タイトル */}
         <div className="py-6">
-          <Link href={routes.billDetail(billId)}>
-            <h1 className="text-2xl font-bold leading-[1.5] text-black hover:underline">
-              {billTitle}
-            </h1>
-          </Link>
+          <h1 className="text-2xl font-bold leading-[1.5] text-black">
+            {billTitle}
+          </h1>
           {bill.name !== billTitle && (
             <p className="mt-2 text-xs font-medium leading-[1.67] text-mirai-text-muted">
               {bill.name}
@@ -80,27 +67,21 @@ export async function PublicOpinionsPage({
           )}
         </div>
 
-        {/* 意見一覧（フィルター付き・スクロールページネーション） */}
+        {/* 意見一覧（フィルター付き） */}
         <PublicOpinionsList
-          billId={billId}
-          initialReports={initialData.reports}
-          initialReactionsRecord={reactionsRecord}
-          stanceCounts={initialData.stanceCounts}
-          initialHasMore={initialData.hasMore}
-          initialFilter={initialFilter}
-          initialSort={initialSort}
+          reports={reports}
+          reactionsRecord={reactionsRecord}
         />
 
         {/* AIインタビューCTAバナー */}
         {interviewConfig != null && (
           <div className="my-8">
-            <InterviewLandingSection billId={billId} />
+            <InterviewLandingSection
+              billId={billId}
+              estimatedDuration={interviewConfig.estimated_duration}
+            />
           </div>
         )}
-        {/* パンくずリスト */}
-        <div className="pb-8">
-          <OpinionsBreadcrumb billId={billId} />
-        </div>
       </Container>
     </div>
   );

@@ -1,5 +1,4 @@
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { routes } from "@/lib/routes";
 import {
   getBillDetailLink,
   getInterviewLPLink,
@@ -15,7 +14,7 @@ export function DisclosureBreadcrumb({
   previewToken,
 }: DisclosureBreadcrumbProps) {
   const items = [
-    { label: "TOP", href: routes.home() },
+    { label: "TOP", href: "/" },
     { label: "法案詳細", href: getBillDetailLink(billId, previewToken) },
     {
       label: "AIインタビュー",

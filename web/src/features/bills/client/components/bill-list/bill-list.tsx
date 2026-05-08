@@ -1,6 +1,4 @@
-import type { Route } from "next";
 import Link from "next/link";
-import { routes } from "@/lib/routes";
 import type { BillWithContent } from "../../../shared/types";
 import { BillCard } from "./bill-card";
 
@@ -20,7 +18,7 @@ export function BillList({ bills }: BillListProps) {
   return (
     <div className="grid gap-4">
       {bills.map((bill) => (
-        <Link key={bill.id} href={routes.billDetail(bill.id) as Route}>
+        <Link key={bill.id} href={`/bills/${bill.id}`}>
           <BillCard bill={bill} />
         </Link>
       ))}

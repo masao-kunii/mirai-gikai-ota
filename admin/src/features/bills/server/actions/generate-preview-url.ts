@@ -19,7 +19,11 @@ export async function generatePreviewUrl(
   await requireAdmin();
 
   try {
-    const tokenInfo = await previewTokenService.getOrCreateToken(billId);
+    let tokenInfo = await previewTokenService.getValidToken(billId);
+
+    if (!tokenInfo) {
+      tokenInfo = await previewTokenService.createToken(billId);
+    }
 
     return {
       success: true,

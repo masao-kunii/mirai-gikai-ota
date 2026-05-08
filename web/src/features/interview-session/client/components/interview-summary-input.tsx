@@ -1,6 +1,5 @@
 "use client";
 
-import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
@@ -51,7 +50,7 @@ export function InterviewSummaryInput({
             </Button>
           ) : (
             <Button variant="outline" asChild>
-              <Link href={getBillDetailLink(billId, previewToken) as Route}>
+              <Link href={getBillDetailLink(billId, previewToken)}>
                 インタビューを終了する
               </Link>
             </Button>
@@ -66,7 +65,7 @@ export function InterviewSummaryInput({
           input={input}
           onInputChange={onInputChange}
           onSubmit={onSubmit}
-          placeholder="レポートの修正要望を入力する"
+          placeholder="レポートの修正要望があれば入力してください"
           isResponding={isLoading}
           error={error}
         />

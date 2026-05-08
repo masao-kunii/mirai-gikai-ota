@@ -1,12 +1,6 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === "development";
-
 const nextConfig: NextConfig = {
-  experimental: {
-    serverSourceMaps: true,
-  },
-  typedRoutes: true,
   turbopack: {
     root: "../",
   },
@@ -27,14 +21,6 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/bill-thumbnails/**",
       },
-      ...(isDev
-        ? [
-            {
-              protocol: "https" as const,
-              hostname: "placehold.co",
-            },
-          ]
-        : []),
     ],
   },
 };

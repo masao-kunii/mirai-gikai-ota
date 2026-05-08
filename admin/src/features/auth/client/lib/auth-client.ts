@@ -25,19 +25,6 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-export async function signInWithGoogle() {
-  const { error } = await authClient.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/api/auth/callback`,
-    },
-  });
-
-  if (error) {
-    throw new Error("Googleログインに失敗しました。");
-  }
-}
-
 export async function signOut() {
   const { error } = await authClient.signOut();
   if (error) {

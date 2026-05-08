@@ -4,24 +4,22 @@
  * 1. references内の全session_idが既知セッションIDセットに含まれるか検証
  * 2. 無効な参照を除去
  * 3. description_md内の無効な[ref:N]マーカーを除去
- * 4. 有効な[ref:N]を脚注リンク形式に変換
- *    - 単独ref: `[[1]](url)`
- *    - 複数ref（カンマ区切りまたは連続）: `[[1]](url)[[4]](url)`
+ * 4. 有効な[ref:N]を「(インタビュー#N)」形式（markdownリンク付き、丸括弧で囲む）に変換
+ *    - 単独ref: `(インタビュー#1)`
+ *    - 複数ref（カンマ区切りまたは連続）: `(インタビュー#1, インタビュー#4)`
  */
 export function validateAndReplaceReferences(
   descriptionMd: string,
   references: Array<{ ref_id: number; session_id: string }>,
   validSessionIds: Set<string>,
-  billId: string,
-  sessionConfigMap: Record<string, string>
+  billId: string
 ): {
   cleanedMd: string;
   validReferences: Array<{ ref_id: number; session_id: string }>;
 } {
-  // 1. Filter references to only valid session IDs with resolvable configId
-  const validRefs = references.filter(
-    (ref) =>
-      validSessionIds.has(ref.session_id) && sessionConfigMap[ref.session_id]
+  // 1. Filter references to only valid session IDs
+  const validRefs = references.filter((ref) =>
+    validSessionIds.has(ref.session_id)
   );
 
   // 2. Replace ref markers in markdown
@@ -38,14 +36,13 @@ export function validateAndReplaceReferences(
           if (!ref) {
             return null;
           }
-          const configId = sessionConfigMap[ref.session_id];
-          return `[[${refId}]](/bills/${billId}/interview/${configId}/reports/${ref.session_id})`;
+          return `[インタビュー#${refId}](/bills/${billId}/reports/${ref.session_id})`;
         })
         .filter(Boolean);
       if (replaced.length === 0) {
         return "";
       }
-      return replaced.join("");
+      return `(${replaced.join(", ")})`;
     }
   );
 

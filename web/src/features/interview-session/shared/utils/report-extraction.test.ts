@@ -11,7 +11,7 @@ describe("extractReportFromMessage", () => {
       role_description: "一般市民です",
       role_title: "市民",
       opinions: [{ title: "意見1", content: "内容1", source_message_id: null }],
-      content_richness: {
+      scores: {
         total: 75,
         clarity: 80,
         specificity: 70,
@@ -29,7 +29,7 @@ describe("extractReportFromMessage", () => {
     expect(result?.stance).toBe("for");
     expect(result?.role).toBe("general_citizen");
     expect(result?.opinions).toHaveLength(1);
-    expect(result?.content_richness.total).toBe(75);
+    expect(result?.scores.total).toBe(75);
   });
 
   it("JSONでない文字列はnullを返す", () => {
@@ -60,26 +60,26 @@ describe("extractReportFromMessage", () => {
     expect(result).toBeNull();
   });
 
-  it("情報充実度の小数値は丸められる", () => {
-    const reportWithDecimalContentRichness = {
+  it("スコアの小数値は丸められる", () => {
+    const reportWithDecimalScores = {
       text: "まとめ",
       report: {
         ...validReport.report,
-        content_richness: {
+        scores: {
           total: 75.4,
           clarity: 80.6,
           specificity: 70.5,
           impact: 65.1,
           constructiveness: 85.9,
-          reasoning: "充実度テスト",
+          reasoning: "スコアテスト",
         },
       },
     };
     const result = extractReportFromMessage(
-      JSON.stringify(reportWithDecimalContentRichness)
+      JSON.stringify(reportWithDecimalScores)
     );
     expect(result).not.toBeNull();
-    expect(result?.content_richness.total).toBe(75);
-    expect(result?.content_richness.clarity).toBe(81);
+    expect(result?.scores.total).toBe(75);
+    expect(result?.scores.clarity).toBe(81);
   });
 });

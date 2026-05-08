@@ -7,10 +7,10 @@ import { AI_MODELS } from "@/lib/ai/models";
 import { injectJsonFields } from "@/lib/stream/inject-json-fields";
 import {
   type ConfigGenerationStage,
-  defaultQuestionsGenerationSchema,
   questionProposalSchema,
   themeProposalSchema,
 } from "../../shared/schemas";
+import { getInterviewConfigById } from "../loaders/get-interview-config";
 import { buildConfigGenerationPrompt } from "../utils/build-config-generation-prompt";
 
 interface ExistingQuestion {
@@ -22,23 +22,26 @@ interface ExistingQuestion {
 interface HandleConfigGenerationParams {
   messages: Array<{ role: string; content: string }>;
   billId: string;
+  configId?: string;
   stage: ConfigGenerationStage;
+  confirmedThemes?: string[];
   existingThemes?: string[];
   existingQuestions?: ExistingQuestion[];
-  confirmedQuestions?: ExistingQuestion[];
 }
 
 export async function handleConfigGeneration({
   messages,
   billId,
+  configId,
   stage,
+  confirmedThemes,
   existingThemes,
   existingQuestions,
-  confirmedQuestions,
 }: HandleConfigGenerationParams) {
-  const [bill, billContents] = await Promise.all([
+  const [bill, billContents, config] = await Promise.all([
     getBillById(billId),
     getBillContents(billId),
+    configId ? getInterviewConfigById(configId) : null,
   ]);
 
   if (!bill) {
@@ -56,22 +59,24 @@ export async function handleConfigGeneration({
     billSummary: normalContent?.summary || "",
     billContent: normalContent?.content || "",
     stage,
-    knowledgeSource: bill.knowledge_source ?? undefined,
+    confirmedThemes,
+    knowledgeSource: config?.knowledge_source || undefined,
     existingThemes,
     existingQuestions,
-    confirmedQuestions,
   });
 
-  const initialUserMessage =
-    stage === "default_questions"
-      ? "法案内容を分析して、topics（Q1の論点選択肢）とstance（Q2の立場選択肢）を生成してください。"
-      : stage === "theme_proposal"
-        ? "確定した質問と法案内容をもとに、テーマを提案してください。"
-        : "質問を提案・ブラッシュアップしてください。";
-
+  // メッセージが空の場合は初回呼び出し用のユーザーメッセージを追加
   const effectiveMessages =
     messages.length === 0
-      ? [{ role: "user" as const, content: initialUserMessage }]
+      ? [
+          {
+            role: "user" as const,
+            content:
+              stage === "theme_proposal"
+                ? "法案内容を分析して、テーマを提案してください。"
+                : "確定したテーマに基づいて、質問を提案してください。",
+          },
+        ]
       : messages;
 
   const uiMessages = effectiveMessages.map((message) => ({
@@ -81,34 +86,27 @@ export async function handleConfigGeneration({
 
   const modelMessages = await convertToModelMessages(uiMessages);
 
-  const onError = (error: unknown) => {
-    console.error("LLM generation error:", error);
-  };
-
+  // ステージに応じたスキーマで streamText を実行
   const result =
-    stage === "default_questions"
+    stage === "theme_proposal"
       ? streamText({
           model: AI_MODELS.gpt5_2,
           system: systemPrompt,
           messages: modelMessages,
-          output: Output.object({ schema: defaultQuestionsGenerationSchema }),
-          onError,
+          output: Output.object({ schema: themeProposalSchema }),
+          onError: (error) => {
+            console.error("LLM generation error:", error);
+          },
         })
-      : stage === "theme_proposal"
-        ? streamText({
-            model: AI_MODELS.gpt5_2,
-            system: systemPrompt,
-            messages: modelMessages,
-            output: Output.object({ schema: themeProposalSchema }),
-            onError,
-          })
-        : streamText({
-            model: AI_MODELS.gpt5_2,
-            system: systemPrompt,
-            messages: modelMessages,
-            output: Output.object({ schema: questionProposalSchema }),
-            onError,
-          });
+      : streamText({
+          model: AI_MODELS.gpt5_2,
+          system: systemPrompt,
+          messages: modelMessages,
+          output: Output.object({ schema: questionProposalSchema }),
+          onError: (error) => {
+            console.error("LLM generation error:", error);
+          },
+        });
 
   // ストリームにstageを注入
   const transformedStream = injectJsonFields(result.textStream, {

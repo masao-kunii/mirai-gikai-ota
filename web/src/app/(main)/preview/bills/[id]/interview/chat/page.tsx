@@ -2,7 +2,6 @@ import { AlertTriangle } from "lucide-react";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-import { getBillByIdAdmin } from "@/features/bills/server/loaders/get-bill-by-id-admin";
 import { validatePreviewToken } from "@/features/bills/server/loaders/validate-preview-token";
 import { getInterviewConfigAdmin } from "@/features/interview-config/server/loaders/get-interview-config-admin";
 import { getInterviewQuestions } from "@/features/interview-config/server/loaders/get-interview-questions";
@@ -57,13 +56,10 @@ export default async function InterviewPreviewChatPage({
     notFound();
   }
 
-  // 法案と非公開設定を取得（管理者用ローダーで非公開法案も取得可能にする）
-  const [bill, interviewConfig] = await Promise.all([
-    getBillByIdAdmin(billId),
-    getInterviewConfigAdmin(billId),
-  ]);
+  // 非公開設定も取得可能にする
+  const interviewConfig = await getInterviewConfigAdmin(billId);
 
-  if (!bill || !interviewConfig) {
+  if (!interviewConfig) {
     notFound();
   }
 
@@ -85,7 +81,6 @@ export default async function InterviewPreviewChatPage({
         <PreviewBanner />
         <InterviewChatClient
           billId={billId}
-          billTitle={bill.bill_content?.title ?? bill.name}
           sessionId={session.id}
           initialMessages={messages}
           mode={interviewConfig.mode}

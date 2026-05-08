@@ -1,7 +1,5 @@
 import { FileText } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
-import { routes } from "@/lib/routes";
 
 import type { TopicAnalysisVersion } from "../../shared/types";
 import { formatAnalysisDuration } from "../../shared/utils/format-analysis-duration";
@@ -9,7 +7,6 @@ import { formatAnalysisDuration } from "../../shared/utils/format-analysis-durat
 interface VersionListProps {
   versions: TopicAnalysisVersion[];
   billId: string;
-  configId: string;
 }
 
 const statusLabels: Record<string, { label: string; className: string }> = {
@@ -31,7 +28,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   },
 };
 
-export function VersionList({ versions, billId, configId }: VersionListProps) {
+export function VersionList({ versions, billId }: VersionListProps) {
   if (versions.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -82,20 +79,12 @@ export function VersionList({ versions, billId, configId }: VersionListProps) {
                     : "-"}
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">
-                  {new Date(version.created_at).toLocaleString("ja-JP", {
-                    timeZone: "Asia/Tokyo",
-                  })}
+                  {new Date(version.created_at).toLocaleString("ja-JP")}
                 </td>
                 <td className="px-4 py-3 text-sm text-right">
                   {version.status === "completed" && (
                     <Link
-                      href={
-                        routes.billTopicAnalysisDetail(
-                          billId,
-                          configId,
-                          version.id
-                        ) as Route
-                      }
+                      href={`/bills/${billId}/topic-analysis/${version.id}`}
                       className="inline-flex items-center gap-1 text-primary hover:underline"
                     >
                       <FileText className="h-4 w-4" />

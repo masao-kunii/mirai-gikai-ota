@@ -1,22 +1,40 @@
 import { z } from "zod";
-import {
-  contentRichnessResultSchema,
-  type ContentRichnessResult,
-} from "@mirai-gikai/shared/content-richness/schemas";
 
 // 意見スキーマ
-const opinionSchema = z
-  .object({
-    title: z.string().describe("意見のタイトル（40文字以内）"),
-    content: z.string().describe("意見の説明（120文字以内）"),
-    source_message_id: z
-      .string()
-      .nullable()
-      .describe("この意見の根拠となるユーザー発言のメッセージID"),
-  })
-  .strict();
+const opinionSchema = z.object({
+  title: z.string().describe("意見のタイトル（40文字以内）"),
+  content: z.string().describe("意見の説明（120文字以内）"),
+  source_message_id: z
+    .string()
+    .nullable()
+    .describe("この意見の根拠となるユーザー発言のメッセージID"),
+});
 
-export type InterviewContentRichness = ContentRichnessResult;
+// 0-100のスコア（LLMが小数点を返す可能性があるため丸める）
+const scoreValueSchema = z
+  .number()
+  .transform((v) => Math.round(v))
+  .pipe(z.number().int().min(0).max(100));
+
+// スコアリングスキーマ
+const scoresSchema = z.object({
+  total: scoreValueSchema.describe("総合スコア（0-100の整数）"),
+  clarity: scoreValueSchema.describe(
+    "主張の明確さ（0-100）- 意見や立場が明確に表現されているか"
+  ),
+  specificity: scoreValueSchema.describe(
+    "具体性（0-100）- 実務経験に基づく具体的な事例や数値が含まれているか"
+  ),
+  impact: scoreValueSchema.describe(
+    "影響度（0-100）- 議案が与える市民生活や行政運営への影響について言及があるか"
+  ),
+  constructiveness: scoreValueSchema.describe(
+    "建設性（0-100）- 問題点の指摘だけでなく、改善案や代替案の提示があるか"
+  ),
+  reasoning: z.string().describe("スコアの根拠を簡潔に説明（100文字以内）"),
+});
+
+export type InterviewScores = z.infer<typeof scoresSchema>;
 
 // レポート生成結果のバリデーション
 export const interviewReportSchema = z
@@ -25,13 +43,13 @@ export const interviewReportSchema = z
       .string()
       .nullable()
       .describe(
-        "ユーザーの主張を100文字程度でまとめたもの。「」書きで書けるようなテキスト（ただし「」は記載しない）"
+        "ユーザーの主張を40文字以内でまとめたもの。「」書きで書けるようなテキスト（ただし「」は記載しない）"
       ),
     stance: z
       .enum(["for", "against", "neutral"])
       .nullable()
       .describe(
-        "法案に対するユーザーのスタンス。for=賛成、against=反対、neutral=期待と懸念の両方がある"
+        "議案に対するユーザーのスタンス。for=賛成、against=反対、neutral=期待と懸念の両方がある"
       ),
     role: z
       .enum([
@@ -61,19 +79,16 @@ export const interviewReportSchema = z
       .describe(
         "ユーザーの具体的な主張（最大3件）。メインの主張を補強する内容を最低1つは含める。元の対話ログにないことは記載しない"
       ),
-    content_richness: contentRichnessResultSchema.describe(
-      "インタビューの情報充実度評価"
+    scores: scoresSchema.describe(
+      "インタビューを「議案検討の参考資料」として評価したスコア"
     ),
   })
   .strict();
 
 export type InterviewReportData = z.infer<typeof interviewReportSchema>;
 
-// クライアント表示用の型（content_richnessはユーザーには表示しない）
-export type InterviewReportViewData = Omit<
-  InterviewReportData,
-  "content_richness"
->;
+// クライアント表示用の型（scoresはユーザーには表示しない）
+export type InterviewReportViewData = Omit<InterviewReportData, "scores">;
 
 // ステージ遷移の型
 export const interviewStageSchema = z.enum([
@@ -97,13 +112,13 @@ export const interviewChatTextSchema = z.object({
 export type InterviewChatText = z.infer<typeof interviewChatTextSchema>;
 
 // summaryフェーズ用スキーマ（LLM出力用 - next_stageを含む）
-// chat遷移時はreportをnullにする（OpenAI structured outputはoptionalを許容しないためnullableを使用）
+// chat遷移時はreportを省略できるようoptionalにしている
 export const interviewChatWithReportSchema = z.object({
   text: z.string(),
   report: interviewReportSchema
-    .nullable()
+    .optional()
     .describe(
-      "インタビュー内容をまとめたレポート。next_stageがchatの場合はnullにすること"
+      "インタビュー内容をまとめたレポート。next_stageがchatの場合は省略すること"
     ),
   next_stage: interviewStageSchema.describe(
     "ステージ遷移判定。summary=レポート修正継続、summary_complete=レポート完了、chat=インタビュー再開"
@@ -117,7 +132,7 @@ export type InterviewChatWithReport = z.infer<
 // クライアント側で使う統一スキーマ（両方のレスポンスを受け取れる）
 export const interviewChatResponseSchema = z.object({
   text: z.string(),
-  report: interviewReportSchema.optional().nullable(),
+  report: interviewReportSchema.optional(),
   quick_replies: z.array(z.string()).optional().nullable(),
   question_id: z.string().optional().nullable(),
   topic_title: z.string().optional().nullable(),

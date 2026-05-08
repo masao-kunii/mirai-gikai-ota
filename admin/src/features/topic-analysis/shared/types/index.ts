@@ -55,7 +55,6 @@ export type PhaseData = {
   valid_session_ids?: string[];
   raw_topics?: string[];
   merged_topic_names?: string[];
-  session_config_map?: Record<string, string>;
   sessions_count?: number;
   opinions_count?: number;
   classifications?: Array<{

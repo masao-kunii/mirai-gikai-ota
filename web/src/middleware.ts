@@ -11,9 +11,8 @@ import {
   isPageSpeedInsights,
   validateBasicAuth,
 } from "./lib/basic-auth";
-import { updateSupabaseSession } from "./lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   // /dev routes: 本番では404、開発ではauthスキップ
   if (request.nextUrl.pathname.startsWith("/dev")) {
     if (process.env.NODE_ENV !== "development") {
@@ -22,11 +21,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Supabaseセッションをリフレッシュ（トークン期限切れ時に自動更新）
-  const response = await updateSupabaseSession(request);
-
-  // URLパラメータからdifficulty Cookieをセット
-  _applyDifficultyCookie(request, response);
+  const response = _handleDifficultyCookie(request);
 
   const authConfig = getBasicAuthConfig();
 
@@ -62,15 +57,15 @@ export function isValidDifficultyLevel(
 }
 
 /**
- * URLパラメータからdifficultyを取得し、レスポンスのCookieにセット
+ * URLパラメータからdifficultyを取得し、Cookieにセット
  */
-function _applyDifficultyCookie(
-  request: NextRequest,
-  response: NextResponse
-): void {
+function _handleDifficultyCookie(request: NextRequest): NextResponse {
   const { searchParams } = new URL(request.url);
   const difficulty = searchParams.get("difficulty");
 
+  const response = NextResponse.next();
+
+  // 有効なdifficulty値の場合、Cookieにセット
   if (isValidDifficultyLevel(difficulty)) {
     response.cookies.set(
       DIFFICULTY_COOKIE_NAME,
@@ -78,6 +73,8 @@ function _applyDifficultyCookie(
       DIFFICULTY_COOKIE_OPTIONS
     );
   }
+
+  return response;
 }
 
 export function isHtmlAcceptHeader(accept: string): boolean {
@@ -88,13 +85,3 @@ function _isHtmlRequest(request: NextRequest) {
   const accept = request.headers.get("accept") || "";
   return isHtmlAcceptHeader(accept);
 }
-
-export const config = {
-  matcher: [
-    /*
-     * _next/static, _next/image, favicon.ico, 画像ファイル等の
-     * 静的アセットを除外し、ページリクエストのみでミドルウェアを実行する
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
-};

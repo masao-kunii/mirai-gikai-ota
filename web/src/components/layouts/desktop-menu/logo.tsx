@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { routes } from "@/lib/routes";
+import { siteConfig } from "@/config/site.config";
 
 /**
  * デスクトップメニュー: ロゴ (画面左上)
@@ -8,14 +8,14 @@ import { routes } from "@/lib/routes";
 export function DesktopMenuLogo() {
   return (
     <Link
-      href={routes.home()}
+      href="/"
       className="fixed top-6 left-6 z-50 flex items-center gap-6 hover:opacity-90 transition-opacity"
     >
       {/* ロゴ */}
       <div className="relative w-[116px] h-[98.38px]">
         <Image
           src="/img/logo.svg"
-          alt="みらい議会ロゴ"
+          alt={`${siteConfig.siteName}ロゴ`}
           fill
           className="object-contain"
           priority
@@ -32,7 +32,7 @@ export function DesktopMenuLogo() {
             letterSpacing: "0.1em",
           }}
         >
-          みらい議会
+          {siteConfig.siteName}
         </h1>
         <p
           className="font-bold text-black"
@@ -41,7 +41,7 @@ export function DesktopMenuLogo() {
             lineHeight: "2em",
           }}
         >
-          国会の議論をわかりやすく
+          市議会の議論をわかりやすく
         </p>
       </div>
     </Link>

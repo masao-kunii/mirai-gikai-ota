@@ -1,11 +1,9 @@
 import { ArrowLeft } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id";
 import { InterviewConfigEditClient } from "@/features/interview-config/client/components/interview-config-edit-client";
-import { routes } from "@/lib/routes";
 
 interface InterviewNewPageProps {
   params: Promise<{
@@ -27,7 +25,7 @@ export default async function InterviewNewPage({
     <div>
       <div className="mb-6">
         <Link
-          href={routes.billInterview(id) as Route}
+          href={`/bills/${id}/interview`}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -48,7 +46,6 @@ export default async function InterviewNewPage({
         billId={bill.id}
         config={null}
         questions={[]}
-        completedReports={[]}
       />
     </div>
   );

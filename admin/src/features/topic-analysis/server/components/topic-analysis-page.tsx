@@ -9,12 +9,10 @@ import { VersionList } from "./version-list";
 
 interface TopicAnalysisPageContentProps {
   billId: string;
-  configId: string;
 }
 
 export async function TopicAnalysisPageContent({
   billId,
-  configId,
 }: TopicAnalysisPageContentProps) {
   const [bill, versions] = await Promise.all([
     getBillById(billId),
@@ -27,13 +25,9 @@ export async function TopicAnalysisPageContent({
 
   return (
     <div className="space-y-6">
-      <TopicAnalysisHeader
-        billId={billId}
-        configId={configId}
-        billName={bill.name}
-      />
-      <RunAnalysisButton billId={billId} configId={configId} />
-      <VersionList versions={versions} billId={billId} configId={configId} />
+      <TopicAnalysisHeader billId={billId} billName={bill.name} />
+      <RunAnalysisButton billId={billId} />
+      <VersionList versions={versions} billId={billId} />
     </div>
   );
 }

@@ -3,13 +3,12 @@ import { InviteAdminForm } from "@/features/admins/client/components/invite-admi
 import { AdminList } from "@/features/admins/server/components/admin-list";
 import { loadAdmins } from "@/features/admins/server/loaders/load-admins";
 import { getCurrentAdmin } from "@/features/auth/server/lib/auth-server";
-import { routes } from "@/lib/routes";
 
 export default async function AdminsPage() {
   const currentAdmin = await getCurrentAdmin();
 
   if (!currentAdmin) {
-    redirect(routes.login());
+    redirect("/login");
   }
 
   const admins = await loadAdmins();

@@ -123,7 +123,13 @@ describe("topicReportSchema", () => {
     const result = topicReportSchema.safeParse({
       description: "# トピック説明\n\n詳細な説明 [ref:1]",
       references: [{ ref_id: 1, session_id: "session-1" }],
-      representative_opinion_ids: [1, 3],
+      representative_opinions: [
+        {
+          session_id: "session-1",
+          opinion_title: "意見タイトル",
+          opinion_content: "意見の内容",
+        },
+      ],
     });
     expect(result.success).toBe(true);
   });
@@ -132,25 +138,35 @@ describe("topicReportSchema", () => {
     const result = topicReportSchema.safeParse({
       description: "説明文",
       references: [],
-      representative_opinion_ids: [],
+      representative_opinions: [],
     });
     expect(result.success).toBe(true);
   });
 
-  it("accepts representative_opinion_ids with exactly 5 items", () => {
+  it("accepts representative_opinions with exactly 5 items", () => {
+    const opinions = Array.from({ length: 5 }, (_, i) => ({
+      session_id: `session-${i}`,
+      opinion_title: `タイトル${i}`,
+      opinion_content: `内容${i}`,
+    }));
     const result = topicReportSchema.safeParse({
       description: "説明文",
       references: [],
-      representative_opinion_ids: [1, 2, 3, 4, 5],
+      representative_opinions: opinions,
     });
     expect(result.success).toBe(true);
   });
 
-  it("rejects representative_opinion_ids with more than 5 items", () => {
+  it("rejects representative_opinions with more than 5 items", () => {
+    const opinions = Array.from({ length: 6 }, (_, i) => ({
+      session_id: `session-${i}`,
+      opinion_title: `タイトル${i}`,
+      opinion_content: `内容${i}`,
+    }));
     const result = topicReportSchema.safeParse({
       description: "説明文",
       references: [],
-      representative_opinion_ids: [1, 2, 3, 4, 5, 6],
+      representative_opinions: opinions,
     });
     expect(result.success).toBe(false);
   });
@@ -158,7 +174,7 @@ describe("topicReportSchema", () => {
   it("rejects missing description", () => {
     const result = topicReportSchema.safeParse({
       references: [],
-      representative_opinion_ids: [],
+      representative_opinions: [],
     });
     expect(result.success).toBe(false);
   });
@@ -166,12 +182,12 @@ describe("topicReportSchema", () => {
   it("rejects missing references", () => {
     const result = topicReportSchema.safeParse({
       description: "説明文",
-      representative_opinion_ids: [],
+      representative_opinions: [],
     });
     expect(result.success).toBe(false);
   });
 
-  it("rejects missing representative_opinion_ids", () => {
+  it("rejects missing representative_opinions", () => {
     const result = topicReportSchema.safeParse({
       description: "説明文",
       references: [],

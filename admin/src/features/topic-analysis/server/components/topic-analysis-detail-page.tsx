@@ -7,13 +7,11 @@ import { TopicAnalysisHeader } from "./topic-analysis-header";
 
 interface TopicAnalysisDetailPageContentProps {
   billId: string;
-  configId: string;
   versionId: string;
 }
 
 export async function TopicAnalysisDetailPageContent({
   billId,
-  configId,
   versionId,
 }: TopicAnalysisDetailPageContentProps) {
   const detail = await getTopicAnalysisDetail(versionId);
@@ -26,7 +24,6 @@ export async function TopicAnalysisDetailPageContent({
     <div className="space-y-6">
       <TopicAnalysisHeader
         billId={billId}
-        configId={configId}
         billName={`トピック解析 v${detail.version.version}`}
         showBackToAnalysis
       />

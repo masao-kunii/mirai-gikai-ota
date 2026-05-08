@@ -4,12 +4,7 @@ import type {
   TopicAnalysisTopic,
   TopicAnalysisVersion,
 } from "../types";
-import {
-  buildReportMarkdown,
-  buildToc,
-  fixCjkBold,
-  toSlug,
-} from "./report-builder";
+import { buildReportMarkdown, buildToc, toSlug } from "./report-builder";
 
 // ---------------------------------------------------------------------------
 // Helpers to build minimal mock objects
@@ -143,7 +138,8 @@ describe("buildReportMarkdown", () => {
     expect(md).toContain("## トピック1. 交通");
     expect(md).toContain("交通の説明");
     expect(md).toContain("### 代表的な意見");
-    expect(md).toContain("[1]");
+    expect(md).toContain("**賛成意見**");
+    expect(md).toContain("（インタビュー#1）");
     expect(md).toContain("内容A");
   });
 
@@ -188,7 +184,7 @@ describe("buildReportMarkdown", () => {
 
     const md = buildReportMarkdown(version, topics);
 
-    expect(md).toContain("[5]");
+    expect(md).toContain("（インタビュー#5）");
   });
 
   it("omits ref label when ref_id is null", () => {
@@ -205,7 +201,7 @@ describe("buildReportMarkdown", () => {
 
     const md = buildReportMarkdown(version, topics);
 
-    expect(md).not.toContain("[");
+    expect(md).not.toContain("インタビュー#");
   });
 
   it("uses source_message_content over opinion_content when available", () => {
@@ -246,31 +242,5 @@ describe("buildReportMarkdown", () => {
   it("returns empty string when no summary and no topics", () => {
     const version = makeVersion({ summary_md: null });
     expect(buildReportMarkdown(version, [])).toBe("");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// fixCjkBold
-// ---------------------------------------------------------------------------
-
-describe("fixCjkBold", () => {
-  it("inserts thin space around ** so CJK bold renders correctly", () => {
-    const input = "のは**健康被害に関するトピック（76件）**であり";
-    const result = fixCjkBold(input);
-    expect(result).toContain(
-      "\u2009**健康被害に関するトピック（76件）**\u2009"
-    );
-  });
-
-  it("handles multiple bold markers", () => {
-    const input = "**トピックA**と**トピックB**について";
-    const result = fixCjkBold(input);
-    expect(result).toContain("\u2009**トピックA**\u2009");
-    expect(result).toContain("\u2009**トピックB**\u2009");
-  });
-
-  it("does not modify text without bold markers", () => {
-    const input = "普通のテキスト";
-    expect(fixCjkBold(input)).toBe("普通のテキスト");
   });
 });

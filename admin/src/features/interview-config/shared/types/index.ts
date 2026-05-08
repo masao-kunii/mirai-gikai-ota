@@ -26,6 +26,7 @@ export const interviewConfigSchema = z.object({
   status: z.enum(["public", "closed"]),
   mode: z.enum(["loop", "bulk"]),
   themes: z.array(z.string().min(1)).optional(),
+  knowledge_source: z.string().optional(),
   chat_model: z
     .string()
     .nullable()

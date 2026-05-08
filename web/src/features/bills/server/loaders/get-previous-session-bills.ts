@@ -1,31 +1,30 @@
 import { unstable_cache } from "next/cache";
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
-import { getPreviousDietSession } from "@/features/diet-sessions/server/loaders/get-previous-diet-session";
-import type { DietSession } from "@/features/diet-sessions/shared/types";
+import { getPreviousCouncilSession } from "@/features/council-sessions/server/loaders/get-previous-council-session";
+import type { CouncilSession } from "@/features/council-sessions/shared/types";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import type { BillWithContent } from "../../shared/types";
 import {
   findPreviousSessionBills,
   findTagsByBillIds,
-  findBillIdsWithPublicInterview,
   countPublishedBillsByDietSession,
 } from "../repositories/bill-repository";
 
 const MAX_PREVIEW_BILLS = 5;
 
 export type PreviousSessionBillsResult = {
-  session: DietSession;
+  session: CouncilSession;
   bills: BillWithContent[];
   totalBillCount: number;
 } | null;
 
 /**
- * 前回の国会会期とその議案を取得（プレビュー用、最大5件）
+ * 前回の定例会とその議案を取得（プレビュー用、最大5件）
  * 前回の会期がない場合はnullを返す
  */
 export async function getPreviousSessionBills(): Promise<PreviousSessionBillsResult> {
-  const previousSession = await getPreviousDietSession();
+  const previousSession = await getPreviousCouncilSession();
   if (!previousSession) {
     return null;
   }
@@ -45,11 +44,11 @@ export async function getPreviousSessionBills(): Promise<PreviousSessionBillsRes
 
 const _getCachedPreviousSessionBills = unstable_cache(
   async (
-    dietSessionId: string,
+    councilSessionId: string,
     difficultyLevel: DifficultyLevelEnum
   ): Promise<BillWithContent[]> => {
     const data = await findPreviousSessionBills(
-      dietSessionId,
+      councilSessionId,
       difficultyLevel,
       MAX_PREVIEW_BILLS
     );
@@ -58,12 +57,9 @@ const _getCachedPreviousSessionBills = unstable_cache(
       return [];
     }
 
-    // タグ情報とインタビュー状態を取得
+    // タグ情報を取得
     const billIds = data.map((item) => item.id);
-    const [tagsByBillId, interviewBillIds] = await Promise.all([
-      findTagsByBillIds(billIds),
-      findBillIdsWithPublicInterview(billIds),
-    ]);
+    const tagsByBillId = await findTagsByBillIds(billIds);
 
     const billsWithContent: BillWithContent[] = data.map((item) => {
       const { bill_contents, ...bill } = item;
@@ -73,7 +69,6 @@ const _getCachedPreviousSessionBills = unstable_cache(
           ? bill_contents[0]
           : undefined,
         tags: tagsByBillId.get(item.id) ?? [],
-        hasPublicInterview: interviewBillIds.has(item.id),
       };
     });
 
@@ -82,7 +77,7 @@ const _getCachedPreviousSessionBills = unstable_cache(
   ["previous-session-bills"],
   {
     revalidate: 600, // 10分
-    tags: [CACHE_TAGS.BILLS, CACHE_TAGS.INTERVIEW_CONFIGS],
+    tags: [CACHE_TAGS.BILLS],
   }
 );
 

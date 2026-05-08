@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/features/auth/server/lib/auth-server";
-import { env } from "@/lib/env";
 
 interface RunTopicAnalysisResult {
   success: boolean;
@@ -23,7 +22,7 @@ export async function runTopicAnalysisAction(
 
   try {
     // API Route 経由で実行（maxDuration を活用するため）
-    const baseUrl = env.adminUrl;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
     const response = await fetch(`${baseUrl}/api/topic-analysis/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,7 +38,7 @@ export async function runTopicAnalysisAction(
       };
     }
 
-    revalidatePath(`/bills/${billId}`, "layout");
+    revalidatePath(`/bills/${billId}/topic-analysis`);
 
     return { success: true, versionId: data.versionId };
   } catch (error) {

@@ -1,9 +1,8 @@
 import Image from "next/image";
 import { RubySafeLineClamp } from "@/components/ruby-safe-line-clamp";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDateWithDots } from "@/lib/utils/date";
+import { formatDateJST } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
-import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
 import { BillStatusBadge } from "./bill-status-badge";
 import { BillTag } from "./bill-tag";
 
@@ -48,18 +47,12 @@ export function BillCard({ bill }: BillCardProps) {
             <div className="flex flex-col gap-3">
               <CardTitle className="text-2xl/8 tracking-normal">
                 {displayTitle}
-                {bill.is_review_completed && (
-                  <>
-                    {" "}
-                    <ReviewCompleteBadge />
-                  </>
-                )}
               </CardTitle>
               <div className="flex flex-row gap-4">
                 <BillStatusBadge status={bill.status} className="w-fit" />
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  {bill.submitted_date && (
-                    <time>{formatDateWithDots(bill.submitted_date)} 提出</time>
+                  {bill.published_at && (
+                    <time>{formatDateJST(bill.published_at)} 提出</time>
                   )}
                 </div>
               </div>
@@ -70,16 +63,11 @@ export function BillCard({ bill }: BillCardProps) {
                 className="text-sm leading-relaxed"
               />
               {/* タグ表示 */}
-              {(bill.tags.length > 0 || bill.hasPublicInterview) && (
+              {bill.tags && bill.tags.length > 0 && (
                 <div className="flex flex-wrap gap-3">
                   {bill.tags.map((tag) => (
                     <BillTag key={tag.id} tag={tag} />
                   ))}
-                  {bill.hasPublicInterview && (
-                    <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium text-black bg-mirai-light-gradient rounded-full">
-                      AIインタビュー受付中
-                    </span>
-                  )}
                 </div>
               )}
             </div>

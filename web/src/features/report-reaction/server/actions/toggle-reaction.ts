@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/features/interview-session/server/utils/verify-session-ownership";
 import type { ReactionType } from "../../shared/types";
 import {
@@ -38,7 +39,8 @@ export async function toggleReaction(
   const userId = authResult.userId;
 
   try {
-    const isPublic = await getReportPublicStatus(reportId);
+    // レポートが公開されているか確認し、紐づくbillIdもサーバー側で取得
+    const { isPublic, billId } = await getReportPublicStatus(reportId);
     if (!isPublic) {
       return {
         success: false,
@@ -50,11 +52,23 @@ export async function toggleReaction(
     const currentReaction = await findUserReaction(reportId, userId);
 
     if (currentReaction === reactionType) {
+      // 同じリアクション → 解除
       await deleteReaction(reportId, userId);
+      revalidatePath(`/report/${reportId}/chat-log`);
+      if (billId) {
+        revalidatePath(`/bills/${billId}`);
+        revalidatePath(`/bills/${billId}/opinions`);
+      }
       return { success: true, newReaction: null };
     }
 
+    // 新規 or 切り替え → upsert
     await upsertReaction(reportId, userId, reactionType);
+    revalidatePath(`/report/${reportId}/chat-log`);
+    if (billId) {
+      revalidatePath(`/bills/${billId}`);
+      revalidatePath(`/bills/${billId}/opinions`);
+    }
     return { success: true, newReaction: reactionType };
   } catch {
     return {

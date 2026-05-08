@@ -12,7 +12,6 @@ interface ReportVisibilityToggleProps {
   sessionId: string;
   billId: string;
   isPublic: boolean;
-  isPublicByUser: boolean;
 }
 
 export function ReportVisibilityToggle({
@@ -20,11 +19,9 @@ export function ReportVisibilityToggle({
   sessionId,
   billId,
   isPublic,
-  isPublicByUser,
 }: ReportVisibilityToggleProps) {
   const [isPending, startTransition] = useTransition();
   const switchId = useId();
-  const isDisabled = isPending || (!isPublicByUser && !isPublic);
 
   const handleToggle = (checked: boolean) => {
     startTransition(async () => {
@@ -47,24 +44,15 @@ export function ReportVisibilityToggle({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-500">ユーザー公開:</span>
-        {isPublicByUser ? (
-          <span className="text-green-700 font-medium">公開</span>
-        ) : (
-          <span className="text-gray-500">非公開</span>
-        )}
-      </div>
-      <div className="h-4 w-px bg-gray-300" />
       <Switch
         id={switchId}
         checked={isPublic}
         onCheckedChange={handleToggle}
-        disabled={isDisabled}
+        disabled={isPending}
       />
       <Label
         htmlFor={switchId}
-        className={`flex items-center gap-2 text-sm ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+        className="flex items-center gap-2 cursor-pointer text-sm"
       >
         {isPublic ? (
           <>
@@ -79,11 +67,6 @@ export function ReportVisibilityToggle({
         )}
       </Label>
       {isPending && <span className="text-xs text-gray-400">更新中...</span>}
-      {!isPublicByUser && !isPublic && (
-        <span className="text-xs text-gray-400">
-          ユーザーが非公開のため公開不可
-        </span>
-      )}
     </div>
   );
 }

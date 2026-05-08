@@ -1,21 +1,16 @@
-import {
-  formatRoleLabel,
-  type InterviewReportRole,
-  roleIcons,
-} from "../constants";
+import { type InterviewReportRole, roleIcons, roleLabels } from "../constants";
 
 interface RoleDisplayProps {
-  role?: string | null;
-  roleTitle?: string | null;
+  role: string;
 }
 
-export function RoleDisplay({ role, roleTitle }: RoleDisplayProps) {
-  const RoleIcon = role ? roleIcons[role as InterviewReportRole] : undefined;
+export function RoleDisplay({ role }: RoleDisplayProps) {
+  const RoleIcon = roleIcons[role as InterviewReportRole];
 
   return (
-    <p className="text-xs text-gray-600 flex items-center gap-1">
+    <p className="text-sm text-gray-600 flex items-center gap-1">
       {RoleIcon && <RoleIcon size={16} strokeWidth={1.5} />}
-      {formatRoleLabel(role, roleTitle)}
+      {roleLabels[role as keyof typeof roleLabels] || role}
     </p>
   );
 }

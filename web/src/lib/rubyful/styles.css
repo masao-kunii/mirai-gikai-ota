@@ -11,9 +11,3 @@ rt {
   -webkit-user-select: none;
   -moz-user-select: none;
 }
-
-/* ボタン内のルビを非表示（固定高さのボタンレイアウトが崩れるため） */
-button .rubyful-rt,
-[data-slot="button"] .rubyful-rt {
-  display: none;
-}

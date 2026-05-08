@@ -48,16 +48,15 @@ export const topicReportSchema = z.object({
       session_id: z.string().describe("参照するインタビューセッションのID"),
     })
   ),
-  representative_opinion_ids: z
+  representative_opinions: z
     .array(
-      z
-        .number()
-        .int()
-        .min(1)
-        .describe("代表的な意見の番号（意見一覧の番号に対応）")
+      z.object({
+        session_id: z.string(),
+        opinion_title: z.string(),
+        opinion_content: z.string(),
+      })
     )
-    .max(5)
-    .describe("このトピックを代表する意見の番号を最大5件選択"),
+    .max(5),
 });
 export type TopicReportResult = z.infer<typeof topicReportSchema>;
 

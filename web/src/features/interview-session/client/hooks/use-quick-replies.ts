@@ -20,12 +20,13 @@ export function useQuickReplies({ messages, isLoading }: UseQuickRepliesProps) {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === "user") return [];
 
-    // 最新のAIメッセージからquickRepliesを取得（questionId不問）
+    // 最新のAIメッセージからquickRepliesを取得
     const lastAssistantMessage = [...messages]
       .reverse()
       .find((m) => m.role === "assistant");
     if (
-      lastAssistantMessage?.quickReplies &&
+      lastAssistantMessage?.questionId &&
+      lastAssistantMessage.quickReplies &&
       lastAssistantMessage.quickReplies.length > 0
     ) {
       return lastAssistantMessage.quickReplies;

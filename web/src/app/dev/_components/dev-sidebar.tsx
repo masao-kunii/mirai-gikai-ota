@@ -1,6 +1,5 @@
 "use client";
 
-import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -23,7 +22,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {group.items.map((item) => (
               <li key={item.path}>
                 <Link
-                  href={item.path as Route}
+                  href={item.path}
                   onClick={onNavigate}
                   className={cn(
                     "block px-3 py-1.5 rounded text-sm transition-colors",

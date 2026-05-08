@@ -77,12 +77,6 @@ async function runPhase1Steps(
 
   const validSessionIds = [...new Set(reports.map((r) => r.session_id))];
 
-  // session_id → config_id のマッピングを構築
-  const sessionConfigMap: Record<string, string> = {};
-  for (const report of reports) {
-    sessionConfigMap[report.session_id] = report.config_id;
-  }
-
   // Step 2: トピック抽出
   await updateVersionStep(versionId, ANALYSIS_STEPS.EXTRACT_TOPICS.label);
   console.log(
@@ -106,7 +100,6 @@ async function runPhase1Steps(
     bill_title: billData.billTitle,
     bill_summary: billData.billSummary,
     valid_session_ids: validSessionIds,
-    session_config_map: sessionConfigMap,
     raw_topics: rawTopics,
     merged_topic_names: mergedTopicNames,
     sessions_count: reports.length,
@@ -154,7 +147,6 @@ async function runPhase3Steps(
   const mergedTopicNames = phaseData.merged_topic_names!;
   const billTitle = phaseData.bill_title!;
   const validSessionIds = new Set(phaseData.valid_session_ids!);
-  const sessionConfigMap = phaseData.session_config_map ?? {};
   const classifications = phaseData.classifications!;
 
   // トピックごとの意見をグループ化
@@ -195,8 +187,7 @@ async function runPhase3Steps(
     topicInputs,
     billTitle,
     validSessionIds,
-    billId,
-    sessionConfigMap
+    billId
   );
 
   // Step 6: 全体サマリ生成
@@ -232,23 +223,13 @@ async function runPhase3Steps(
     topicNameToId.set(topic.name, topic.id);
   }
 
-  // 有効な interview_report_id のセットを構築（FK制約違反を防止）
-  const validReportIds = new Set(
-    flatOpinions.map((o) => o.interview_report_id)
-  );
-
   const classificationRows: Array<{
     interview_report_id: string;
     topic_id: string;
     opinion_index: number;
   }> = [];
 
-  let skippedCount = 0;
   for (const c of classifications) {
-    if (!validReportIds.has(c.interview_report_id)) {
-      skippedCount++;
-      continue;
-    }
     for (const topicName of c.topic_names) {
       const topicId = topicNameToId.get(topicName);
       if (topicId) {
@@ -259,12 +240,6 @@ async function runPhase3Steps(
         });
       }
     }
-  }
-
-  if (skippedCount > 0) {
-    console.warn(
-      `[TopicAnalysis] Skipped ${skippedCount} classifications with invalid interview_report_id`
-    );
   }
 
   if (classificationRows.length > 0) {

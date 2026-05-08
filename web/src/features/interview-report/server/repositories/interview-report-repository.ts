@@ -1,8 +1,6 @@
 import "server-only";
 
 import { createAdminClient } from "@mirai-gikai/supabase";
-import { isReportAutoPublishEligible } from "@mirai-gikai/shared/report-publication/auto-publish";
-import type { SortOrder } from "../../shared/utils/sort-order";
 
 /**
  * レポートIDからインタビューレポートとセッション情報を結合取得
@@ -67,9 +65,7 @@ export async function findBillWithContentById(billId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("bills")
-    .select(
-      "id, name, thumbnail_url, share_thumbnail_url, bill_contents(title)"
-    )
+    .select("id, name, thumbnail_url, bill_contents(title)")
     .eq("id", billId)
     .single();
 
@@ -81,49 +77,28 @@ export async function findBillWithContentById(billId: string) {
 }
 
 /**
- * 議案IDから公開インタビューレポートを取得（helpful×5+total_content_richnessの重み付きスコア降順、件数制限あり）
+ * 議案IDから公開インタビューレポートを取得（total_score降順、件数制限あり）
  * 公開条件: is_public_by_admin = true AND is_public_by_user = true
  */
 export async function findPublicReportsByBillId(
   billId: string,
-  limit: number = 3,
-  offset: number = 0,
-  stance?: string,
-  sortOrder: SortOrder = "recommended"
+  limit: number = 3
 ) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc(
-    "find_public_reports_by_bill_id_ordered_by_reactions",
-    {
-      p_bill_id: billId,
-      p_limit: limit,
-      p_offset: offset,
-      p_stance: stance,
-      p_sort_order: sortOrder,
-    }
-  );
+  const { data, error } = await supabase
+    .from("interview_report")
+    .select(
+      "id, stance, role, role_title, summary, total_score, created_at, interview_sessions!inner(interview_configs!inner(bill_id))"
+    )
+    .eq("is_public_by_admin", true)
+    .eq("is_public_by_user", true)
+    .eq("interview_sessions.interview_configs.bill_id", billId)
+    .order("total_score", { ascending: false, nullsFirst: false })
+    .limit(limit);
 
   if (error) {
     throw new Error(
       `Failed to fetch public interview reports: ${error.message}`
-    );
-  }
-
-  return data;
-}
-
-/**
- * 議案IDからスタンスごとの公開レポート件数を取得
- */
-export async function countPublicReportsByStance(billId: string) {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("count_public_reports_by_stance", {
-    p_bill_id: billId,
-  });
-
-  if (error) {
-    throw new Error(
-      `Failed to count public reports by stance: ${error.message}`
     );
   }
 
@@ -180,30 +155,6 @@ export async function findPublicReportWithSessionById(reportId: string) {
 }
 
 /**
- * ユーザーの過去のインタビューレポートを取得（指定interview_config配下、新しい順）
- */
-export async function findUserReportsByInterviewConfigId(
-  interviewConfigId: string,
-  userId: string
-) {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("interview_report")
-    .select(
-      "id, stance, role, role_title, summary, created_at, interview_sessions!inner(interview_config_id, user_id)"
-    )
-    .eq("interview_sessions.interview_config_id", interviewConfigId)
-    .eq("interview_sessions.user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(`Failed to fetch user interview reports: ${error.message}`);
-  }
-
-  return data;
-}
-
-/**
  * レポートの公開設定を更新
  */
 export async function updateReportPublicSetting(
@@ -211,38 +162,9 @@ export async function updateReportPublicSetting(
   isPublic: boolean
 ) {
   const supabase = createAdminClient();
-
-  const { data: report, error: fetchError } = await supabase
-    .from("interview_report")
-    .select("is_public_by_admin, moderation_score, total_content_richness")
-    .eq("id", reportId)
-    .single();
-
-  if (fetchError) {
-    throw new Error(
-      `Failed to fetch report for public setting: ${fetchError.message}`
-    );
-  }
-
-  const updateValues: {
-    is_public_by_user: boolean;
-    is_public_by_admin?: boolean;
-  } = { is_public_by_user: isPublic };
-
-  if (
-    !report.is_public_by_admin &&
-    isReportAutoPublishEligible({
-      isPublicByUser: isPublic,
-      moderationScore: report.moderation_score,
-      totalContentRichness: report.total_content_richness,
-    })
-  ) {
-    updateValues.is_public_by_admin = true;
-  }
-
   const { error } = await supabase
     .from("interview_report")
-    .update(updateValues)
+    .update({ is_public_by_user: isPublic })
     .eq("id", reportId);
 
   if (error) {
