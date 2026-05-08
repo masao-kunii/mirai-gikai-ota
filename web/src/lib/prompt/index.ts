@@ -1,33 +1,28 @@
 import { getLangfuseClient } from "./langfuse/client";
 import { LangfusePromptProvider } from "./langfuse/langfuse-prompt-provider";
+import { MockPromptProvider } from "./mock-prompt-provider";
 import type { PromptProvider } from "./interface/prompt-provider";
 
 /**
  * プロンプトプロバイダーの作成処理
  *
- * モック実装を使いたい場合はここに処理を追加する。
- * PromptProviderインターフェースで抽象化されているため、
- * テストやローカル開発用のモック実装に簡単に切り替え可能。
- *
- * モック実装の追加手順：
- * 1. prompt/mock-prompt-provider.ts を作成し、PromptProviderを実装
- * 2. この関数で環境変数に応じて切り替え
- *
- * 例:
- * ```ts
- * if (process.env.USE_MOCK_PROMPTS === "true") {
- *   return new MockPromptProvider();
- * }
- * ```
+ * Langfuse の認証情報が設定されている場合は LangfusePromptProvider を返し、
+ * 設定されていない（ローカル開発や Langfuse 未契約の自前ホスト環境）場合は
+ * 直書きプロンプトを返す MockPromptProvider にフォールバックする。
  */
 export function createPromptProvider(): PromptProvider {
-  try {
-    const client = getLangfuseClient();
-    return new LangfusePromptProvider(client);
-  } catch (error) {
-    console.error("Failed to initialize Langfuse client:", error);
-    throw error;
+  if (process.env.LANGFUSE_PUBLIC_KEY && process.env.LANGFUSE_SECRET_KEY) {
+    try {
+      const client = getLangfuseClient();
+      return new LangfusePromptProvider(client);
+    } catch (error) {
+      console.warn(
+        "Langfuse client init failed, falling back to MockPromptProvider:",
+        error
+      );
+    }
   }
+  return new MockPromptProvider();
 }
 
 export type { CompiledPrompt, PromptVariables } from "./interface/types";
