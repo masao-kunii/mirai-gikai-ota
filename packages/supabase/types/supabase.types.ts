@@ -293,6 +293,53 @@ export type Database = {
         }
         Relationships: []
       }
+      council_session_minutes: {
+        Row: {
+          council_session_id: string
+          created_at: string
+          day_number: number | null
+          extracted_at: string | null
+          id: string
+          markdown_text: string | null
+          meeting_date: string
+          source_pdf_url: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          council_session_id: string
+          created_at?: string
+          day_number?: number | null
+          extracted_at?: string | null
+          id?: string
+          markdown_text?: string | null
+          meeting_date: string
+          source_pdf_url: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          council_session_id?: string
+          created_at?: string
+          day_number?: number | null
+          extracted_at?: string | null
+          id?: string
+          markdown_text?: string | null
+          meeting_date?: string
+          source_pdf_url?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_session_minutes_council_session_id_fkey"
+            columns: ["council_session_id"]
+            isOneToOne: false
+            referencedRelation: "council_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       council_sessions: {
         Row: {
           council_url: string | null

@@ -1,6 +1,7 @@
 import {
   bills,
   tags,
+  councilSessionMinutes,
   councilSessions,
   factions,
   committees,
@@ -62,7 +63,7 @@ async function seedDatabase() {
       await supabase
         .from("council_sessions")
         .insert(councilSessions)
-        .select("id");
+        .select("id, slug");
 
     if (councilSessionsError) {
       throw new Error(
@@ -77,6 +78,35 @@ async function seedDatabase() {
     console.log(
       `✅ Inserted ${insertedCouncilSessions.length} council sessions`
     );
+
+    // Insert council session minutes (議事録のメタデータ。markdown は admin で抽出)
+    console.log("📝 Inserting council session minutes...");
+    const sessionSlugToId = new Map(
+      insertedCouncilSessions.map((s) => [s.slug as string, s.id])
+    );
+    const minutesRows = councilSessionMinutes
+      .map(({ session_slug, ...rest }) => {
+        const session_id = sessionSlugToId.get(session_slug);
+        if (!session_id) {
+          console.warn(
+            `⚠️  Skipping minute for unknown session_slug: ${session_slug}`
+          );
+          return null;
+        }
+        return { ...rest, council_session_id: session_id };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+    if (minutesRows.length > 0) {
+      const { error: minutesError } = await supabase
+        .from("council_session_minutes")
+        .insert(minutesRows);
+      if (minutesError) {
+        throw new Error(
+          `Failed to insert council session minutes: ${minutesError.message}`
+        );
+      }
+      console.log(`✅ Inserted ${minutesRows.length} council session minutes`);
+    }
 
     // Insert committees
     console.log("🏢 Inserting committees...");

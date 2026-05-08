@@ -9,6 +9,10 @@ type CouncilSessionInsert =
   Database["public"]["Tables"]["council_sessions"]["Insert"];
 type FactionInsert = Database["public"]["Tables"]["factions"]["Insert"];
 type CommitteeInsert = Database["public"]["Tables"]["committees"]["Insert"];
+type CouncilSessionMinutesInsert = Omit<
+  Database["public"]["Tables"]["council_session_minutes"]["Insert"],
+  "council_session_id"
+> & { session_slug: string };
 type InterviewConfigInsert =
   Database["public"]["Tables"]["interview_configs"]["Insert"];
 type InterviewQuestionInsert =
@@ -39,6 +43,53 @@ export const councilSessions: CouncilSessionInsert[] = [
     start_date: "2025-11-26",
     end_date: "2025-12-11",
     is_active: false,
+  },
+];
+
+// 議事録（会議録速報版）データ
+// 出典: https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.html
+// 令和8年第1回定例会の本会議録（PDF）。markdown_text は admin の
+// markitdown 実行で後から埋める運用。
+export const councilSessionMinutes: CouncilSessionMinutesInsert[] = [
+  {
+    session_slug: "r8-1",
+    meeting_date: "2026-02-13",
+    day_number: 1,
+    title: "令和8年第1回定例会（第1日）",
+    source_pdf_url:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.files/080213.pdf",
+  },
+  {
+    session_slug: "r8-1",
+    meeting_date: "2026-02-20",
+    day_number: 2,
+    title: "令和8年第1回定例会（第2日）",
+    source_pdf_url:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.files/080220.pdf",
+  },
+  {
+    session_slug: "r8-1",
+    meeting_date: "2026-02-24",
+    day_number: 3,
+    title: "令和8年第1回定例会(第3日)",
+    source_pdf_url:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.files/080224.pdf",
+  },
+  {
+    session_slug: "r8-1",
+    meeting_date: "2026-03-04",
+    day_number: 4,
+    title: "令和8年第1回定例会（第4日）",
+    source_pdf_url:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.files/080304.pdf",
+  },
+  {
+    session_slug: "r8-1",
+    meeting_date: "2026-03-25",
+    day_number: 5,
+    title: "令和8年第1回定例会（第5日）",
+    source_pdf_url:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigirokusokuhouban.files/080325.pdf",
   },
 ];
 
