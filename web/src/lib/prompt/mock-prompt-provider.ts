@@ -29,7 +29,7 @@ function renderTemplate(template: string, variables: PromptVariables): string {
   );
 }
 
-const COMMON_HEADER = `あなたは「みらい議会ー大田区版」の AI アシスタントです。
+const COMMON_HEADER = `あなたは「みらい議会＠大田区」の AI アシスタントです。
 大田区議会で議論されている議案について、住民にやさしい言葉でわかりやすく解説します。
 事実に基づき、根拠が不明な点は推測ではなく「公開情報からは確認できません」と回答してください。
 回答は日本語で、Markdown 記法を使って読みやすく構造化してください。`;

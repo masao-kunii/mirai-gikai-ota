@@ -20,9 +20,30 @@ export function Footer() {
         {siteConfig.features.showTeamMiraiSection && <FooterLogoSection />}
         <FooterPrimaryLinks />
         <FooterPolicies />
+        <FooterDisclaimer />
         {siteConfig.features.showTeamMiraiSection && <FooterCopyright />}
       </div>
     </footer>
+  );
+}
+
+function FooterDisclaimer() {
+  return (
+    <div className="mt-4 w-full text-center text-[12px] leading-relaxed text-slate-700">
+      <p>これは政党チームみらいが運営しているものではありません。</p>
+      <p className="mt-1">
+        本家「みらい議会」は{" "}
+        <Link
+          href="https://gikai.team-mir.ai/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-slate-900"
+        >
+          gikai.team-mir.ai
+        </Link>{" "}
+        でご覧いただけます。
+      </p>
+    </div>
   );
 }
 

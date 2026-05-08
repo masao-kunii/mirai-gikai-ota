@@ -3,7 +3,7 @@
  * Fork して別の地方議会向けに使用する場合はこのファイルを変更してください。
  */
 export const siteConfig = {
-  siteName: "みらい議会ー大田区版",
+  siteName: "みらい議会＠大田区",
   cityName: "大田区",
   councilName: "大田区議会",
   councilBaseUrl: "https://www.city.ota.tokyo.jp/gikai/",

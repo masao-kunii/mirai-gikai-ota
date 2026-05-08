@@ -100,9 +100,9 @@
   --color-mirai-progress-track: #d9d9d9;
   --color-mirai-progress-fill: #a9e89d;
 
-  /* Gradient endpoints */
-  --color-mirai-gradient-start: #64d8c6;
-  --color-mirai-gradient-end: #bcecd3;
+  /* Gradient endpoints (大田区版: コーラル系) */
+  --color-mirai-gradient-start: #f4d4d4;
+  --color-mirai-gradient-end: #fbe8e8;
 }
 
 :root {
@@ -113,8 +113,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #2aa693;
-  --primary-accent: #0f8472;
+  --primary: #d76262;
+  --primary-accent: #a83e3e;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

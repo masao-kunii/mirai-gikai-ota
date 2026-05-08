@@ -4,13 +4,13 @@
  * @see docs/kawasaki/20260304_1000_別地域向けfork手順.md
  */
 export const siteConfig = {
-  siteName: "みらい議会ー大田区版",
+  siteName: "みらい議会＠大田区",
   siteDescription:
     "大田区議会で今どんな議案が検討されているか、わかりやすく伝えるプラットフォームです",
   cityName: "大田区",
   councilName: "大田区議会",
   keywords: [
-    "みらい議会ー大田区版",
+    "みらい議会＠大田区",
     "議案",
     "大田区",
     "区議会",
@@ -22,7 +22,7 @@ export const siteConfig = {
   /** 議案・議決結果の一覧ページ */
   councilBillsDetailUrl:
     "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/index.html",
-  twitterHashtag: "みらい議会大田区版", // # なし
+  twitterHashtag: "みらい議会大田区", // # なし
   externalLinks: {
     report: "https://forms.gle/GM4oTN94ttPRjyjp9",
     aboutNote: "",

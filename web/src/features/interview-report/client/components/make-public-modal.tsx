@@ -52,7 +52,7 @@ export function MakePublicModal({
 
         <div className="space-y-4 mt-6">
           <CheckListItem>
-            公開を許可した場合、今後みらい議会ー大田区版にあなたのご意見が匿名で掲載されることがあります。
+            公開を許可した場合、今後みらい議会＠大田区にあなたのご意見が匿名で掲載されることがあります。
           </CheckListItem>
           <CheckListItem>
             さまざまな当事者の意見が公開されることで、より深い議案議論が実現できます。
