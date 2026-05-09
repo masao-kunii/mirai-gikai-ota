@@ -182,6 +182,8 @@ export function DraftReview({ run, existingBillNumbers }: DraftReviewProps) {
     Map<string, FactionMatchStatus>
   >(new Map());
   // 会派見解の選択状態（再取り込み用）
+  const [autoPublish, setAutoPublish] = useState(false);
+  const [setFeatured, setSetFeatured] = useState(false);
   const [selectedStanceIds, setSelectedStanceIds] = useState<Set<string>>(
     new Set(run.factionStances.map((s) => s.id))
   );
@@ -334,6 +336,10 @@ export function DraftReview({ run, existingBillNumbers }: DraftReviewProps) {
         runId: run.id,
         newBillIds: Array.from(selectedNewIds),
         existingBillOverrides,
+        publishOptions: {
+          autoPublish,
+          setFeatured,
+        },
       });
 
       if (!result.success) {
@@ -868,7 +874,27 @@ export function DraftReview({ run, existingBillNumbers }: DraftReviewProps) {
       )}
 
       {/* Apply button */}
-      <div className="rounded-md border bg-gray-50 p-4">
+      <div className="rounded-md border bg-gray-50 p-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <label className="inline-flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={autoPublish}
+              onChange={(e) => setAutoPublish(e.target.checked)}
+            />
+            <span>適用と同時に公開する（publish_status=published）</span>
+          </label>
+          <label className="inline-flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={setFeatured}
+              onChange={(e) => setSetFeatured(e.target.checked)}
+            />
+            <span>注目枠に表示する（is_featured=true）</span>
+          </label>
+        </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={handleApply}

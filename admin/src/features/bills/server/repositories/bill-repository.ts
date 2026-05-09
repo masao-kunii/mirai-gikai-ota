@@ -136,6 +136,28 @@ export async function updateBillPublishStatus(
   }
 }
 
+export async function bulkUpdateBills(
+  billIds: string[],
+  patch: {
+    publish_status?: BillPublishStatus;
+    is_featured?: boolean;
+    published_at?: string | null;
+  }
+): Promise<number> {
+  if (billIds.length === 0) return 0;
+  if (Object.keys(patch).length === 0) return 0;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("bills")
+    .update(patch)
+    .in("id", billIds)
+    .select("id");
+  if (error) {
+    throw new Error(`Failed to bulk update bills: ${error.message}`);
+  }
+  return data?.length ?? 0;
+}
+
 export async function findBillContentsByBillId(billId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase

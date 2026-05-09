@@ -22,6 +22,14 @@ type ApplyDraftsInput = {
   runId: string;
   newBillIds: string[];
   existingBillOverrides: BillFieldOverride[];
+  /**
+   * 新規 bill 挿入時のオプション。指定しない場合は draft + featured=false で
+   * 入る（管理者が後から /bills 画面で公開する）。
+   */
+  publishOptions?: {
+    autoPublish?: boolean;
+    setFeatured?: boolean;
+  };
 };
 
 type ApplyResult = {
@@ -72,6 +80,26 @@ export async function applyDrafts(
     // --- Insert new bills ---
     const newBills = run.bills.filter((b) => input.newBillIds.includes(b.id));
 
+    const autoPublish = input.publishOptions?.autoPublish ?? false;
+    const setFeatured = input.publishOptions?.setFeatured ?? false;
+
+    // 取り込み時に紐付ける council_session を解決する。
+    // - run.mode === "minutes" の場合は議事録の startDate（最も古い meeting_date）に
+    //   一致する council_session を選ぶ
+    // - 通常モードでは run.startDate を published_at として使う既存挙動を維持
+    let councilSessionIdForInsert: string | null = null;
+    if (run.mode === "minutes" && run.startDate) {
+      const { data: matchedSession } = await supabase
+        .from("council_sessions")
+        .select("id")
+        .lte("start_date", run.startDate)
+        .or(`end_date.gte.${run.startDate},end_date.is.null`)
+        .order("start_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      councilSessionIdForInsert = matchedSession?.id ?? null;
+    }
+
     for (const draft of newBills) {
       const { data: inserted, error: billError } = await supabase
         .from("bills")
@@ -80,8 +108,9 @@ export async function applyDrafts(
           bill_number: draft.billNumber ?? "",
           status: mapBillStatus(draft.status),
           published_at: run.startDate,
-          is_featured: false,
-          publish_status: "draft",
+          is_featured: setFeatured,
+          publish_status: autoPublish ? "published" : "draft",
+          council_session_id: councilSessionIdForInsert,
         })
         .select("id")
         .single();

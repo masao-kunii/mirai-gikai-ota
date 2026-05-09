@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BillActionsMenu } from "../bill-actions-menu/bill-actions-menu";
+import { BulkActionsToolbar } from "./bulk-actions-toolbar";
 import { PreviewButton } from "./preview-button";
 import { PublishStatusBadge } from "./publish-status-badge";
 import { PublishStatusFilter } from "./publish-status-filter";
@@ -163,6 +164,8 @@ export function ResizableBillTable({
         <PublishStatusFilter currentPublishStatus={publishStatus} />
         <ReviewStatusFilter currentReviewStatus={reviewStatus} />
       </div>
+
+      <BulkActionsToolbar billIds={bills.map((b) => b.id)} />
 
       <div className="rounded-md border bg-white overflow-x-auto">
         <table style={{ tableLayout: "fixed", width: totalWidth }}>
