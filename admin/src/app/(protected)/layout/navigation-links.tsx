@@ -12,6 +12,8 @@ const navigationLinks = [
   { href: "/factions", label: "会派管理" },
   { href: "/committees", label: "委員会管理" },
   { href: "/ai-collection", label: "AI情報収集" },
+  { href: "/interviews", label: "インタビュー" },
+  { href: "/experts", label: "有識者" },
   { href: "/admins", label: "管理者" },
 ];
 

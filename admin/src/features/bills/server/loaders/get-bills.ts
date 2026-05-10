@@ -1,20 +1,9 @@
-import type {
-  BillSortConfig,
-  BillWithCouncilSession,
-} from "../../shared/types";
-import { findBillsWithCouncilSessions } from "../repositories/bill-repository";
-
-export type BillListFilters = {
-  sessionId?: string;
-  tagId?: string;
-  publishStatus?: string;
-  reviewStatus?: string;
-};
+import type { BillSortConfig, BillWithDietSession } from "../../shared/types";
+import { findBillsWithDietSessions } from "../repositories/bill-repository";
 
 export async function getBills(
-  sortConfig?: BillSortConfig,
-  filters?: BillListFilters
-): Promise<BillWithCouncilSession[]> {
-  const data = await findBillsWithCouncilSessions(sortConfig, filters);
+  sortConfig?: BillSortConfig
+): Promise<BillWithDietSession[]> {
+  const data = await findBillsWithDietSessions(sortConfig);
   return data || [];
 }

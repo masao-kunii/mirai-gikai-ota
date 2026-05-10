@@ -11,31 +11,54 @@ export type BillPublishStatus = "draft" | "published" | "coming_soon";
 
 // 共通のバリデーションスキーマ
 const billBaseSchema = z.object({
-  bill_number: z.string().max(50, "議案番号は50文字以内で入力してください"),
   name: z
     .string()
     .min(1, "議案名は必須です")
     .max(200, "議案名は200文字以内で入力してください"),
   status: z.enum([
     "preparing",
-    "submitted",
-    "in_committee",
-    "plenary_session",
-    "approved",
+    "introduced",
+    "in_originating_house",
+    "in_receiving_house",
+    "enacted",
     "rejected",
-    "adopted",
-    "partially_adopted",
   ]),
+  originating_house: z.enum(["HR", "HC"]),
   status_note: z
     .string()
     .max(500, "ステータス備考は500文字以内で入力してください")
     .nullable(),
-  published_at: z.string().optional(),
+  submitted_date: z
+    .string()
+    .refine(
+      (val) => val === "" || /^\d{4}-\d{2}-\d{2}$/.test(val),
+      "法案提出日は YYYY-MM-DD 形式で入力してください"
+    )
+    .optional(),
   thumbnail_url: z.string().nullable().optional(),
   share_thumbnail_url: z.string().nullable().optional(),
+  council_url: z
+    .string()
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .refine((val) => val === null || val.startsWith("http"), {
+      message: "有効なURLを入力してください",
+    })
+    .optional(),
   is_featured: z.boolean(),
-  committee_id: z.string().uuid().nullable().optional(),
+  is_review_completed: z.boolean(),
   council_session_id: z.string().uuid().nullable().optional(),
+  slug: z
+    .string()
+    .max(200, "slugは200文字以内で入力してください")
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .optional(),
+  knowledge_source: z
+    .string()
+    .max(40_000, "ナレッジソースは40,000文字以内で入力してください")
+    .optional(),
+  use_knowledge_source_in_chat: z.boolean().optional(),
 });
 
 // 更新用スキーマ（既存）

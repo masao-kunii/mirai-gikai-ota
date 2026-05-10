@@ -7,12 +7,13 @@ import type { BillsByTag } from "../../shared/types";
 import {
   findFeaturedTags,
   findPublishedBillsByTag,
+  findBillIdsWithPublicInterview,
 } from "../repositories/bill-repository";
 
 /**
  * Featured表示用の議案をタグごとにグループ化して取得
- * featured_priorityが設定されているタグを持つアクティブな定例会の議案を優先度順に取得
- * アクティブな定例会がない場合は全件取得
+ * featured_priorityが設定されているタグを持つアクティブな国会会期の議案を優先度順に取得
+ * アクティブな国会会期がない場合は全件取得
  */
 export async function getBillsByFeaturedTags(): Promise<BillsByTag[]> {
   // キャッシュ外でcookiesにアクセス
@@ -28,7 +29,7 @@ export async function getBillsByFeaturedTags(): Promise<BillsByTag[]> {
 const _getCachedBillsByFeaturedTags = unstable_cache(
   async (
     difficultyLevel: DifficultyLevelEnum,
-    councilSessionId: string | null
+    dietSessionId: string | null
   ): Promise<BillsByTag[]> => {
     const featuredTags = await findFeaturedTags();
 
@@ -42,7 +43,7 @@ const _getCachedBillsByFeaturedTags = unstable_cache(
         const data = await findPublishedBillsByTag(
           tag.id,
           difficultyLevel,
-          councilSessionId
+          dietSessionId
         );
 
         if (!data || data.length === 0) {
@@ -91,14 +92,27 @@ const _getCachedBillsByFeaturedTags = unstable_cache(
       })
     );
 
-    // nullを除外して返す
-    return results.filter(
+    // nullを除外
+    const filteredResults = results.filter(
       (result): result is NonNullable<typeof result> => result !== null
     );
+
+    // 全議案のIDを収集してインタビュー状態を一括取得
+    const allBillIds = filteredResults.flatMap((r) => r.bills.map((b) => b.id));
+    const interviewBillIds = await findBillIdsWithPublicInterview(allBillIds);
+
+    // インタビュー状態を付与
+    return filteredResults.map((result) => ({
+      ...result,
+      bills: result.bills.map((bill) => ({
+        ...bill,
+        hasPublicInterview: interviewBillIds.has(bill.id),
+      })),
+    }));
   },
   ["featured-bills-list"],
   {
     revalidate: 600, // 10分（600秒）
-    tags: [CACHE_TAGS.BILLS],
+    tags: [CACHE_TAGS.BILLS, CACHE_TAGS.INTERVIEW_CONFIGS],
   }
 );

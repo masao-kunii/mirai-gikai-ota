@@ -8,8 +8,8 @@ import { findComingSoonBills } from "../repositories/bill-repository";
 
 /**
  * Coming Soon議案を取得する
- * publish_status = 'coming_soon' でアクティブな定例会の議案を取得
- * アクティブな定例会がない場合は全件取得
+ * publish_status = 'coming_soon' でアクティブな国会会期の議案を取得
+ * アクティブな国会会期がない場合は全件取得
  */
 export async function getComingSoonBills(): Promise<ComingSoonBill[]> {
   // キャッシュ外でcookiesにアクセス
@@ -25,6 +25,7 @@ const _getCachedComingSoonBills = unstable_cache(
     councilSessionId: string | null
   ): Promise<ComingSoonBill[]> => {
     const data = await findComingSoonBills(councilSessionId);
+
     if (data.length === 0) {
       return [];
     }
@@ -48,7 +49,8 @@ const _getCachedComingSoonBills = unstable_cache(
         id: bill.id,
         name: bill.name,
         title: preferredContent?.title || fallbackContent?.title || null,
-        council_url: bill.council_sessions?.council_url ?? null,
+        originating_house: bill.originating_house,
+        council_url: bill.council_url,
       };
     });
   },

@@ -1,7 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@mirai-gikai/supabase";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
-import type { MiraiStance } from "../../shared/types";
 
 // ============================================================
 // Bills
@@ -33,7 +32,7 @@ export async function findPublishedBillsWithContents(
     )
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel)
-    .order("published_at", { ascending: false });
+    .order("submitted_date", { ascending: false, nullsFirst: false });
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
@@ -81,43 +80,20 @@ export async function findBillById(id: string) {
 
 /**
  * 議案のmirai_stanceを取得
- * 大田区議会DBにはmirai_stancesテーブルが存在しないため常にnullを返す
  */
-export async function findMiraiStanceByBillId(
-  _billId: string
-): Promise<MiraiStance | null> {
-  return null;
-}
-
-/**
- * 議案に紐づく会派見解を取得
- */
-export async function findFactionStancesByBillId(billId: string) {
+export async function findMiraiStanceByBillId(billId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("faction_stances")
-    .select(
-      `
-      id,
-      type,
-      comment,
-      factions (
-        id,
-        name,
-        display_name,
-        sort_order
-      )
-    `
-    )
+    .from("mirai_stances")
+    .select("*")
     .eq("bill_id", billId)
-    .order("created_at", { ascending: true });
+    .single();
 
   if (error) {
-    console.error(`Failed to fetch faction stances: ${error.message}`);
-    return [];
+    return null;
   }
 
-  return data ?? [];
+  return data;
 }
 
 /**
@@ -194,11 +170,11 @@ export async function findTagsByBillIds(
 }
 
 // ============================================================
-// Council Session Bills
+// Diet Session Bills
 // ============================================================
 
 /**
- * 定例会IDに紐づく公開済み議案を取得
+ * 国会会期IDに紐づく公開済み議案を取得
  */
 export async function findPublishedBillsByDietSession(
   councilSessionId: string,
@@ -226,19 +202,17 @@ export async function findPublishedBillsByDietSession(
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel)
     .order("status_order", { ascending: true })
-    .order("published_at", { ascending: false });
+    .order("submitted_date", { ascending: false, nullsFirst: false });
 
   if (error) {
-    throw new Error(
-      `Failed to fetch bills by council session: ${error.message}`
-    );
+    throw new Error(`Failed to fetch bills by diet session: ${error.message}`);
   }
 
   return data;
 }
 
 /**
- * 前回の定例会の公開済み議案を取得（件数制限あり）
+ * 前回の国会会期の公開済み議案を取得（成立法案を優先、件数制限あり）
  */
 export async function findPreviousSessionBills(
   councilSessionId: string,
@@ -267,7 +241,7 @@ export async function findPreviousSessionBills(
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel)
     .order("status_order", { ascending: true })
-    .order("published_at", { ascending: false })
+    .order("submitted_date", { ascending: false, nullsFirst: false })
     .limit(limit);
 
   if (error) {
@@ -279,7 +253,7 @@ export async function findPreviousSessionBills(
 }
 
 /**
- * 前回の定例会の公開済み議案数を取得
+ * 前回の国会会期の公開済み議案数を取得
  */
 export async function countPublishedBillsByDietSession(
   councilSessionId: string,
@@ -413,7 +387,7 @@ export async function findFeaturedBillsWithContents(
     )
     .eq("is_featured", true)
     .eq("bill_contents.difficulty_level", difficultyLevel)
-    .order("published_at", { ascending: false });
+    .order("submitted_date", { ascending: false, nullsFirst: false });
 
   if (councilSessionId) {
     query = query.eq("council_session_id", councilSessionId);
@@ -444,12 +418,11 @@ export async function findComingSoonBills(councilSessionId: string | null) {
       `
       id,
       name,
+      originating_house,
+      council_url,
       bill_contents (
         title,
         difficulty_level
-      ),
-      council_sessions (
-        council_url
       )
     `
     )
@@ -491,4 +464,33 @@ export async function findPreviewToken(billId: string, token: string) {
   }
 
   return data;
+}
+
+// ============================================================
+// Interview Status
+// ============================================================
+
+/**
+ * 複数のbill_idに対して、公開中のインタビュー設定があるかを一括判定
+ */
+export async function findBillIdsWithPublicInterview(
+  billIds: string[]
+): Promise<Set<string>> {
+  if (billIds.length === 0) {
+    return new Set();
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("interview_configs")
+    .select("bill_id")
+    .in("bill_id", billIds)
+    .eq("status", "public");
+
+  if (error) {
+    console.error("Failed to fetch interview configs:", error);
+    return new Set();
+  }
+
+  return new Set(data.map((row) => row.bill_id));
 }

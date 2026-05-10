@@ -10,16 +10,8 @@ import type {
 type BillContentInsert =
   Database["public"]["Tables"]["bill_contents"]["Insert"];
 
-type BillFilters = {
-  sessionId?: string;
-  tagId?: string;
-  publishStatus?: string;
-  reviewStatus?: string;
-};
-
 export async function findBillsWithCouncilSessions(
-  sortConfig?: BillSortConfig,
-  filters?: BillFilters
+  sortConfig?: BillSortConfig
 ) {
   const supabase = createAdminClient();
   const field = sortConfig?.field ?? "created_at";
@@ -29,54 +21,14 @@ export async function findBillsWithCouncilSessions(
     ascending,
   };
 
-  if (field === "published_at") {
+  if (field === "submitted_date") {
     orderOptions.nullsFirst = false;
   }
 
-  let query = supabase.from("bills").select("*, council_sessions(name)");
-
-  if (filters?.sessionId) {
-    query = query.eq("council_session_id", filters.sessionId);
-  }
-
-  if (filters?.publishStatus) {
-    query = query.eq(
-      "publish_status",
-      filters.publishStatus as "draft" | "published" | "coming_soon"
-    );
-  }
-
-  if (filters?.reviewStatus) {
-    query = query.eq(
-      "status",
-      filters.reviewStatus as
-        | "preparing"
-        | "submitted"
-        | "in_committee"
-        | "plenary_session"
-        | "approved"
-        | "rejected"
-    );
-  }
-
-  if (filters?.tagId) {
-    const { data: taggedBills } = await supabase
-      .from("bills_tags")
-      .select("bill_id")
-      .eq("tag_id", filters.tagId);
-    const billIds = (taggedBills ?? []).map((b) => b.bill_id);
-    query = query.in("id", billIds);
-  }
-
-  const result =
-    field === "council_session"
-      ? await query.order("created_at", {
-          referencedTable: "council_sessions",
-          ascending,
-        })
-      : await query.order(field, orderOptions);
-
-  const { data, error } = result;
+  const { data, error } = await supabase
+    .from("bills")
+    .select("*, council_sessions(name)")
+    .order(field, orderOptions);
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
@@ -134,28 +86,6 @@ export async function updateBillPublishStatus(
   if (error) {
     throw new Error(`Failed to update bill publish status: ${error.message}`);
   }
-}
-
-export async function bulkUpdateBills(
-  billIds: string[],
-  patch: {
-    publish_status?: BillPublishStatus;
-    is_featured?: boolean;
-    published_at?: string | null;
-  }
-): Promise<number> {
-  if (billIds.length === 0) return 0;
-  if (Object.keys(patch).length === 0) return 0;
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("bills")
-    .update(patch)
-    .in("id", billIds)
-    .select("id");
-  if (error) {
-    throw new Error(`Failed to bulk update bills: ${error.message}`);
-  }
-  return data?.length ?? 0;
 }
 
 export async function findBillContentsByBillId(billId: string) {

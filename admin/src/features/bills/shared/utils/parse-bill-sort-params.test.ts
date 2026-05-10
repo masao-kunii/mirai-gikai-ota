@@ -17,24 +17,9 @@ describe("parseBillSortParams", () => {
     expect(result).toEqual({ field: "publish_status_order", order: "desc" });
   });
 
-  it("published_atフィールドを受け付ける", () => {
-    const result = parseBillSortParams("published_at", "asc");
-    expect(result).toEqual({ field: "published_at", order: "asc" });
-  });
-
-  it("bill_numberフィールドを受け付ける", () => {
-    const result = parseBillSortParams("bill_number", "asc");
-    expect(result).toEqual({ field: "bill_number", order: "asc" });
-  });
-
-  it("nameフィールドを受け付ける", () => {
-    const result = parseBillSortParams("name", "asc");
-    expect(result).toEqual({ field: "name", order: "asc" });
-  });
-
-  it("council_sessionフィールドを受け付ける", () => {
-    const result = parseBillSortParams("council_session", "asc");
-    expect(result).toEqual({ field: "council_session", order: "asc" });
+  it("submitted_dateフィールドを受け付ける", () => {
+    const result = parseBillSortParams("submitted_date", "asc");
+    expect(result).toEqual({ field: "submitted_date", order: "asc" });
   });
 
   it("不正なフィールドはデフォルトフィールドにフォールバックする", () => {

@@ -1,23 +1,16 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import { shouldDisplayPublicReports } from "@mirai-gikai/shared/report-publication/auto-publish";
+import {
+  mapPublicInterviewReports,
+  type PublicInterviewReportDisplay,
+} from "../../shared/utils/public-report-display";
 import {
   countPublicReportsByBillId,
   findPublicReportsByBillId,
 } from "../repositories/interview-report-repository";
 
-const REVALIDATE_SECONDS = 600;
-
-export type PublicInterviewReport = {
-  id: string;
-  stance: string | null;
-  role: string | null;
-  role_title: string | null;
-  summary: string | null;
-  total_score: number | null;
-  created_at: string;
-};
+export type PublicInterviewReport = PublicInterviewReportDisplay;
 
 export type PublicReportsResult = {
   reports: PublicInterviewReport[];
@@ -30,29 +23,14 @@ export type PublicReportsResult = {
 export async function getPublicReportsByBillId(
   billId: string
 ): Promise<PublicReportsResult> {
-  return unstable_cache(
-    async () => {
-      const [rawReports, totalCount] = await Promise.all([
-        findPublicReportsByBillId(billId, 3),
-        countPublicReportsByBillId(billId),
-      ]);
+  const totalCount = await countPublicReportsByBillId(billId);
 
-      const reports: PublicInterviewReport[] = rawReports.map((r) => ({
-        id: r.id,
-        stance: r.stance,
-        role: r.role,
-        role_title: r.role_title,
-        summary: r.summary,
-        total_score: r.total_score,
-        created_at: r.created_at,
-      }));
+  if (!shouldDisplayPublicReports(totalCount)) {
+    return { reports: [], totalCount: 0 };
+  }
 
-      return { reports, totalCount };
-    },
-    [`public-reports-${billId}`],
-    {
-      tags: [CACHE_TAGS.PUBLIC_INTERVIEW_REPORTS],
-      revalidate: REVALIDATE_SECONDS,
-    }
-  )();
+  const rawReports = await findPublicReportsByBillId(billId, 3);
+  const reports = mapPublicInterviewReports(rawReports);
+
+  return { reports, totalCount };
 }

@@ -13,19 +13,24 @@ const makeBill = (
   overrides: Partial<BillWithContent> = {}
 ): BillWithContent => ({
   id: "bill-1",
-  bill_number: "",
-  name: "テスト議案",
+  name: "テスト法案",
   is_featured: false,
+  is_review_completed: true,
+  originating_house: "HR",
+  council_url: null,
+  slug: null,
   council_session_id: null,
-  committee_id: null,
   publish_status: "published",
   published_at: null,
+  submitted_date: null,
   share_thumbnail_url: null,
   status: "submitted",
   status_note: null,
-  status_order: BILL_STATUS_ORDER.submitted,
+  status_order: BILL_STATUS_ORDER.introduced,
   publish_status_order: 2,
   thumbnail_url: null,
+  knowledge_source: "厚生労働省の報告書",
+  use_knowledge_source_in_chat: false,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   bill_content: {
@@ -56,7 +61,6 @@ const baseParams: InterviewPromptInput = {
   bill: makeBill(),
   interviewConfig: {
     themes: ["医療", "教育"],
-    knowledge_source: "厚生労働省の報告書",
   },
   questions: sampleQuestions,
   currentStage: "chat",
@@ -109,7 +113,7 @@ describe("buildBulkModeSystemPrompt", () => {
   it("知識ソース未設定の場合「（知識ソース未設定）」が含まれる", () => {
     const result = buildBulkModeSystemPrompt({
       ...baseParams,
-      interviewConfig: { themes: ["テーマ1"] },
+      bill: makeBill({ knowledge_source: null }),
     });
 
     expect(result).toContain("（知識ソース未設定）");
@@ -160,6 +164,15 @@ describe("buildBulkModeSystemPrompt", () => {
     });
 
     expect(result).toContain("（賛成か、反対か）");
+  });
+
+  it("法案内容の誤認検知と補足ガイダンスが含まれる", () => {
+    const result = buildBulkModeSystemPrompt(baseParams);
+
+    expect(result).toContain("法案内容の誤認検知と補足");
+    expect(result).toContain("誤認の兆候例");
+    expect(result).toContain("補足の仕方");
+    expect(result).toContain("補足しない場合");
   });
 
   describe("nextQuestionIdが指定されている場合", () => {

@@ -8,29 +8,29 @@ import {
 } from "./bill-progress";
 
 const BASE_STEPS = [
-  { label: "議案\n上程" },
-  { label: "委員会\n審査" },
-  { label: "本会議\n採決" },
-  { label: "可決\n/否決" },
+  { label: "法案\n提出" },
+  { label: "衆議院\n審議" },
+  { label: "参議院\n審議" },
+  { label: "法案\n成立" },
 ] as const;
 
 describe("getStatusMessage", () => {
-  test("preparing の場合は '議案上程前' を返す", () => {
-    expect(getStatusMessage("preparing", null)).toBe("議案上程前");
+  test("preparing の場合は '法案提出前' を返す", () => {
+    expect(getStatusMessage("preparing", null)).toBe("法案提出前");
   });
 
-  test("preparing の場合は statusNote があっても '議案上程前' を返す", () => {
-    expect(getStatusMessage("preparing", "審議中メモ")).toBe("議案上程前");
+  test("preparing の場合は statusNote があっても '法案提出前' を返す", () => {
+    expect(getStatusMessage("preparing", "審議中メモ")).toBe("法案提出前");
   });
 
   test("preparing 以外で statusNote がある場合はそれを返す", () => {
-    expect(getStatusMessage("submitted", "上程されました")).toBe(
-      "上程されました"
+    expect(getStatusMessage("introduced", "衆議院で審議中")).toBe(
+      "衆議院で審議中"
     );
   });
 
   test("preparing 以外で statusNote が null の場合は空文字を返す", () => {
-    expect(getStatusMessage("approved", null)).toBe("");
+    expect(getStatusMessage("enacted", null)).toBe("");
   });
 
   test("preparing 以外で statusNote が undefined の場合は空文字を返す", () => {
@@ -58,19 +58,27 @@ describe("getStepState", () => {
 });
 
 describe("getOrderedSteps", () => {
-  test("ステップ順序がそのまま返る", () => {
-    const result = getOrderedSteps(BASE_STEPS);
-    expect(result[0].label).toBe("議案\n上程");
-    expect(result[1].label).toBe("委員会\n審査");
-    expect(result[2].label).toBe("本会議\n採決");
-    expect(result[3].label).toBe("可決\n/否決");
+  test("HR(衆議院)の場合はステップ順序がそのまま", () => {
+    const result = getOrderedSteps("HR", BASE_STEPS);
+    expect(result[0].label).toBe("法案\n提出");
+    expect(result[1].label).toBe("衆議院\n審議");
+    expect(result[2].label).toBe("参議院\n審議");
+    expect(result[3].label).toBe("法案\n成立");
+  });
+
+  test("HC(参議院)の場合はステップ2と3が入れ替わる", () => {
+    const result = getOrderedSteps("HC", BASE_STEPS);
+    expect(result[0].label).toBe("法案\n提出");
+    expect(result[1].label).toBe("参議院\n審議");
+    expect(result[2].label).toBe("衆議院\n審議");
+    expect(result[3].label).toBe("法案\n成立");
   });
 
   test("元の配列を変更しない", () => {
     const original = [...BASE_STEPS.map((s) => ({ ...s }))];
-    getOrderedSteps(BASE_STEPS);
-    expect(BASE_STEPS[0].label).toBe(original[0].label);
+    getOrderedSteps("HC", BASE_STEPS);
     expect(BASE_STEPS[1].label).toBe(original[1].label);
+    expect(BASE_STEPS[2].label).toBe(original[2].label);
   });
 });
 
@@ -106,20 +114,20 @@ describe("getCurrentStep", () => {
     expect(getCurrentStep("preparing")).toBe(0);
   });
 
-  test("submitted は 1", () => {
-    expect(getCurrentStep("submitted")).toBe(1);
+  test("introduced は 1", () => {
+    expect(getCurrentStep("introduced")).toBe(1);
   });
 
-  test("in_committee は 2", () => {
-    expect(getCurrentStep("in_committee")).toBe(2);
+  test("in_originating_house は 2", () => {
+    expect(getCurrentStep("in_originating_house")).toBe(2);
   });
 
-  test("plenary_session は 3", () => {
-    expect(getCurrentStep("plenary_session")).toBe(3);
+  test("in_receiving_house は 3", () => {
+    expect(getCurrentStep("in_receiving_house")).toBe(3);
   });
 
-  test("approved は 4", () => {
-    expect(getCurrentStep("approved")).toBe(4);
+  test("enacted は 4", () => {
+    expect(getCurrentStep("enacted")).toBe(4);
   });
 
   test("rejected は 4", () => {

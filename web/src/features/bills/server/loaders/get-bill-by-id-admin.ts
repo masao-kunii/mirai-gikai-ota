@@ -1,5 +1,5 @@
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
-import type { BillWithContent, FactionStance } from "../../shared/types";
+import type { BillWithContent } from "../../shared/types";
 import {
   findBillById,
   findMiraiStanceByBillId,
@@ -17,26 +17,20 @@ export async function getBillByIdAdmin(
 ): Promise<BillWithContent | null> {
   const difficultyLevel = await getDifficultyLevel();
 
-  // 基本的なbill情報、会派見解、コンテンツ、タグを並列取得
+  // 基本的なbill情報、見解、コンテンツ、タグを並列取得
   // ステータスに関係なく取得（管理者用）
-  const [bill, factionStancesResult, billContent, tagsResult] =
-    await Promise.all([
-      findBillById(id),
-      findMiraiStanceByBillId(id),
-      getBillContentWithDifficulty(id, difficultyLevel),
-      findTagsByBillId(id),
-    ]);
+  const [bill, miraiStance, billContent, billTags] = await Promise.all([
+    findBillById(id),
+    findMiraiStanceByBillId(id),
+    getBillContentWithDifficulty(id, difficultyLevel),
+    findTagsByBillId(id),
+  ]);
+
   if (!bill) {
     console.error("Failed to fetch bill");
     return null;
   }
 
-  const billTags = tagsResult;
-
-  // 大田区版は会派見解なし（mirai_stancesは議会全体のスタンス）
-  const factionStances: FactionStance[] = [];
-
-  // タグデータを整形
   const tags =
     billTags
       ?.map((bt) => bt.tags)
@@ -45,7 +39,7 @@ export async function getBillByIdAdmin(
 
   return {
     ...bill,
-    faction_stances: factionStances.length > 0 ? factionStances : undefined,
+    mirai_stance: miraiStance || undefined,
     bill_content: billContent || undefined,
     tags,
   };

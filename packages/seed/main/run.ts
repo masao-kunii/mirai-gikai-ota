@@ -267,6 +267,23 @@ async function seedDatabase() {
     // Insert interview config (for first bill)
     console.log("💬 Inserting interview config...");
     const interviewConfigData = createInterviewConfig(insertedBills);
+
+    // 移設: knowledge_source は bills 側に持つ（migration 20260428100000）
+    const targetBillId = interviewConfigData?.bill_id;
+    if (targetBillId) {
+      const { error: knowledgeError } = await supabase
+        .from("bills")
+        .update({
+          knowledge_source: "この議案についてあなたの意見を聞かせてください。",
+        })
+        .eq("id", targetBillId);
+      if (knowledgeError) {
+        console.warn(
+          `⚠️  Failed to set knowledge_source on bill: ${knowledgeError.message}`
+        );
+      }
+    }
+
     let insertedQuestionsCount = 0;
     let insertedSessionsCount = 0;
     let insertedMessagesCount = 0;

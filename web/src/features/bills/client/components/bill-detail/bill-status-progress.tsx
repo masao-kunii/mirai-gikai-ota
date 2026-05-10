@@ -1,12 +1,15 @@
-import type { BillStatusEnum } from "../../../shared/types";
+import type { BillStatusEnum, HouseEnum } from "../../../shared/types";
 import {
   calculateProgressWidth,
   getCurrentStep,
   getOrderedSteps,
+  getStatusMessage,
+  getStepState,
 } from "../../../shared/utils/bill-progress";
 
 interface BillStatusProgressProps {
   status: BillStatusEnum;
+  originatingHouse: HouseEnum;
   statusNote?: string | null;
 }
 
@@ -22,25 +25,13 @@ interface ProgressStepProps {
   isPreparing: boolean;
 }
 
-// 基本ステップ定義（大田区議会: 一院制）
+// 基本ステップ定義
 const BASE_STEPS = [
-  { label: "議案\n上程" },
-  { label: "委員会\n審査" },
-  { label: "本会議\n採決" },
-  { label: "可決\n/否決" },
+  { label: "法案\n提出" },
+  { label: "衆議院\n審議" },
+  { label: "参議院\n審議" },
+  { label: "法案\n成立" },
 ] as const;
-
-// ステータスラベル
-const STATUS_LABELS: Record<BillStatusEnum, string> = {
-  preparing: "議案上程前",
-  submitted: "上程済み",
-  in_committee: "委員会審査中",
-  plenary_session: "本会議採決中",
-  approved: "可決",
-  rejected: "否決",
-  adopted: "採択",
-  partially_adopted: "趣旨採択",
-};
 
 // ステータスバッジコンポーネント
 function StatusBadge({ message }: StatusBadgeProps) {
@@ -104,19 +95,16 @@ function ProgressStep({
 
 export function BillStatusProgress({
   status,
+  originatingHouse,
   statusNote,
 }: BillStatusProgressProps) {
   const isPreparing = status === "preparing";
   const currentStep = getCurrentStep(status);
-  const statusMessage = STATUS_LABELS[status] ?? "";
 
-  const getStepState = (stepNumber: number): "active" | "inactive" => {
-    if (isPreparing) return "inactive";
-    return stepNumber <= currentStep ? "active" : "inactive";
-  };
-
-  const orderedSteps = getOrderedSteps(BASE_STEPS);
+  const orderedSteps = getOrderedSteps(originatingHouse, BASE_STEPS);
   const progressWidth = calculateProgressWidth(currentStep);
+
+  const statusMessage = getStatusMessage(status, statusNote);
 
   return (
     <>
@@ -125,12 +113,6 @@ export function BillStatusProgress({
         <div className="flex flex-col items-center gap-7">
           {/* ステータスメッセージバッジ */}
           <StatusBadge message={statusMessage} />
-          {/* ステータス備考 */}
-          {statusNote && (
-            <p className="text-sm text-gray-600 text-center -mt-4">
-              {statusNote}
-            </p>
-          )}
 
           {/* プログレスライン */}
           <div className="relative w-full max-w-md">
@@ -149,7 +131,9 @@ export function BillStatusProgress({
             <div className="relative flex justify-around">
               {orderedSteps.map((step, index) => {
                 const stepNumber = index + 1;
-                const isActive = getStepState(stepNumber) === "active";
+                const isActive =
+                  getStepState(stepNumber, currentStep, isPreparing) ===
+                  "active";
 
                 return (
                   <ProgressStep

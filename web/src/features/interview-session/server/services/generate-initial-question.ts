@@ -6,9 +6,14 @@ import {
   type LanguageModel,
 } from "@mirai-gikai/shared/ai/sdk";
 import { getBillByIdAdmin } from "@/features/bills/server/loaders/get-bill-by-id-admin";
+import {
+  isWithinDailyCostLimit,
+  recordChatUsage,
+} from "@/features/chat/server/services/cost-tracker";
 import { getInterviewConfigAdmin } from "@/features/interview-config/server/loaders/get-interview-config-admin";
 import { getInterviewQuestions } from "@/features/interview-config/server/loaders/get-interview-questions";
 import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
+import { env } from "@/lib/env";
 import { interviewChatTextSchema } from "../../shared/schemas";
 import type { InterviewMessage } from "../../shared/types";
 import { overrideInitialTopicTitle } from "../../shared/utils/override-initial-topic-title";
@@ -19,6 +24,7 @@ type GenerateInitialQuestionParams = {
   sessionId: string;
   billId: string;
   interviewConfigId: string;
+  userId: string;
   deps?: GenerateQuestionDeps;
 };
 
@@ -34,10 +40,11 @@ export async function generateInitialQuestion({
   sessionId,
   billId,
   interviewConfigId,
+  userId,
   deps,
 }: GenerateInitialQuestionParams): Promise<InterviewMessage | null> {
   try {
-    // インタビュー設定と議案情報を取得
+    // インタビュー設定と法案情報を取得
     // どちらもサーバーサイドでの生成処理のため、常にAdmin用（非公開制限なし）を使用する
     const [interviewConfig, bill, questions] = await Promise.all([
       getInterviewConfigAdmin(billId),
@@ -60,10 +67,26 @@ export async function generateInitialQuestion({
 
     // インタビュー開始の指示を追加（最初の質問にはクイックリプライとquestion_idを含める）
     const firstQuestionId = questions[0]?.id;
-    const billTitle = bill?.bill_content?.title ?? bill?.name ?? "この議案";
+    const billTitle = bill?.bill_content?.title ?? bill?.name ?? "この法案";
     const enhancedSystemPrompt = `${systemPrompt}\n\n## 重要: これはインタビューの開始です。ユーザーからのメッセージはありません。事前定義質問の最初の質問から始めてください。挨拶は温かく丁寧に（2文程度）、「${billTitle}」についてのインタビューであることを明確に伝えた上で、すぐに最初の質問をしてください。最初の質問にクイックリプライが設定されている場合は、必ず quick_replies フィールドに含めてください。${firstQuestionId ? `最初の質問は ID: ${firstQuestionId} であり、レスポンスの question_id にこの値を含めてください。` : ""}`;
 
+    // 日次コスト制限チェック（fail-closed: エラー時も生成をブロック）
+    try {
+      const isWithinLimit = await isWithinDailyCostLimit(
+        userId,
+        env.chat.dailyUserCostLimitUsd
+      );
+      if (!isWithinLimit) {
+        console.error("Daily cost limit reached for initial question");
+        return null;
+      }
+    } catch (error) {
+      console.error("Cost limit check error:", error);
+      return null;
+    }
+
     // メッセージ履歴なしで最初の質問を生成（構造化出力）
+    const occurredAt = new Date().toISOString();
     const model =
       deps?.model ?? interviewConfig.chat_model ?? DEFAULT_INTERVIEW_CHAT_MODEL;
     const result = await generateText({
@@ -79,6 +102,28 @@ export async function generateInitialQuestion({
         },
       },
     });
+
+    // LLM利用コストを記録
+    const modelName =
+      typeof model === "string" ? model : (model.modelId ?? "unknown");
+    try {
+      await recordChatUsage({
+        userId,
+        sessionId,
+        promptName: "interview-initial-question",
+        model: modelName,
+        usage: result.usage,
+        occurredAt,
+        metadata: {
+          pageType: "interview",
+          billId,
+          finishReason: result.finishReason ?? null,
+          stepCount: 0,
+        },
+      });
+    } catch (usageError) {
+      console.error("Failed to record interview usage:", usageError);
+    }
 
     const generatedText = result.text;
 

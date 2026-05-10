@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/features/auth/server/lib/auth-server";
+import { routes } from "@/lib/routes";
 import {
   invalidateWebCache,
   WEB_CACHE_TAGS,
@@ -20,8 +21,8 @@ export async function createBill(input: BillCreateInput) {
 
     const insertData = {
       ...validatedData,
-      published_at: validatedData.published_at
-        ? new Date(validatedData.published_at).toISOString()
+      submitted_date: validatedData.submitted_date
+        ? `${validatedData.submitted_date}T00:00:00+09:00`
         : null,
     };
 
@@ -38,5 +39,5 @@ export async function createBill(input: BillCreateInput) {
   }
 
   // 成功したら一覧ページへリダイレクト
-  redirect("/bills");
+  redirect(routes.bills());
 }

@@ -7,40 +7,42 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 
-import type { Committee } from "@/features/committees/shared/types";
-import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import type { DietSession } from "@/features/diet-sessions/shared/types";
 import { createBill } from "../../server/actions/create-bill";
 import { type BillCreateInput, billCreateSchema } from "../../shared/types";
 import { useBillForm } from "../hooks/use-bill-form";
 import { BillFormFields } from "./bill-form-fields";
 
 interface BillCreateFormProps {
-  councilSessions: CouncilSession[];
-  committees: Committee[];
+  councilSessions: DietSession[];
 }
 
-export function BillCreateForm({
-  councilSessions,
-  committees,
-}: BillCreateFormProps) {
+export function BillCreateForm({ councilSessions }: BillCreateFormProps) {
   const { isSubmitting, error, handleSubmit, handleCancel } = useBillForm();
 
   // Default to the latest session (first in the list, sorted by start_date desc)
-  const defaultCouncilSessionId =
+  const defaultDietSessionId =
     councilSessions.length > 0 ? councilSessions[0].id : null;
 
   const form = useForm<BillCreateInput>({
     resolver: zodResolver(billCreateSchema),
     defaultValues: {
-      bill_number: "",
       name: "",
       status: "preparing",
+      originating_house: "HR",
       status_note: null,
-      published_at: new Date().toISOString().slice(0, 16),
+      submitted_date: new Date().toLocaleDateString("sv-SE", {
+        timeZone: "Asia/Tokyo",
+      }),
       thumbnail_url: null,
       share_thumbnail_url: null,
+      council_url: null,
+      slug: null,
       is_featured: false,
-      council_session_id: defaultCouncilSessionId,
+      is_review_completed: false,
+      council_session_id: defaultDietSessionId,
+      knowledge_source: "",
+      use_knowledge_source_in_chat: false,
     },
   });
 
@@ -59,7 +61,6 @@ export function BillCreateForm({
             <BillFormFields
               control={form.control}
               councilSessions={councilSessions}
-              committees={committees}
             />
 
             {error && (

@@ -1,24 +1,20 @@
 import { ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
+import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/config/site.config";
-import { formatEstimatedDuration } from "@/features/interview-config/shared/utils/format-estimated-duration";
+import { routes } from "@/lib/routes";
 
 interface InterviewLandingSectionProps {
   billId: string;
-  estimatedDuration: number | null;
 }
 
-function getCheckPoints(estimatedDuration: number | null): string[] {
-  const durationText = formatEstimatedDuration(estimatedDuration);
+function getCheckPoints(): string[] {
   return [
-    durationText ? `所要時間は${durationText}` : null,
+    "所要時間は約5分〜",
     "AIがあなたのご意見を深掘り",
-    siteConfig.managingParty
-      ? `${siteConfig.managingParty}の政策検討に活用`
-      : "政策検討に活用",
-  ].filter((text): text is string => text !== null);
+    "チームみらいの政策検討に活用",
+  ];
 }
 
 function _InterviewBadge() {
@@ -26,7 +22,7 @@ function _InterviewBadge() {
     <div className="flex">
       <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-mirai-surface-tag rounded-2xl">
         <span className="text-[11px] font-medium text-black leading-[1.09]">
-          議案の当事者の方へ
+          法案の当事者・有識者の方へ
         </span>
       </div>
     </div>
@@ -42,12 +38,8 @@ function _CheckPoint({ text }: { text: string }) {
   );
 }
 
-function _CheckPointsList({
-  estimatedDuration,
-}: {
-  estimatedDuration: number | null;
-}) {
-  const checkPoints = getCheckPoints(estimatedDuration);
+function _CheckPointsList() {
+  const checkPoints = getCheckPoints();
   return (
     <div className="flex flex-col gap-2">
       {checkPoints.map((text) => (
@@ -59,7 +51,7 @@ function _CheckPointsList({
 
 function _InterviewCTAButton({ billId }: { billId: string }) {
   return (
-    <Link href={`/bills/${billId}/interview`}>
+    <Link href={routes.interviewLP(billId) as Route}>
       <Button className="w-[224px] bg-mirai-gradient text-black border border-black rounded-3xl h-[42px] px-5 font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-1">
         <span>AIインタビューを受ける</span>
         <ArrowRight className="size-4" />
@@ -70,7 +62,7 @@ function _InterviewCTAButton({ billId }: { billId: string }) {
 
 function _InterviewIllustration() {
   return (
-    <div className="absolute right-6 bottom-[-32px] w-[113.6px] h-[177px] pointer-events-none">
+    <div className="absolute right-[-16px] sm:right-6 bottom-[-32px] w-[113.6px] h-[177px] pointer-events-none">
       <Image
         src="/illustrations/interview-illustration.png"
         alt=""
@@ -84,7 +76,6 @@ function _InterviewIllustration() {
 
 export function InterviewLandingSection({
   billId,
-  estimatedDuration,
 }: InterviewLandingSectionProps) {
   return (
     <div className="relative overflow-hidden rounded-xl bg-white p-6 mx-auto">
@@ -95,12 +86,12 @@ export function InterviewLandingSection({
 
         <div className="space-y-2">
           <h2 className="text-lg font-bold leading-[1.67]">
-            本議案についてのご意見を
+            本法案についてのご意見を
             <br className="pc:hidden" />
             お聞かせください
           </h2>
 
-          <_CheckPointsList estimatedDuration={estimatedDuration} />
+          <_CheckPointsList />
 
           <div className="pt-2">
             <_InterviewCTAButton billId={billId} />

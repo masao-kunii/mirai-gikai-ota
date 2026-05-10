@@ -1,64 +1,148 @@
-import { GitMerge, Plus } from "lucide-react";
+import type { Route } from "next";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { ResizableBillTable } from "../../../client/components/bill-list/resizable-bill-table";
-import type { BillSortConfig } from "../../../shared/types";
+import { routes } from "@/lib/routes";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { BillActionsMenu } from "../../../client/components/bill-actions-menu/bill-actions-menu";
+import { PreviewButton } from "../../../client/components/bill-list/preview-button";
+import { PublishStatusBadge } from "../../../client/components/bill-list/publish-status-badge";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { ViewButton } from "../../../client/components/bill-list/view-button";
+import { BILL_STATUS_CONFIG } from "../../../shared/constants/bill-config";
+import type {
+  BillSortConfig,
+  BillStatus,
+  BillWithDietSession,
+} from "../../../shared/types";
+import { getBillStatusLabel } from "../../../shared/types";
 import { getBills } from "../../loaders/get-bills";
-import { getCouncilSessions } from "../../loaders/get-council-sessions";
-import { getTags } from "../../loaders/get-tags";
 
-type BillListProps = {
-  sortConfig: BillSortConfig;
-  sessionId?: string;
-  tagId?: string;
-  publishStatus?: string;
-  reviewStatus?: string;
-};
+function StatusBadge({
+  status,
+  originatingHouse,
+}: {
+  status: BillStatus;
+  originatingHouse: BillWithDietSession["originating_house"];
+}) {
+  const config = BILL_STATUS_CONFIG[status];
+  const Icon = config.icon;
 
-export async function BillList({
-  sortConfig,
-  sessionId,
-  tagId,
-  publishStatus,
-  reviewStatus,
-}: BillListProps) {
-  const [bills, sessions, tags] = await Promise.all([
-    getBills(sortConfig, { sessionId, tagId, publishStatus, reviewStatus }),
-    getCouncilSessions(),
-    getTags(),
-  ]);
+  return (
+    <div className="inline-flex items-center gap-1.5 py-1 rounded-full text-sm font-bold">
+      <Icon className="h-4 w-4" />
+      <span>{getBillStatusLabel(status, originatingHouse)}</span>
+    </div>
+  );
+}
+
+export async function BillList({ sortConfig }: { sortConfig: BillSortConfig }) {
+  const bills = await getBills(sortConfig);
 
   return (
     <div>
       <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="text-sm text-gray-600">{bills.length}件の議案</div>
-        <div className="flex items-center gap-2">
-          <Link href="/bills/merge">
-            <Button variant="outline">
-              <GitMerge className="h-4 w-4 mr-1" />
-              重複統合
-            </Button>
-          </Link>
-          <Link href="/bills/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-1" />
-              新規作成
-            </Button>
-          </Link>
-        </div>
+        <Link href={routes.billNew()}>
+          <Button>
+            <Plus className="h-4 w-4 mr-1" />
+            新規作成
+          </Button>
+        </Link>
       </div>
 
-      <ResizableBillTable
-        bills={bills}
-        sessions={sessions}
-        tags={tags}
-        sortConfig={sortConfig}
-        sessionId={sessionId}
-        tagId={tagId}
-        publishStatus={publishStatus}
-        reviewStatus={reviewStatus}
-      />
+      <div className="rounded-md border bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>議案名</TableHead>
+              <TableHead>国会会期</TableHead>
+              <SortableTableHead
+                field="publish_status_order"
+                currentField={sortConfig.field}
+                currentOrder={sortConfig.order}
+              >
+                公開ステータス
+              </SortableTableHead>
+              <SortableTableHead
+                field="status_order"
+                currentField={sortConfig.field}
+                currentOrder={sortConfig.order}
+              >
+                審議ステータス
+              </SortableTableHead>
+              <SortableTableHead
+                field="submitted_date"
+                currentField={sortConfig.field}
+                currentOrder={sortConfig.order}
+              >
+                法案提出日
+              </SortableTableHead>
+              <TableHead className="w-[50px]" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bills.map((bill) => (
+              <BillRow key={bill.id} bill={bill} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
+  );
+}
+
+function BillRow({ bill }: { bill: BillWithDietSession }) {
+  return (
+    <TableRow>
+      <TableCell className="max-w-[400px]">
+        <Link
+          href={routes.billEdit(bill.id) as Route}
+          className="block truncate font-medium hover:underline"
+        >
+          {bill.name}
+        </Link>
+      </TableCell>
+      <TableCell className="text-gray-600">
+        {bill.council_sessions?.name ?? "-"}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <PublishStatusBadge
+            billId={bill.id}
+            publishStatus={bill.publish_status}
+          />
+          {(bill.publish_status === "draft" ||
+            bill.publish_status === "coming_soon") && (
+            <PreviewButton billId={bill.id} />
+          )}
+          {bill.publish_status === "published" && (
+            <ViewButton billId={bill.id} />
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <StatusBadge
+          status={bill.status}
+          originatingHouse={bill.originating_house}
+        />
+      </TableCell>
+      <TableCell className="text-gray-600">
+        {bill.submitted_date
+          ? new Date(bill.submitted_date).toLocaleDateString("ja-JP")
+          : "-"}
+      </TableCell>
+      <TableCell>
+        <BillActionsMenu billId={bill.id} billName={bill.name} />
+      </TableCell>
+    </TableRow>
   );
 }

@@ -385,7 +385,9 @@ export function createInterviewConfig(
     name: "デフォルト設定",
     status: "public",
     themes: ["賛否", "理由"],
-    knowledge_source: `この議案についてあなたの意見を聞かせてください。`,
+    // NOTE: upstream migration 20260428100000 で knowledge_source は
+    // interview_configs から bills へ移設された。bills 側の更新は
+    // run.ts で targetBill に対して行う。
   };
 }
 

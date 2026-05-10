@@ -1,11 +1,13 @@
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { getPublicReportLink } from "@/features/interview-config/shared/utils/interview-links";
+import { cn } from "@/lib/utils";
 import {
   type InterviewReportRole,
-  formatRoleLabel,
   roleIcons,
+  roleLabels,
+  stanceBadgeBgStyles,
   stanceLabels,
   stanceTextColors,
 } from "../constants";
@@ -22,68 +24,95 @@ export interface ReportCardData {
 
 interface ReportCardProps {
   report: ReportCardData;
-  summaryMaxLength?: number;
+  children?: React.ReactNode;
+  href?: string;
 }
 
-export function ReportCard({ report, summaryMaxLength = 80 }: ReportCardProps) {
+export function ReportCard({ report, children, href }: ReportCardProps) {
   const stanceLabel = report.stance
     ? stanceLabels[report.stance] || report.stance
     : null;
   const stanceTextColor = report.stance
     ? stanceTextColors[report.stance] || ""
     : "";
+  const stanceBadgeBg = report.stance
+    ? stanceBadgeBgStyles[report.stance] || ""
+    : "";
   const RoleIcon = report.role
     ? roleIcons[report.role as InterviewReportRole]
     : null;
-  const roleLabel = formatRoleLabel(report.role, report.role_title);
+  const roleLabel = report.role
+    ? roleLabels[report.role as InterviewReportRole] || report.role
+    : null;
   const relativeTime = formatRelativeTime(report.created_at);
 
   const summary = report.summary || "";
-  const truncatedSummary =
-    summary.length > summaryMaxLength
-      ? `${summary.slice(0, summaryMaxLength)}...`
-      : summary;
 
   return (
-    <Link
-      href={getPublicReportLink(report.id)}
-      className="block bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors"
-    >
-      <div className="flex items-center gap-2">
+    <article className="relative bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors">
+      <Link
+        href={(href ?? getPublicReportLink(report.id)) as Route}
+        prefetch={false}
+        className="absolute inset-0 rounded-lg"
+        aria-label={
+          [stanceLabel, report.role_title || roleLabel, summary]
+            .filter(Boolean)
+            .join(" / ") || "レポートを見る"
+        }
+      />
+      <div className="flex items-start gap-3">
         {report.stance && (
           <Image
             src={`/icons/stance-${report.stance}.png`}
             alt={stanceLabel || ""}
-            width={38}
-            height={38}
+            width={34}
+            height={34}
             className="rounded-full flex-shrink-0"
           />
         )}
-        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-          {stanceLabel && (
-            <span className={cn("text-base font-bold", stanceTextColor)}>
-              {stanceLabel}
-            </span>
-          )}
-          <div className="flex items-center gap-2">
-            {roleLabel && (
-              <div className="flex items-center gap-0.5 text-mirai-text-subtle">
-                {RoleIcon && <RoleIcon size={16} className="flex-shrink-0" />}
-                <span className="text-xs">{roleLabel}</span>
-              </div>
+        <div className="flex flex-col gap-2 min-w-0 flex-1">
+          <div className="flex flex-col gap-1.5">
+            {report.role_title && (
+              <p className="text-base font-bold leading-snug text-mirai-text">
+                {report.role_title}
+              </p>
             )}
-            <span className="text-[13px] text-mirai-text-muted leading-[1.2]">
-              {relativeTime}
-            </span>
+
+            <div className="flex flex-1 min-w-0 items-center gap-3">
+              {stanceLabel && (
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center px-3 py-0.5 rounded-2xl text-xs font-medium leading-3 flex-shrink-0",
+                    stanceBadgeBg,
+                    stanceTextColor
+                  )}
+                >
+                  {stanceLabel}
+                </span>
+              )}
+              {roleLabel && (
+                <div className="flex items-center gap-1 text-mirai-text-subtle flex-shrink-0">
+                  {RoleIcon && <RoleIcon size={16} className="flex-shrink-0" />}
+                  <span className="text-xs leading-3">{roleLabel}</span>
+                </div>
+              )}
+              <span className="text-[13px] text-mirai-text-muted whitespace-nowrap flex-shrink-0">
+                {relativeTime}
+              </span>
+            </div>
+
+            {summary && (
+              <p className="text-sm leading-6 text-black">{summary}</p>
+            )}
           </div>
+
+          {children && (
+            <div className="relative z-10 pointer-events-none [&_button]:pointer-events-auto [&_a]:pointer-events-auto">
+              {children}
+            </div>
+          )}
         </div>
       </div>
-
-      {truncatedSummary && (
-        <p className="mt-2 text-[13px] leading-[1.692] text-black">
-          {truncatedSummary}
-        </p>
-      )}
-    </Link>
+    </article>
   );
 }

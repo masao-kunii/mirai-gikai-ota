@@ -27,8 +27,8 @@ export function createShippingBillInterviewConfig(
     name: "デフォルト設定",
     status: "public",
     themes: ["電子化の影響", "実務上の課題", "国際整合性"],
-    knowledge_source:
-      "船荷証券（B/L）の電子化に関する法律案について、あなたの意見を聞かせてください。",
+    // NOTE: knowledge_source は bills 側に移設（migration 20260428100000）。
+    // ここでは config からは外し、bills 側で別途 set する想定。
   };
 }
 

@@ -24,6 +24,7 @@ import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useViewportHeight } from "@/hooks/use-viewport-height";
 import { SystemMessage } from "./system-message";
 import { UserMessage } from "./user-message";
+
 interface ChatWindowProps {
   billContext?: BillWithContent;
   hasInterviewConfig?: boolean;
@@ -84,7 +85,7 @@ function ChatMessages({
         {/* 初期メッセージ */}
         <div className="flex flex-col gap-1">
           <p className="text-sm font-bold leading-[1.8] text-mirai-text">
-            市議会や議案について、気になることをAIに質問してください。
+            国会や法案について、気になることをAIに質問してください。
           </p>
           {billContext && (
             <p className="text-sm font-bold leading-[1.8] text-mirai-text">
@@ -96,11 +97,11 @@ function ChatMessages({
         {/* サンプル質問チップ */}
         <div className="flex flex-wrap gap-3">
           {(billContext
-            ? [`この議案のポイントは？`, "この議案は私にどんな影響がある？"]
+            ? [`この法案のポイントは？`, "この法案は私にどんな影響がある？"]
             : [
-                "みらい議会＠大田区って何？",
-                "市議会って何をするところ？",
-                "注目の議案について教えて",
+                "みらい議会って何？",
+                "国会って何をするところ？",
+                "注目の法案について教えて",
               ]
           ).map((question) => {
             return (

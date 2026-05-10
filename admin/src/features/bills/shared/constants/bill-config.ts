@@ -19,32 +19,24 @@ export const BILL_STATUS_CONFIG: Record<
     icon: Settings,
     color: "text-gray-600 bg-gray-50",
   },
-  submitted: {
+  introduced: {
     icon: FileText,
     color: "text-blue-600 bg-blue-50",
   },
-  in_committee: {
+  in_originating_house: {
     icon: Clock,
     color: "text-yellow-600 bg-yellow-50",
   },
-  plenary_session: {
+  in_receiving_house: {
     icon: AlertCircle,
     color: "text-orange-600 bg-orange-50",
   },
-  approved: {
+  enacted: {
     icon: CheckCircle,
     color: "text-green-600 bg-green-50",
   },
   rejected: {
     icon: XCircle,
     color: "text-red-600 bg-red-50",
-  },
-  adopted: {
-    icon: CheckCircle,
-    color: "text-teal-600 bg-teal-50",
-  },
-  partially_adopted: {
-    icon: CheckCircle,
-    color: "text-cyan-600 bg-cyan-50",
   },
 };

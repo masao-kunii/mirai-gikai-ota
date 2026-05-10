@@ -7,12 +7,13 @@ import type { BillWithContent } from "../../shared/types";
 import {
   findFeaturedBillsWithContents,
   findTagsByBillIds,
+  findBillIdsWithPublicInterview,
 } from "../repositories/bill-repository";
 
 /**
  * 注目の議案を取得する
- * is_featured = true でアクティブな定例会の公開済み議案を最新順に取得
- * アクティブな定例会がない場合は全件取得
+ * is_featured = true でアクティブな国会会期の公開済み議案を最新順に取得
+ * アクティブな国会会期がない場合は全件取得
  */
 export async function getFeaturedBills(): Promise<BillWithContent[]> {
   // キャッシュ外でcookiesにアクセス
@@ -25,20 +26,23 @@ export async function getFeaturedBills(): Promise<BillWithContent[]> {
 const _getCachedFeaturedBills = unstable_cache(
   async (
     difficultyLevel: DifficultyLevelEnum,
-    councilSessionId: string | null
+    dietSessionId: string | null
   ): Promise<BillWithContent[]> => {
     const data = await findFeaturedBillsWithContents(
       difficultyLevel,
-      councilSessionId
+      dietSessionId
     );
 
     if (data.length === 0) {
       return [];
     }
 
-    // タグ情報を一括取得
+    // タグ情報とインタビュー状態を一括取得
     const billIds = data.map((item: { id: string }) => item.id);
-    const tagsByBillId = await findTagsByBillIds(billIds);
+    const [tagsByBillId, interviewBillIds] = await Promise.all([
+      findTagsByBillIds(billIds),
+      findBillIdsWithPublicInterview(billIds),
+    ]);
 
     // データ構造を整形
     return data.map((item) => {
@@ -49,12 +53,13 @@ const _getCachedFeaturedBills = unstable_cache(
           ? bill_contents[0]
           : undefined,
         tags: tagsByBillId.get(item.id) || [],
+        hasPublicInterview: interviewBillIds.has(item.id),
       };
     }) as BillWithContent[];
   },
   ["featured-bills-list"],
   {
     revalidate: 600, // 10分（600秒）
-    tags: [CACHE_TAGS.BILLS],
+    tags: [CACHE_TAGS.BILLS, CACHE_TAGS.INTERVIEW_CONFIGS],
   }
 );

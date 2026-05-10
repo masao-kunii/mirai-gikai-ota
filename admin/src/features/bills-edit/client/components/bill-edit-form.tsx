@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 
-import type { Committee } from "@/features/committees/shared/types";
-import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import type { DietSession } from "@/features/diet-sessions/shared/types";
 import { updateBill } from "../../server/actions/update-bill";
 import {
   type Bill,
@@ -20,37 +19,38 @@ import { BillFormFields } from "./bill-form-fields";
 
 interface BillEditFormProps {
   bill: Bill;
-  councilSessions: CouncilSession[];
-  committees: Committee[];
+  councilSessions: DietSession[];
 }
 
-export function BillEditForm({
-  bill,
-  councilSessions,
-  committees,
-}: BillEditFormProps) {
+export function BillEditForm({ bill, councilSessions }: BillEditFormProps) {
   const { isSubmitting, error, handleSubmit, handleCancel } = useBillForm();
 
   // If bill has no council_session_id, default to the latest session (first in the list)
-  const defaultCouncilSessionId =
+  const defaultDietSessionId =
     bill.council_session_id ??
     (councilSessions.length > 0 ? councilSessions[0].id : null);
 
   const form = useForm<BillUpdateInput>({
     resolver: zodResolver(billUpdateSchema),
     defaultValues: {
-      bill_number: bill.bill_number,
       name: bill.name,
       status: bill.status,
+      originating_house: bill.originating_house,
       status_note: bill.status_note,
-      published_at: bill.published_at
-        ? new Date(bill.published_at).toISOString().slice(0, 16)
+      submitted_date: bill.submitted_date
+        ? new Date(bill.submitted_date).toLocaleDateString("sv-SE", {
+            timeZone: "Asia/Tokyo",
+          })
         : "",
       thumbnail_url: bill.thumbnail_url,
       share_thumbnail_url: bill.share_thumbnail_url,
+      council_url: bill.council_url,
+      slug: bill.slug,
       is_featured: bill.is_featured,
-      committee_id: bill.committee_id,
-      council_session_id: defaultCouncilSessionId,
+      is_review_completed: bill.is_review_completed,
+      council_session_id: defaultDietSessionId,
+      knowledge_source: bill.knowledge_source ?? "",
+      use_knowledge_source_in_chat: bill.use_knowledge_source_in_chat,
     },
   });
 
@@ -73,7 +73,6 @@ export function BillEditForm({
               control={form.control}
               billId={bill.id}
               councilSessions={councilSessions}
-              committees={committees}
             />
 
             {error && (

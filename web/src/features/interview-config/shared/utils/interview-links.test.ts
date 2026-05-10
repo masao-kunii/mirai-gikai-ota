@@ -5,6 +5,7 @@ import {
   getInterviewChatLink,
   getInterviewChatLogLink,
   getInterviewLPLink,
+  getInterviewMessageLink,
   getInterviewReportCompleteLink,
   getPublicReportLink,
 } from "./interview-links";
@@ -59,12 +60,50 @@ describe("getPublicReportLink", () => {
   it("returns public report path", () => {
     expect(getPublicReportLink("report-456")).toBe("/report/report-456");
   });
+
+  it("returns public report path with from=opinions when from is specified", () => {
+    expect(getPublicReportLink("report-456", "opinions")).toBe(
+      "/report/report-456?from=opinions"
+    );
+  });
 });
 
 describe("getInterviewChatLogLink", () => {
-  it("returns chat log path", () => {
+  it("returns public report chat-log section because chat log is integrated there", () => {
     expect(getInterviewChatLogLink("report-456")).toBe(
-      "/report/report-456/chat-log"
+      "/report/report-456#chat-log"
+    );
+  });
+
+  it("returns public report chat-log section with from=opinions when from is specified", () => {
+    expect(getInterviewChatLogLink("report-456", "opinions")).toBe(
+      "/report/report-456?from=opinions#chat-log"
+    );
+  });
+
+  it("returns report complete chat-log section when from=complete is specified", () => {
+    expect(getInterviewChatLogLink("report-456", "complete")).toBe(
+      "/report/report-456/complete#chat-log"
+    );
+  });
+});
+
+describe("getInterviewMessageLink", () => {
+  it("returns public report message anchor", () => {
+    expect(getInterviewMessageLink("report-456", "abc-123")).toBe(
+      "/report/report-456#message-abc-123"
+    );
+  });
+
+  it("returns public report message anchor with from=opinions when from is specified", () => {
+    expect(getInterviewMessageLink("report-456", "abc-123", "opinions")).toBe(
+      "/report/report-456?from=opinions#message-abc-123"
+    );
+  });
+
+  it("returns report complete message anchor when from=complete is specified", () => {
+    expect(getInterviewMessageLink("report-456", "abc-123", "complete")).toBe(
+      "/report/report-456/complete#message-abc-123"
     );
   });
 });

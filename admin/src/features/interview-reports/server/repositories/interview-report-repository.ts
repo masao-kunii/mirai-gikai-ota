@@ -1,32 +1,123 @@
 import "server-only";
 
 import { createAdminClient } from "@mirai-gikai/supabase";
+import { isReportAutoPublishEligible } from "@mirai-gikai/shared/report-publication/auto-publish";
+import type { SessionFilterConfig } from "../../shared/types";
+import { DEFAULT_SESSION_FILTER } from "../../shared/types";
 
-export async function findInterviewConfigIdByBillId(
-  billId: string
-): Promise<{ id: string } | null> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("interview_configs")
-    .select("id")
-    .eq("bill_id", billId)
-    .single();
+function toRpcFilterParams(filters: SessionFilterConfig) {
+  return {
+    p_status: filters.status !== "all" ? (filters.status as string) : undefined,
+    p_visibility:
+      filters.visibility !== "all" ? (filters.visibility as string) : undefined,
+    p_stance: filters.stance !== "all" ? (filters.stance as string) : undefined,
+    p_role: filters.role !== "all" ? (filters.role as string) : undefined,
+  };
+}
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      return null;
-    }
-    throw new Error(`Failed to fetch interview config: ${error.message}`);
-  }
-
-  return data;
+function hasReportLevelFilters(filters: SessionFilterConfig): boolean {
+  return (
+    filters.visibility !== "all" ||
+    filters.stance !== "all" ||
+    filters.role !== "all" ||
+    filters.moderation !== "all"
+  );
 }
 
 export async function findInterviewSessionsWithReport(
   configId: string,
   from: number,
-  to: number
+  to: number,
+  orderBy: {
+    column: string;
+    ascending: boolean;
+  } = { column: "started_at", ascending: false },
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
 ) {
+  const supabase = createAdminClient();
+  const useInnerJoin = hasReportLevelFilters(filters);
+  const selectQuery = useInnerJoin
+    ? "*, interview_report!inner(*)"
+    : "*, interview_report(*)";
+
+  let query = supabase
+    .from("interview_sessions")
+    .select(selectQuery)
+    .eq("interview_config_id", configId);
+
+  // ステータスフィルタ
+  if (filters.status === "completed") {
+    query = query.not("completed_at", "is", null);
+  } else if (filters.status === "in_progress") {
+    query = query.is("completed_at", null).is("archived_at", null);
+  } else if (filters.status === "archived") {
+    query = query.is("completed_at", null).not("archived_at", "is", null);
+  }
+
+  // レポートレベルフィルタ（inner join使用時のみ有効）
+  if (filters.visibility === "public") {
+    query = query.eq("interview_report.is_public_by_admin", true);
+  } else if (filters.visibility === "private") {
+    query = query.eq("interview_report.is_public_by_admin", false);
+  }
+
+  if (filters.stance !== "all") {
+    query = query.eq("interview_report.stance", filters.stance);
+  }
+
+  if (filters.role !== "all") {
+    query = query.eq("interview_report.role", filters.role);
+  }
+
+  if (filters.moderation === "unscored") {
+    query = query.is("interview_report.moderation_score", null);
+  } else if (filters.moderation !== "all") {
+    query = query.eq("interview_report.moderation_status", filters.moderation);
+  }
+
+  const { data, error } = await query
+    .order(orderBy.column, { ascending: orderBy.ascending })
+    .range(from, to);
+
+  if (error) {
+    throw new Error(`Failed to fetch interview sessions: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function findSessionIdsOrderedByMessageCount(
+  configId: string,
+  ascending: boolean,
+  offset: number,
+  limit: number,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc(
+    "find_sessions_ordered_by_message_count",
+    {
+      p_config_id: configId,
+      p_ascending: ascending,
+      p_offset: offset,
+      p_limit: limit,
+      ...toRpcFilterParams(filters),
+    }
+  );
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch sessions ordered by message count: ${error.message}`
+    );
+  }
+
+  return (data || []).map((row) => row.session_id);
+}
+
+export async function findInterviewSessionsWithReportByIds(
+  sessionIds: string[]
+) {
+  if (sessionIds.length === 0) return [];
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("interview_sessions")
@@ -36,15 +127,204 @@ export async function findInterviewSessionsWithReport(
       interview_report(*)
     `
     )
-    .eq("interview_config_id", configId)
-    .order("started_at", { ascending: false })
-    .range(from, to);
+    .in("id", sessionIds);
 
   if (error) {
     throw new Error(`Failed to fetch interview sessions: ${error.message}`);
   }
 
-  return data;
+  // Preserve the order of sessionIds
+  const dataMap = new Map(data.map((s) => [s.id, s]));
+  return sessionIds.map((id) => dataMap.get(id)).filter(Boolean) as typeof data;
+}
+
+export async function findFilteredSessionIds(
+  configId: string,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
+): Promise<string[]> {
+  const supabase = createAdminClient();
+
+  // レポートレベルフィルタがある場合はreport経由でセッションIDを取得
+  if (hasReportLevelFilters(filters)) {
+    let reportQuery = supabase
+      .from("interview_report")
+      .select("interview_session_id, interview_sessions!inner(id)")
+      .eq("interview_sessions.interview_config_id", configId);
+
+    if (filters.status === "completed") {
+      reportQuery = reportQuery.not(
+        "interview_sessions.completed_at",
+        "is",
+        null
+      );
+    } else if (filters.status === "in_progress") {
+      reportQuery = reportQuery
+        .is("interview_sessions.completed_at", null)
+        .is("interview_sessions.archived_at", null);
+    } else if (filters.status === "archived") {
+      reportQuery = reportQuery
+        .is("interview_sessions.completed_at", null)
+        .not("interview_sessions.archived_at", "is", null);
+    }
+
+    if (filters.visibility === "public") {
+      reportQuery = reportQuery.eq("is_public_by_admin", true);
+    } else if (filters.visibility === "private") {
+      reportQuery = reportQuery.eq("is_public_by_admin", false);
+    }
+
+    if (filters.stance !== "all") {
+      reportQuery = reportQuery.eq("stance", filters.stance);
+    }
+
+    if (filters.role !== "all") {
+      reportQuery = reportQuery.eq("role", filters.role);
+    }
+
+    if (filters.moderation === "unscored") {
+      reportQuery = reportQuery.is("moderation_score", null);
+    } else if (filters.moderation !== "all") {
+      reportQuery = reportQuery.eq("moderation_status", filters.moderation);
+    }
+
+    const { data, error } = await reportQuery;
+
+    if (error) {
+      throw new Error(`Failed to fetch filtered session ids: ${error.message}`);
+    }
+
+    return (data || []).map((row) => row.interview_session_id);
+  }
+
+  // セッションレベルフィルタのみの場合
+  let query = supabase
+    .from("interview_sessions")
+    .select("id")
+    .eq("interview_config_id", configId);
+
+  if (filters.status === "completed") {
+    query = query.not("completed_at", "is", null);
+  } else if (filters.status === "in_progress") {
+    query = query.is("completed_at", null).is("archived_at", null);
+  } else if (filters.status === "archived") {
+    query = query.is("completed_at", null).not("archived_at", "is", null);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to fetch filtered session ids: ${error.message}`);
+  }
+
+  return (data || []).map((row) => row.id);
+}
+
+export async function findSessionIdsOrderedByTotalContentRichness(
+  configId: string,
+  ascending: boolean,
+  offset: number,
+  limit: number,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc(
+    "find_sessions_ordered_by_total_content_richness",
+    {
+      p_config_id: configId,
+      p_ascending: ascending,
+      p_offset: offset,
+      p_limit: limit,
+      ...toRpcFilterParams(filters),
+    }
+  );
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch sessions ordered by total content richness: ${error.message}`
+    );
+  }
+
+  return (data || []).map((row) => row.session_id);
+}
+
+export async function findSessionIdsOrderedByHelpfulCount(
+  configId: string,
+  ascending: boolean,
+  offset: number,
+  limit: number,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc(
+    "find_sessions_ordered_by_helpful_count",
+    {
+      p_config_id: configId,
+      p_ascending: ascending,
+      p_offset: offset,
+      p_limit: limit,
+      ...toRpcFilterParams(filters),
+    }
+  );
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch sessions ordered by helpful count: ${error.message}`
+    );
+  }
+
+  return (data || []).map((row) => row.session_id);
+}
+
+export async function findSessionIdsOrderedByModerationScore(
+  configId: string,
+  ascending: boolean,
+  offset: number,
+  limit: number,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc(
+    "find_sessions_ordered_by_moderation_score",
+    {
+      p_config_id: configId,
+      p_ascending: ascending,
+      p_offset: offset,
+      p_limit: limit,
+      ...toRpcFilterParams(filters),
+    }
+  );
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch sessions ordered by moderation score: ${error.message}`
+    );
+  }
+
+  return (data || []).map((row) => row.session_id);
+}
+
+export async function findHelpfulCountsByReportIds(
+  reportIds: string[]
+): Promise<Map<string, number>> {
+  const countsMap = new Map<string, number>();
+  if (reportIds.length === 0) return countsMap;
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("count_reactions_by_report_ids", {
+    report_ids: reportIds,
+  });
+
+  if (error) {
+    throw new Error(`Failed to fetch helpful counts: ${error.message}`);
+  }
+
+  for (const row of data) {
+    if (row.reaction_type === "helpful") {
+      countsMap.set(row.interview_report_id, Number(row.cnt));
+    }
+  }
+
+  return countsMap;
 }
 
 export async function findInterviewMessageCounts(sessionIds: string[]) {
@@ -61,13 +341,49 @@ export async function findInterviewMessageCounts(sessionIds: string[]) {
 }
 
 export async function countInterviewSessionsByConfigId(
-  configId: string
+  configId: string,
+  filters: SessionFilterConfig = DEFAULT_SESSION_FILTER
 ): Promise<number> {
   const supabase = createAdminClient();
-  const { count, error } = await supabase
+  const useInnerJoin = hasReportLevelFilters(filters);
+  const selectQuery = useInnerJoin ? "*, interview_report!inner(*)" : "*";
+
+  let query = supabase
     .from("interview_sessions")
-    .select("*", { count: "exact", head: true })
+    .select(selectQuery, { count: "exact", head: true })
     .eq("interview_config_id", configId);
+
+  // ステータスフィルタ
+  if (filters.status === "completed") {
+    query = query.not("completed_at", "is", null);
+  } else if (filters.status === "in_progress") {
+    query = query.is("completed_at", null).is("archived_at", null);
+  } else if (filters.status === "archived") {
+    query = query.is("completed_at", null).not("archived_at", "is", null);
+  }
+
+  // レポートレベルフィルタ
+  if (filters.visibility === "public") {
+    query = query.eq("interview_report.is_public_by_admin", true);
+  } else if (filters.visibility === "private") {
+    query = query.eq("interview_report.is_public_by_admin", false);
+  }
+
+  if (filters.stance !== "all") {
+    query = query.eq("interview_report.stance", filters.stance);
+  }
+
+  if (filters.role !== "all") {
+    query = query.eq("interview_report.role", filters.role);
+  }
+
+  if (filters.moderation === "unscored") {
+    query = query.is("interview_report.moderation_score", null);
+  } else if (filters.moderation !== "all") {
+    query = query.eq("interview_report.moderation_status", filters.moderation);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     throw new Error(`Failed to fetch session count: ${error.message}`);
@@ -124,6 +440,56 @@ export async function findInterviewMessagesBySessionId(sessionId: string) {
   return data;
 }
 
+export async function findReactionCountsByReportId(
+  reportId: string
+): Promise<{ helpful: number }> {
+  const supabase = createAdminClient();
+  const helpfulResult = await supabase
+    .from("report_reactions")
+    .select("*", { count: "exact", head: true })
+    .eq("interview_report_id", reportId)
+    .eq("reaction_type", "helpful");
+
+  if (helpfulResult.error) {
+    throw new Error(
+      `Failed to fetch helpful count: ${helpfulResult.error.message}`
+    );
+  }
+
+  return {
+    helpful: helpfulResult.count ?? 0,
+  };
+}
+
+export async function findFeedbackTagsBySessionId(
+  sessionId: string
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("interview_rating_feedbacks")
+    .select("tag")
+    .eq("interview_session_id", sessionId);
+
+  if (error) {
+    throw new Error(`Failed to fetch feedback tags: ${error.message}`);
+  }
+
+  return (data || []).map((row) => row.tag);
+}
+
+export async function findInterviewStatistics(configId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("get_interview_statistics", {
+    p_config_id: configId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to fetch interview statistics: ${error.message}`);
+  }
+
+  return data?.[0] ?? null;
+}
+
 export async function updateReportVisibility(
   reportId: string,
   isPublic: boolean
@@ -137,4 +503,202 @@ export async function updateReportVisibility(
   if (error) {
     throw new Error(`Failed to update report visibility: ${error.message}`);
   }
+}
+
+export async function findReportForModerationScoringById(reportId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("interview_report")
+    .select("id, interview_session_id, summary, opinions, role_description")
+    .eq("id", reportId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(
+      `Failed to fetch report for moderation scoring: ${error.message}`
+    );
+  }
+
+  return data;
+}
+
+export async function findReportsForModerationScoring() {
+  const supabase = createAdminClient();
+  const PAGE_SIZE = 500;
+  type ReportRow = {
+    id: string;
+    interview_session_id: string;
+    summary: string | null;
+    opinions: unknown;
+    role_description: string | null;
+  };
+  const allData: ReportRow[] = [];
+  let offset = 0;
+
+  // Supabase max_rows 制限を超えるデータに対応するためページネーション
+  while (true) {
+    const { data, error } = await supabase
+      .from("interview_report")
+      .select("id, interview_session_id, summary, opinions, role_description")
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(
+        `Failed to fetch reports for moderation scoring: ${error.message}`
+      );
+    }
+
+    allData.push(...data);
+
+    if (data.length < PAGE_SIZE) {
+      break;
+    }
+    offset += PAGE_SIZE;
+  }
+
+  return allData;
+}
+
+/**
+ * interview_report テーブルからIDをページネーション付きで取得するヘルパー
+ */
+async function fetchReportIdsPaginated(options?: {
+  unscoredOnly?: boolean;
+}): Promise<string[]> {
+  const supabase = createAdminClient();
+  const PAGE_SIZE = 500;
+  const allIds: string[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = supabase.from("interview_report").select("id");
+
+    if (options?.unscoredOnly) {
+      query = query.is("moderation_score", null);
+    }
+
+    const { data, error } = await query
+      .order("id")
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(`Failed to fetch report ids: ${error.message}`);
+    }
+
+    allIds.push(...data.map((r) => r.id));
+
+    if (data.length < PAGE_SIZE) {
+      break;
+    }
+    offset += PAGE_SIZE;
+  }
+
+  return allIds;
+}
+
+/**
+ * モデレーション未評価のレポートIDのみを取得する
+ */
+export async function findUnscoredReportIds(): Promise<string[]> {
+  return fetchReportIdsPaginated({ unscoredOnly: true });
+}
+
+/**
+ * 全レポートIDを取得する（再評価用）
+ */
+export async function findAllReportIds(): Promise<string[]> {
+  return fetchReportIdsPaginated();
+}
+
+export async function updateModerationScore(
+  reportId: string,
+  params: {
+    score: number;
+    reasoning: string;
+  }
+): Promise<void> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("interview_report")
+    .update({
+      moderation_score: params.score,
+      moderation_reasoning: params.reasoning,
+    })
+    .eq("id", reportId);
+
+  if (error) {
+    throw new Error(`Failed to update moderation score: ${error.message}`);
+  }
+
+  await publishReportIfAutoPublishEligible(reportId);
+}
+
+export async function updateContentRichness(
+  reportId: string,
+  contentRichness: {
+    total: number;
+    clarity: number;
+    specificity: number;
+    impact: number;
+    constructiveness: number;
+    reasoning: string;
+  }
+): Promise<void> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("interview_report")
+    .update({
+      content_richness: contentRichness,
+    })
+    .eq("id", reportId);
+
+  if (error) {
+    throw new Error(`Failed to update content richness: ${error.message}`);
+  }
+
+  await publishReportIfAutoPublishEligible(reportId);
+}
+
+export async function publishReportIfAutoPublishEligible(
+  reportId: string
+): Promise<boolean> {
+  const supabase = createAdminClient();
+  const { data: report, error: fetchError } = await supabase
+    .from("interview_report")
+    .select(
+      "is_public_by_user, is_public_by_admin, moderation_score, total_content_richness"
+    )
+    .eq("id", reportId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(
+      `Failed to fetch report for auto publish: ${fetchError.message}`
+    );
+  }
+
+  if (
+    report.is_public_by_admin ||
+    !isReportAutoPublishEligible({
+      isPublicByUser: report.is_public_by_user,
+      moderationScore: report.moderation_score,
+      totalContentRichness: report.total_content_richness,
+    })
+  ) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("interview_report")
+    .update({ is_public_by_admin: true })
+    .eq("id", reportId);
+
+  if (error) {
+    throw new Error(`Failed to auto publish report: ${error.message}`);
+  }
+
+  return true;
 }

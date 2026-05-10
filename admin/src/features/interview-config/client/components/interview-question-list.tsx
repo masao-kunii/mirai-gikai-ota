@@ -16,6 +16,13 @@ interface InterviewQuestionListProps {
   questions: InterviewQuestion[];
   aiGeneratedQuestions?: InterviewQuestionInput[] | null;
   onAiQuestionsApplied?: () => void;
+  /**
+   * シミュレーション機能など、親コンポーネントから現在の質問一覧を読み取るための ref。
+   * 毎レンダーで最新の questions を返すゲッターに差し替わる。
+   */
+  getQuestionsRef?: React.MutableRefObject<
+    (() => InterviewQuestionInput[]) | null
+  >;
 }
 
 export function InterviewQuestionList({
@@ -23,6 +30,7 @@ export function InterviewQuestionList({
   questions: initialQuestions,
   aiGeneratedQuestions,
   onAiQuestionsApplied,
+  getQuestionsRef,
 }: InterviewQuestionListProps) {
   const [questions, setQuestions] = useState<InterviewQuestionInput[]>(
     initialQuestions.map((q) => ({
@@ -33,6 +41,16 @@ export function InterviewQuestionList({
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // 親コンポーネントから最新の questions を読めるようにする
+  useEffect(() => {
+    if (!getQuestionsRef) return;
+    getQuestionsRef.current = () => questions;
+    return () => {
+      // アンマウント後に stale な getter を親が読まないようクリア
+      getQuestionsRef.current = null;
+    };
+  }, [questions, getQuestionsRef]);
 
   const saveQuestions = useCallback(
     (questionsToSave: InterviewQuestionInput[]) => {

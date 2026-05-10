@@ -1,19 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useAnonymousSupabaseUser } from "@/features/chat/client/hooks/use-anonymous-supabase-user";
+import { getPublicReportLink } from "@/features/interview-config/shared/utils/interview-links";
 import { ReactionButtonsInline } from "@/features/report-reaction/client/components/reaction-buttons-inline";
 import type { ReportReactionData } from "@/features/report-reaction/shared/types";
-import { ReportCard } from "../../shared/components/report-card";
+import { cn } from "@/lib/utils";
+import { fetchMorePublicReports } from "../../server/actions/fetch-more-public-reports";
 import type { PublicInterviewReport } from "../../server/loaders/get-public-reports-by-bill-id";
+import { ReportCard } from "../../shared/components/report-card";
 import {
+  type SortOrder,
+  sortOrderLabels,
+  sortOrderOptions,
+} from "../../shared/utils/sort-order";
+import {
+  type StanceCounts,
   type StanceFilter,
-  countReportsByStance,
-  filterReportsByStance,
   stanceFilterLabels,
   stanceFilterOrder,
 } from "../../shared/utils/stance-filter";
+import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 
 function _FilterChip({
   label,
@@ -43,25 +53,132 @@ function _FilterChip({
   );
 }
 
+function _SortToggle({
+  activeSort,
+  onChangeSort,
+}: {
+  activeSort: SortOrder;
+  onChangeSort: (sort: SortOrder) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-bold">
+      {sortOrderOptions.map((sort, index) => (
+        <span key={sort} className="flex items-center gap-2">
+          {index > 0 && <span className="text-mirai-text">｜</span>}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onChangeSort(sort)}
+            className={cn(
+              "!p-0 !h-auto rounded-none transition-colors",
+              activeSort === sort ? "text-primary-accent" : "text-mirai-text"
+            )}
+          >
+            {sortOrderLabels[sort]}
+          </Button>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+type ReactionsRecord = Record<
+  string,
+  { counts: { helpful: number; hmm: number }; userReaction: string | null }
+>;
+
 interface PublicOpinionsListProps {
-  reports: PublicInterviewReport[];
-  reactionsRecord: Record<
-    string,
-    { counts: { helpful: number; hmm: number }; userReaction: string | null }
-  >;
+  billId: string;
+  initialReports: PublicInterviewReport[];
+  initialReactionsRecord: ReactionsRecord;
+  stanceCounts: StanceCounts;
+  initialHasMore: boolean;
+  initialFilter: StanceFilter;
+  initialSort: SortOrder;
 }
 
 export function PublicOpinionsList({
-  reports,
-  reactionsRecord,
+  billId,
+  initialReports,
+  initialReactionsRecord,
+  stanceCounts,
+  initialHasMore,
+  initialFilter,
+  initialSort,
 }: PublicOpinionsListProps) {
   useAnonymousSupabaseUser();
-  const [activeFilter, setActiveFilter] = useState<StanceFilter>("all");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [reactionsRecord, setReactionsRecord] = useState<ReactionsRecord>(
+    initialReactionsRecord
+  );
 
-  const counts = useMemo(() => countReportsByStance(reports), [reports]);
-  const filteredReports = useMemo(
-    () => filterReportsByStance(reports, activeFilter),
-    [reports, activeFilter]
+  const updateUrl = useCallback(
+    (filter: StanceFilter, sort: SortOrder) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (filter === "all") {
+        params.delete("stance");
+      } else {
+        params.set("stance", filter);
+      }
+
+      if (sort === "recommended") {
+        params.delete("sort");
+      } else {
+        params.set("sort", sort);
+      }
+
+      const query = params.toString();
+      const href = query ? `${pathname}?${query}` : pathname;
+      window.history.replaceState(null, "", href);
+    },
+    [pathname, searchParams]
+  );
+
+  const fetchMore = useCallback(
+    async (offset: number, filter: StanceFilter, sort: SortOrder) => {
+      const result = await fetchMorePublicReports(billId, offset, filter, sort);
+      setReactionsRecord((prev) => ({
+        ...prev,
+        ...result.reactionsRecord,
+      }));
+      return { items: result.reports, hasMore: result.hasMore };
+    },
+    [billId]
+  );
+
+  const {
+    items: reports,
+    hasMore,
+    isPending,
+    activeFilter,
+    activeSort,
+    sentinelRef,
+    changeFilter: rawChangeFilter,
+    changeSort: rawChangeSort,
+  } = useInfiniteScroll<PublicInterviewReport, StanceFilter, SortOrder>({
+    initialItems: initialReports,
+    initialHasMore,
+    initialFilter,
+    initialSort,
+    fetchMore,
+  });
+
+  const changeFilter = useCallback(
+    (filter: StanceFilter) => {
+      rawChangeFilter(filter);
+      updateUrl(filter, activeSort);
+    },
+    [rawChangeFilter, updateUrl, activeSort]
+  );
+
+  const changeSort = useCallback(
+    (sort: SortOrder) => {
+      rawChangeSort(sort);
+      updateUrl(activeFilter, sort);
+    },
+    [rawChangeSort, updateUrl, activeFilter]
   );
 
   return (
@@ -69,29 +186,32 @@ export function PublicOpinionsList({
       {/* セクションヘッダー */}
       <div className="flex items-center gap-4">
         <h2 className="text-[22px] font-bold leading-[1.636] text-mirai-text">
-          <span className="mr-1">💬</span>法案に対する当事者の意見
+          <span className="mr-1">💬</span>法案に寄せられた意見
         </h2>
         <span className="text-[22px] font-bold leading-[1.636] text-mirai-text">
-          {reports.length}件
+          {stanceCounts.all}件
         </span>
       </div>
 
-      {/* フィルター */}
-      <div className="flex gap-3 overflow-x-auto">
-        {stanceFilterOrder.map((filter) => (
-          <_FilterChip
-            key={filter}
-            label={stanceFilterLabels[filter]}
-            count={counts[filter]}
-            isActive={activeFilter === filter}
-            onClick={() => setActiveFilter(filter)}
-          />
-        ))}
+      {/* フィルター + ソート */}
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-3 overflow-x-auto">
+          {stanceFilterOrder.map((filter) => (
+            <_FilterChip
+              key={filter}
+              label={stanceFilterLabels[filter]}
+              count={stanceCounts[filter]}
+              isActive={activeFilter === filter}
+              onClick={() => changeFilter(filter)}
+            />
+          ))}
+        </div>
+        <_SortToggle activeSort={activeSort} onChangeSort={changeSort} />
       </div>
 
       {/* レポートカード一覧 */}
       <div className="flex flex-col gap-4">
-        {filteredReports.map((report) => {
+        {reports.map((report) => {
           const reaction = reactionsRecord[report.id];
           const reactionData: ReportReactionData = reaction
             ? {
@@ -103,18 +223,29 @@ export function PublicOpinionsList({
             : { counts: { helpful: 0, hmm: 0 }, userReaction: null };
 
           return (
-            <div key={report.id} className="flex flex-col">
-              <ReportCard report={report} />
-              <div className="bg-white rounded-b-lg px-4 pb-3 -mt-1">
-                <ReactionButtonsInline
-                  reportId={report.id}
-                  initialData={reactionData}
-                />
-              </div>
-            </div>
+            <ReportCard
+              key={report.id}
+              report={report}
+              href={getPublicReportLink(report.id, "opinions")}
+            >
+              <ReactionButtonsInline
+                reportId={report.id}
+                initialData={reactionData}
+              />
+            </ReportCard>
           );
         })}
-        {filteredReports.length === 0 && (
+
+        {/* ローディング表示 & IntersectionObserver用sentinel */}
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-4">
+            {isPending && (
+              <Loader2 className="h-6 w-6 animate-spin text-mirai-text-muted" />
+            )}
+          </div>
+        )}
+
+        {!hasMore && reports.length === 0 && !isPending && (
           <p className="text-center text-mirai-text-muted py-8">
             該当する意見はありません
           </p>

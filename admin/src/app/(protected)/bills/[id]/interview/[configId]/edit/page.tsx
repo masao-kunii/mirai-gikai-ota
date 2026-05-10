@@ -6,6 +6,7 @@ import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id
 import { InterviewConfigEditClient } from "@/features/interview-config/client/components/interview-config-edit-client";
 import { getInterviewConfigById } from "@/features/interview-config/server/loaders/get-interview-config";
 import { getInterviewQuestions } from "@/features/interview-config/server/loaders/get-interview-questions";
+import { getCompletedReportsForBill } from "@/features/interview-simulation/server/loaders/get-completed-reports-for-bill";
 
 interface InterviewEditPageProps {
   params: Promise<{
@@ -27,7 +28,10 @@ export default async function InterviewEditPage({
     notFound();
   }
 
-  const questions = await getInterviewQuestions(config.id);
+  const [questions, completedReportsResult] = await Promise.all([
+    getInterviewQuestions(config.id),
+    getCompletedReportsForBill(bill.id),
+  ]);
 
   return (
     <div>
@@ -55,6 +59,9 @@ export default async function InterviewEditPage({
         billId={bill.id}
         config={config}
         questions={questions}
+        completedReports={completedReportsResult.reports}
+        completedReportsTruncated={completedReportsResult.isTruncated}
+        completedReportsLimit={completedReportsResult.limit}
       />
     </div>
   );
