@@ -75,7 +75,9 @@ steps:
       # ここに含めないとデプロイ時に消える）
       - --set-env-vars=GOOGLE_VERTEX_LOCATION=${_REGION},GOOGLE_VERTEX_PROJECT=${PROJECT_ID},CHAT_DAILY_USER_COST_LIMIT_USD=0.2,CHAT_DAILY_TOTAL_COST_LIMIT_USD=5,CHAT_MONTHLY_TOTAL_COST_LIMIT_USD=50,CHAT_RATE_LIMIT_PER_IP_PER_MIN=20,CHAT_RATE_LIMIT_PER_USER_PER_MIN=30
       # 機密値・接続情報は Secret Manager から読み込ませる
-      - --update-secrets=SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=next-public-supabase-publishable-key:latest,SUPABASE_SECRET_KEY=supabase-secret-key:latest
+      # GEMINI_API_KEY: 公開チャットを支出上限付きの Gemini Developer API キー
+      # 経由にする（getModel がキーありなら Developer API、無しなら Vertex）
+      - --update-secrets=SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=next-public-supabase-publishable-key:latest,SUPABASE_SECRET_KEY=supabase-secret-key:latest,GEMINI_API_KEY=gemini-api-key:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}
