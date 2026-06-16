@@ -1,9 +1,10 @@
-import { getChatSupabaseUser } from "@/features/chat/server/utils/supabase-server";
 import {
   checkSystemDailyCostLimit,
   checkSystemMonthlyCostLimit,
 } from "@/features/chat/server/services/system-cost-guard";
 import { chatErrorToResponse } from "@/features/chat/server/utils/chat-error-response";
+import { enforceChatRateLimit } from "@/features/chat/server/utils/rate-limit";
+import { getChatSupabaseUser } from "@/features/chat/server/utils/supabase-server";
 import { handleInterviewChatRequest } from "@/features/interview-session/server/services/handle-interview-chat-request";
 import { jsonResponse } from "@/lib/api/response";
 import { registerNodeTelemetry } from "@/lib/telemetry/register";
@@ -40,6 +41,8 @@ export async function POST(req: Request) {
   }
 
   try {
+    await enforceChatRateLimit(req, user.id);
+
     // システム全体の予算上限チェック（日次・月次）
     await checkSystemDailyCostLimit();
     await checkSystemMonthlyCostLimit();

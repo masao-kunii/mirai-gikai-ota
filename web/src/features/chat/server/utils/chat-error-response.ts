@@ -19,6 +19,16 @@ export function chatErrorToResponse(error: unknown): Response {
           "今月の利用上限に達しました。来月1日以降に再度お試しください。",
           429
         );
+      case ChatErrorCode.RATE_LIMITED:
+        return textResponse(
+          "リクエストが多すぎます。少し時間をおいてから再度お試しください。",
+          429
+        );
+      case ChatErrorCode.USAGE_CHECK_FAILED:
+        return textResponse(
+          "現在チャットを利用できません。しばらく待ってから再度お試しください。",
+          503
+        );
       default:
         return textResponse(
           "エラーが発生しました。しばらく待ってから再度お試しください。",
