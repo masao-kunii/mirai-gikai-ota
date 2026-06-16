@@ -6,6 +6,7 @@
   "scripts": {
     "seed": "tsx main/run.ts",
     "seed:csv": "tsx csv/import-csv.ts",
+    "import:teirei": "tsx main/import-teirei-cloud.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

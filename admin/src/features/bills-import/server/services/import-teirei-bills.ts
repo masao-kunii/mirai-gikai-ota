@@ -260,8 +260,14 @@ async function collectSeiganBills(
 
 /**
  * 議案を (council_session_id, bill_number) で照合し、無ければ INSERT、
- * あれば UPDATE する。bill_contents（normal/hard）も同時に upsert する。
- * 返り値は bill_id（失敗時 null）。
+ * あれば UPDATE する。返り値は bill_id（失敗時 null）。
+ *
+ * 再実行（会期進行に合わせた定期同期）を安全にするため:
+ *   - 議決結果に関わる status / committee_id は毎回 UPDATE する
+ *     （公開中の「審議状況」バッジを最新に保つ）。
+ *   - bill_contents は新規 INSERT 時のみ生成する。既存議案では上書きしない
+ *     （管理画面での手動編集や AI で拡充した本文を保持するため）。
+ *   - publish_status は新規 INSERT 時のみ設定する（既存の公開状態を維持）。
  */
 async function upsertBill(
   supabase: DbClient,
@@ -288,8 +294,8 @@ async function upsertBill(
     council_session_id: councilSessionId,
   };
 
-  let billId: string;
   if (existing) {
+    // 既存議案: 議決結果（status）・付託委員会のみ更新。本文は保持。
     const { error } = await supabase
       .from("bills")
       .update(billFields)
@@ -298,21 +304,21 @@ async function upsertBill(
       warnings.push(`議案「${bill.title}」の更新に失敗: ${error.message}`);
       return null;
     }
-    billId = existing.id;
-  } else {
-    const { data: inserted, error } = await supabase
-      .from("bills")
-      .insert({ ...billFields, publish_status: publishStatus })
-      .select("id")
-      .single();
-    if (error || !inserted) {
-      warnings.push(`議案「${bill.title}」の挿入に失敗: ${error?.message}`);
-      return null;
-    }
-    billId = inserted.id;
+    return existing.id;
   }
 
-  // bill_contents（事実ベース）を upsert
+  // 新規議案: 挿入 + bill_contents（事実ベース）を生成
+  const { data: inserted, error } = await supabase
+    .from("bills")
+    .insert({ ...billFields, publish_status: publishStatus })
+    .select("id")
+    .single();
+  if (error || !inserted) {
+    warnings.push(`議案「${bill.title}」の挿入に失敗: ${error?.message}`);
+    return null;
+  }
+  const billId = inserted.id;
+
   const content = buildBillContent({
     title: bill.title,
     billNumber: bill.billNumber,
@@ -333,10 +339,10 @@ async function upsertBill(
   }));
   const { error: contentErr } = await supabase
     .from("bill_contents")
-    .upsert(contentRows, { onConflict: "bill_id,difficulty_level" });
+    .insert(contentRows);
   if (contentErr) {
     warnings.push(
-      `議案「${bill.title}」の本文 upsert に失敗: ${contentErr.message}`
+      `議案「${bill.title}」の本文挿入に失敗: ${contentErr.message}`
     );
   }
 

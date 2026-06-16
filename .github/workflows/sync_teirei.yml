@@ -1,0 +1,52 @@
+name: Sync Teirei Bills
+
+# 大田区議会の定例会ページから議案・報告・請願陳情・会派見解を Cloud Supabase へ
+# 定期的に再同期する。会期中は議決結果が順次埋まり、会期後に会派態度が公開される
+# ため、定期実行することで「今ここ」の審議状況を最新に保つ。
+#
+# 取り込みは UPSERT で安全に再実行できる:
+#   - 既存議案は status / 付託委員会のみ更新（公開状態と本文は保持）
+#   - 新規議案のみ bill_contents を生成
+#   - 会派見解は (bill_id, faction_id) で upsert
+#
+# 必要な GitHub Secrets:
+#   - SUPABASE_URL          : Cloud Supabase の URL（https://<ref>.supabase.co）
+#   - SUPABASE_SECRET_KEY   : Cloud Supabase の secret key（sb_secret_...）
+
+on:
+  # 毎日 10:00 JST（01:00 UTC）に同期。会期が無い期間も無害（再同期するだけ）。
+  # 不要になったら GitHub の Actions 画面からこのワークフローを無効化できる。
+  schedule:
+    - cron: "0 1 * * *"
+  # 手動実行（速報版を見たタイミングですぐ更新したいとき）
+  workflow_dispatch:
+
+# 同時実行を抑止（前回が走っている間は待つ）
+concurrency:
+  group: sync-teirei
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync teirei bills into Cloud Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: pnpm --filter @mirai-gikai/seed run import:teirei
