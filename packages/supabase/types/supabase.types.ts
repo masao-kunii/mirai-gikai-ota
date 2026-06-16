@@ -814,6 +814,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_counters: {
+        Row: {
+          bucket_key: string
+          request_count: number
+          window_started_at: string
+        }
+        Insert: {
+          bucket_key: string
+          request_count?: number
+          window_started_at: string
+        }
+        Update: {
+          bucket_key?: string
+          request_count?: number
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       report_reactions: {
         Row: {
           created_at: string
@@ -1029,6 +1047,10 @@ export type Database = {
           p_min_content_richness: number
         }
         Returns: number
+      }
+      check_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
       }
       count_bulk_publish_targets: {
         Args: {
