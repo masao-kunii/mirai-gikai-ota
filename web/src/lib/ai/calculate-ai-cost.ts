@@ -26,6 +26,11 @@ export const modelPricing: Record<string, ModelPricing> = {
     inputTokensPerMillionUsd: 0.1,
     outputTokensPerMillionUsd: 0.4,
   },
+  // Gemini Developer API 価格（出典: https://ai.google.dev/gemini-api/docs/pricing）
+  "gemini-3.1-flash-lite": {
+    inputTokensPerMillionUsd: 0.25,
+    outputTokensPerMillionUsd: 1.5,
+  },
   "gemini-2.5-pro": {
     inputTokensPerMillionUsd: 1.25,
     outputTokensPerMillionUsd: 10,
