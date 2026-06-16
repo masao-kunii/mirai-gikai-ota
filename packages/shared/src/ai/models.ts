@@ -20,6 +20,9 @@ export const AI_MODELS = {
   gemini2_5_flash: "gemini-2.5-flash",
   gemini2_5_pro: "gemini-2.5-pro",
   gemini2_5_flash_lite: "gemini-2.5-flash-lite",
+  /** Gemini 3.1 Flash-Lite。2.5-flash より新しく安価（$0.25/$1.50）。
+   *  公開チャットで使用（Developer API キー経由）。 */
+  gemini3_1_flash_lite: "gemini-3.1-flash-lite",
 
   // --- 旧 OpenAI 系の互換エイリアス（→ Gemini 等価モデル） ---
   gpt4o: "gemini-2.5-flash",

@@ -106,7 +106,9 @@ export async function handleChatRequest({
     promptProvider
   );
   // Model configuration
-  const model = deps?.model ?? getModel(AI_MODELS.flash);
+  // 公開チャットは gemini-3.1-flash-lite（2.5-flash より新しく安価）。
+  // web は Developer API キー経由なので Vertex のリージョン制約を受けない。
+  const model = deps?.model ?? getModel(AI_MODELS.gemini3_1_flash_lite);
   const modelName =
     typeof model === "string" ? model : (model.modelId ?? "unknown");
 
