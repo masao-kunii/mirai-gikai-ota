@@ -8,7 +8,11 @@ import type {
   InterviewConfig as PromptInterviewConfig,
   InterviewQuestion as PromptInterviewQuestion,
 } from "@mirai-gikai/shared/interview-prompts/types";
-import { generateObject, generateText, type ModelMessage } from "ai";
+import {
+  generateObject,
+  generateText,
+  type ModelMessage,
+} from "@mirai-gikai/shared/ai/sdk";
 import { z } from "zod";
 import type { AiModel } from "@/lib/ai/models";
 import {

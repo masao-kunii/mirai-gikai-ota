@@ -13,9 +13,17 @@ export const routes = {
   billNew: () => "/bills/new" as const,
   admins: () => "/admins" as const,
   tags: () => "/tags" as const,
-  dietSessions: () => "/diet-sessions" as const,
+  councilSessions: () => "/council-sessions" as const,
   experts: () => "/experts" as const,
   interviews: () => "/interviews" as const,
+  aiCollection: () => "/ai-collection" as const,
+  billsMerge: () => "/bills/merge" as const,
+  committees: () => "/committees" as const,
+  factions: () => "/factions" as const,
+  minutes: () => "/minutes" as const,
+
+  // ── 議事録 ──────────────────────────────────────
+  minuteDetail: (id: string) => `/minutes/${id}` as const,
 
   // ── 議案配下 ──────────────────────────────────────
   billEdit: (billId: string) => `/bills/${billId}/edit` as const,

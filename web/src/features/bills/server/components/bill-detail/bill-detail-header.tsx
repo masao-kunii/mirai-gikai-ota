@@ -13,6 +13,7 @@ import {
 } from "../../../client/components/bill-detail/review-status-banner";
 import { BillStatusBadge } from "../../../client/components/bill-list/bill-status-badge";
 import { BillTag } from "../../../client/components/bill-list/bill-tag";
+import { ProposalTypeBadge } from "../../../client/components/proposal-type-badge";
 import { getBillShareData } from "../../../client/utils/share";
 import type { BillWithContent } from "../../../shared/types";
 
@@ -61,7 +62,8 @@ export async function BillDetailHeader({
             )}
           </h1>
         )}
-        <div className="flex flex-row gap-4">
+        <div className="flex flex-row flex-wrap items-center gap-3">
+          <ProposalTypeBadge type={bill.proposal_type} />
           <BillStatusBadge status={bill.status} className="w-fit" />
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             {bill.submitted_date && (

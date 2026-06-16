@@ -1,3 +1,21 @@
+# みらい議会ー大田区版
+
+## 注意事項
+- このプロジェクトは「チームみらい」が開発・運営している「みらい議会」をForkして開発したものとなります。
+- **非公式**プロジェクトです。
+- 地方議会版としての基本的なスキーマ・機能調整は[GondoTakashi/mirai-gikai-kawasaki](https://github.com/GondoTakashi/mirai-gikai-kawasaki)を参考にしています。
+
+## アップストリーム
+- 本家 mirai-gikai: https://github.com/team-mirai/mirai-gikai
+- `git fetch origin && git merge origin/develop` で本家の変更を取り込めます（コンフリクトの解消は必要）
+
+## 他地方議会向けForkガイド
+- 他の市議会・県議会等のバージョンを作成したい場合は、  
+  以下のドキュメントを参考にすると早いと思います  
+  [fork手順](docs/kawasaki/20260304_1000_別地域向けfork手順.md)
+
+---
+
 # みらい議会
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/team-mirai-volunteer/mirai-gikai)
@@ -45,7 +63,3 @@ WHERE email = '<1で作成したユーザーのemail>';
 
 > [!NOTE]
 > 開発環境では、seedデータによって、`email: admin@example.com, password: admin123456` のAdminユーザーが作成されます。
-
-## Fork して独自サービスを運営する場合
-
-本リポジトリを fork して独自にサービスを運営する場合は、[Fork ガイドライン](./FORK_GUIDELINES.md) を確認してください。本家サービスとの混同防止のため、ロゴ・カラー・サービス名称などの変更が必要です。

@@ -3,14 +3,14 @@ import { shouldAutoCloseInterviewOnBillStatus } from "./should-auto-close-interv
 
 describe("shouldAutoCloseInterviewOnBillStatus", () => {
   it("enacted のときは true を返す", () => {
-    expect(shouldAutoCloseInterviewOnBillStatus("enacted")).toBe(true);
+    expect(shouldAutoCloseInterviewOnBillStatus("approved")).toBe(true);
   });
 
   it.each([
     ["preparing"],
-    ["introduced"],
-    ["in_originating_house"],
-    ["in_receiving_house"],
+    ["submitted"],
+    ["in_committee"],
+    ["plenary_session"],
     ["rejected"],
   ] as const)("%s のときは false を返す", (status) => {
     expect(shouldAutoCloseInterviewOnBillStatus(status)).toBe(false);

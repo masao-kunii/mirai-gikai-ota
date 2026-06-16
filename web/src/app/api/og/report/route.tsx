@@ -209,7 +209,7 @@ export async function GET(request: Request) {
               letterSpacing: "0.03em",
             }}
           >
-            みらい議会
+            みらい議会＠大田区
           </span>
         </div>
 
@@ -217,7 +217,7 @@ export async function GET(request: Request) {
         {logoDataUrl && (
           // biome-ignore lint/performance/noImgElement: ignore
           <img
-            alt="チームみらいロゴ"
+            alt="みらい議会＠大田区ロゴ"
             src={logoDataUrl}
             width={189}
             height={160}

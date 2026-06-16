@@ -84,7 +84,7 @@ describe("reduceMultiSimulationState", () => {
       personaIndex: 0,
       personaSource: { kind: "report", reportId: "r1" },
       persona: {} as PersonaSimulationResult["persona"],
-      personaModel: "openai/gpt-5.2",
+      personaModel: "gemini-2.5-pro",
       original: null,
       run: {} as PersonaSimulationResult["run"],
       elapsedMs: 1234,

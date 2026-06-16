@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateObject } from "ai";
+import { generateObject } from "@mirai-gikai/shared/ai/sdk";
 import { z } from "zod";
 import {
   TOPIC_ANALYSIS_BATCH_SIZE,

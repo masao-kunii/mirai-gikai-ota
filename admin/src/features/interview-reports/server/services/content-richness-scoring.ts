@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateObject } from "ai";
+import { generateObject } from "@mirai-gikai/shared/ai/sdk";
 import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
 import { contentRichnessResultSchema } from "@mirai-gikai/shared/content-richness/schemas";
 import { buildContentRichnessPrompt } from "@mirai-gikai/shared/content-richness/build-prompt";

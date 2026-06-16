@@ -1,12 +1,14 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === "development";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverSourceMaps: true,
-  },
-  typedRoutes: true,
+  // Cloud Run / コンテナ実行向けの最小ビルド出力。`node server.js` で起動する。
+  output: "standalone",
+  // monorepo ルートを示し、pnpm workspace の依存を standalone build に正しく取り込む
+  outputFileTracingRoot: path.join(__dirname, ".."),
   turbopack: {
     root: "../",
   },
@@ -27,21 +29,7 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/bill-thumbnails/**",
       },
-      ...(isDev
-        ? [
-            {
-              protocol: "https" as const,
-              hostname: "placehold.co",
-            },
-          ]
-        : []),
     ],
-    ...(isDev && {
-      dangerouslyAllowSVG: true,
-      contentDispositionType: "attachment" as const,
-      contentSecurityPolicy:
-        "default-src 'self'; script-src 'none'; sandbox;",
-    }),
   },
 };
 

@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { getModel } from "@mirai-gikai/shared/ai/get-model";
 import type { Database } from "@mirai-gikai/supabase";
 import {
   convertToModelMessages,
@@ -6,7 +6,7 @@ import {
   tool,
   type LanguageModel,
   type UIMessage,
-} from "ai";
+} from "@mirai-gikai/shared/ai/sdk";
 import { z } from "zod";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
 import type { BillWithContent } from "@/features/bills/shared/types";
@@ -100,7 +100,7 @@ export async function handleChatRequest({
     promptProvider
   );
   // Model configuration
-  const model = deps?.model ?? AI_MODELS.gpt4o;
+  const model = deps?.model ?? getModel(AI_MODELS.flash);
   const modelName =
     typeof model === "string" ? model : (model.modelId ?? "unknown");
 
@@ -392,10 +392,10 @@ function buildSystemPromptWithInterviewInstructions(
  * チャットで使用するツール一覧を構築
  */
 function buildTools(shouldSuggestInterview: boolean) {
-  // biome-ignore lint/suspicious/noExplicitAny: OpenAI web_search tool type incompatibility
-  const tools: Record<string, any> = {
-    web_search: openai.tools.webSearch(),
-  };
+  // 旧版にあった openai.tools.webSearch() は Vertex AI 移行で削除。
+  // Gemini で必要になったら useSearchGrounding オプションで復活可能。
+  // biome-ignore lint/suspicious/noExplicitAny: tool 型互換のため
+  const tools: Record<string, any> = {};
 
   if (shouldSuggestInterview) {
     tools[SUGGEST_INTERVIEW_TOOL_NAME] = tool({

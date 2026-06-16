@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateObject } from "ai";
+import { generateObject } from "@mirai-gikai/shared/ai/sdk";
 import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
 import { moderationResultSchema } from "@mirai-gikai/shared/moderation/schemas";
 import { buildModerationPrompt } from "@mirai-gikai/shared/moderation/build-prompt";

@@ -4,7 +4,7 @@ import { parseBillSortParams } from "./parse-bill-sort-params";
 describe("parseBillSortParams", () => {
   it("パラメータなしの場合はデフォルト値を返す", () => {
     const result = parseBillSortParams();
-    expect(result).toEqual({ field: "created_at", order: "desc" });
+    expect(result).toEqual({ field: "published_at", order: "desc" });
   });
 
   it("有効なフィールドとオーダーを返す", () => {
@@ -17,14 +17,14 @@ describe("parseBillSortParams", () => {
     expect(result).toEqual({ field: "publish_status_order", order: "desc" });
   });
 
-  it("submitted_dateフィールドを受け付ける", () => {
-    const result = parseBillSortParams("submitted_date", "asc");
-    expect(result).toEqual({ field: "submitted_date", order: "asc" });
+  it("bill_numberフィールドを受け付ける", () => {
+    const result = parseBillSortParams("bill_number", "asc");
+    expect(result).toEqual({ field: "bill_number", order: "asc" });
   });
 
   it("不正なフィールドはデフォルトフィールドにフォールバックする", () => {
     const result = parseBillSortParams("invalid_field", "asc");
-    expect(result).toEqual({ field: "created_at", order: "asc" });
+    expect(result).toEqual({ field: "published_at", order: "asc" });
   });
 
   it("不正なオーダーはデフォルトオーダーにフォールバックする", () => {
@@ -34,11 +34,11 @@ describe("parseBillSortParams", () => {
 
   it("両方不正な場合は完全にデフォルトにフォールバックする", () => {
     const result = parseBillSortParams("bad", "bad");
-    expect(result).toEqual({ field: "created_at", order: "desc" });
+    expect(result).toEqual({ field: "published_at", order: "desc" });
   });
 
   it("undefinedパラメータはデフォルトにフォールバックする", () => {
     const result = parseBillSortParams(undefined, undefined);
-    expect(result).toEqual({ field: "created_at", order: "desc" });
+    expect(result).toEqual({ field: "published_at", order: "desc" });
   });
 });

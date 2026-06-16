@@ -7,5 +7,5 @@ import type { BillUpdateInput } from "../types";
 export function shouldAutoCloseInterviewOnBillStatus(
   status: BillUpdateInput["status"]
 ): boolean {
-  return status === "enacted";
+  return status === "approved";
 }

@@ -6,9 +6,9 @@ import {
 } from "./chat-model-options";
 
 describe("CHAT_MODEL_OPTIONS", () => {
-  it("全てのオプションがprovider/model形式のvalueを持つ", () => {
+  it("全てのオプションが gemini- プレフィックスを持つ", () => {
     for (const option of CHAT_MODEL_OPTIONS) {
-      expect(option.value).toMatch(/^(openai|google|anthropic)\//);
+      expect(option.value).toMatch(/^gemini-/);
     }
   });
 
@@ -25,13 +25,9 @@ describe("CHAT_MODEL_OPTIONS", () => {
 });
 
 describe("CHAT_MODEL_GROUPS", () => {
-  it("3つのプロバイダーグループが存在する", () => {
-    expect(CHAT_MODEL_GROUPS).toHaveLength(3);
-    expect(CHAT_MODEL_GROUPS.map((g) => g.provider)).toEqual([
-      "OpenAI",
-      "Google",
-      "Anthropic",
-    ]);
+  it("Vertex AI プロバイダーグループが存在する", () => {
+    expect(CHAT_MODEL_GROUPS).toHaveLength(1);
+    expect(CHAT_MODEL_GROUPS[0]?.provider).toBe("Google Vertex AI");
   });
 
   it("全グループのモデル数がフラット一覧と一致する", () => {
@@ -54,14 +50,14 @@ describe("CHAT_MODEL_GROUPS", () => {
 
 describe("isValidChatModel", () => {
   it("有効なモデルIDに対してtrueを返す", () => {
-    expect(isValidChatModel("openai/gpt-4o-mini")).toBe(true);
-    expect(isValidChatModel("google/gemini-3-flash")).toBe(true);
-    expect(isValidChatModel("anthropic/claude-sonnet-4.6")).toBe(true);
+    expect(isValidChatModel("gemini-2.5-flash")).toBe(true);
+    expect(isValidChatModel("gemini-2.5-flash-lite")).toBe(true);
+    expect(isValidChatModel("gemini-2.5-pro")).toBe(true);
   });
 
   it("無効なモデルIDに対してfalseを返す", () => {
     expect(isValidChatModel("invalid-model")).toBe(false);
-    expect(isValidChatModel("openai/nonexistent")).toBe(false);
+    expect(isValidChatModel("openai/gpt-4o")).toBe(false);
     expect(isValidChatModel("")).toBe(false);
   });
 });

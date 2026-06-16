@@ -8,8 +8,8 @@ import {
 } from "@/components/layouts/legal-page-layout";
 
 export const metadata: Metadata = {
-  title: "プライバシーポリシー | みらい議会",
-  description: "みらい議会のプライバシーポリシー",
+  title: "プライバシーポリシー | みらい議会＠大田区",
+  description: "みらい議会＠大田区のプライバシーポリシー",
 };
 
 export default function PrivacyPage() {
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
     <LegalPageLayout
       className="bg-transparent pt-24 md:pt-12"
       title="プライバシーポリシー"
-      description="チームみらい（以下「当組織」といいます）における個人情報の取り扱いについてご説明します。"
+      description="本サイト「みらい議会＠大田区」の運営者 masao-kunii（以下「運営者」といいます）における個人情報の取り扱いについてご説明します。本サイトはチームみらいが運営する公式サービスではなく、有志個人による非公式プロジェクトです。"
     >
       <Container className="space-y-8">
         <p className="text-sm text-mirai-text-muted">
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
             items={[
               "氏名、年齢、性別、住所、電話番号、職業、メールアドレス",
               "個人ごとに割り当てられたIDやパスワード、その他識別可能な記号",
-              "当組織の提供するサービスであるみらい議会におけるAIインタビュー機能（以下「みらい議会AIインタビュー機能」といいます。）を通じて取得される対話ログ、音声データ、および行動履歴",
+              "運営者の提供する本サービスであるみらい議会＠大田区におけるAIインタビュー機能（以下「AIインタビュー機能」といいます。）を通じて取得される対話ログ、音声データ、および行動履歴",
               "他の情報と容易に照合することができ、それにより特定の個人を識別できることとなるもの",
             ]}
           />
@@ -42,21 +42,21 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <LegalSectionTitle>2. 個人情報の収集方法と使用範囲</LegalSectionTitle>
           <LegalParagraph>
-            個人情報をご提供いただく際には、ユーザーの同意に基づいて行うことを原則とします。また、当組織は、以下に定める目的での利用を除き、個人情報を無断で利用することはありません。
+            個人情報をご提供いただく際には、ユーザーの同意に基づいて行うことを原則とします。また、運営者は、以下に定める目的での利用を除き、個人情報を無断で利用することはありません。
           </LegalParagraph>
           <LegalList
             items={[
-              "ユーザーが利用する当組織のサービス（以下「当組織サービス」といいます。）の運営およびそれに伴うユーザーとのやりとり・情報提供",
-              "当組織サービスの安全な運営に必要な不正対策",
-              "当組織サービスの改善・新規開発",
-              "当組織における政策立案",
-              "当組織サービスに係る情報提供・広告配信",
+              "ユーザーが利用する運営者のサービス（以下「本サービス」といいます。）の運営およびそれに伴うユーザーとのやりとり・情報提供",
+              "本サービスの安全な運営に必要な不正対策",
+              "本サービスの改善・新規開発",
+              "区議会の議論に関する情報整理および本サイト上での発信",
+              "本サービスに係る情報提供・広告配信",
               "上記の各利用目的に必要な各種調査・分析",
               "「3. 第三者への情報提供について」に定める場合における第三者への開示・提供",
             ]}
           />
           <LegalParagraph>
-            なお、みらい議会AIインタビュー機能を通じて当組織が取得した回答内容については、当組織は、以下の通り取り扱います。
+            なお、AIインタビュー機能を通じて運営者が取得した回答内容については、運営者は、以下の通り取り扱います。
           </LegalParagraph>
           <LegalList
             items={[
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
           </LegalParagraph>
           <LegalList
             items={[
-              "「2. 個人情報の収集方法と使用範囲」に定めるみらい議会AIインタビュー機能を通じて当組織が取得した回答内容の公開",
+              "「2. 個人情報の収集方法と使用範囲」に定めるAIインタビュー機能を通じて運営者が取得した回答内容の公開",
               "利用者本人の同意がある場合",
               "統計的なデータなど、個人を特定できない状態で提供する場合",
               "法令に基づく開示請求（裁判所・警察等）があった場合",
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <LegalSectionTitle>6. 保管期間と廃棄</LegalSectionTitle>
           <LegalParagraph>
-            取得した個人情報および対話ログは、法令（政治資金規正法等）に基づき必要な期間（原則7年間）保管した後、適切な方法で廃棄・削除します。
+            取得した個人情報および対話ログは、本サービス運営に必要な期間に限り保管した後、適切な方法で廃棄・削除します。
           </LegalParagraph>
         </section>
 
@@ -113,9 +113,20 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <LegalSectionTitle>8. お問い合わせ窓口</LegalSectionTitle>
           <LegalParagraph>
-            個人情報の確認・修正・削除、またはみらい議会AIインタビュー機能の回答公開に関する取り消し等のご相談は、下記までご連絡ください。
+            個人情報の確認・修正・削除、またはAIインタビュー機能の回答公開に関する取り消し等のご相談は、下記までご連絡ください。
           </LegalParagraph>
-          <LegalParagraph>support@team-mir.ai</LegalParagraph>
+          <LegalParagraph>
+            お問い合わせ先は本サイトの GitHub リポジトリ（
+            <a
+              href="https://github.com/masao-kunii/mirai-gikai-ota"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              masao-kunii/mirai-gikai-ota
+            </a>
+            ）の Issues よりご連絡ください。
+          </LegalParagraph>
         </section>
       </Container>
     </LegalPageLayout>

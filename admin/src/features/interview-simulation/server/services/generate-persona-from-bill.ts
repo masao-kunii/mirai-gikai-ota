@@ -4,7 +4,10 @@ import type {
   PromptBillInput,
   InterviewConfig as PromptInterviewConfig,
 } from "@mirai-gikai/shared/interview-prompts/types";
-import { generateObject, NoObjectGeneratedError } from "ai";
+import {
+  generateObject,
+  NoObjectGeneratedError,
+} from "@mirai-gikai/shared/ai/sdk";
 import type { AiModel } from "@/lib/ai/models";
 import { LLM_MAX_ATTEMPTS, LLM_TIMEOUT_MS } from "../../shared/constants";
 import {

@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateWithDots } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
 import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
+import { ProposalTypeBadge } from "../proposal-type-badge";
 import { BillStatusBadge } from "./bill-status-badge";
 import { BillTag } from "./bill-tag";
 
@@ -55,7 +56,8 @@ export function BillCard({ bill }: BillCardProps) {
                   </>
                 )}
               </CardTitle>
-              <div className="flex flex-row gap-4">
+              <div className="flex flex-row flex-wrap items-center gap-3">
+                <ProposalTypeBadge type={bill.proposal_type} />
                 <BillStatusBadge status={bill.status} className="w-fit" />
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   {bill.submitted_date && (

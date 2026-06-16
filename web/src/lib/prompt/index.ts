@@ -1,32 +1,29 @@
-import "server-only";
-import { CompositePromptProvider } from "./composite/composite-prompt-provider";
-import type { PromptProvider } from "./interface/prompt-provider";
 import { getLangfuseClient } from "./langfuse/client";
 import { LangfusePromptProvider } from "./langfuse/langfuse-prompt-provider";
-import {
-  SOURCE_CODE_PROMPT_NAMES,
-  SourceCodePromptProvider,
-} from "./source-code/source-code-prompt-provider";
+import { MockPromptProvider } from "./mock-prompt-provider";
+import type { PromptProvider } from "./interface/prompt-provider";
 
 /**
  * プロンプトプロバイダーの作成処理
  *
- * 全チャットプロンプト（top-chat-system, bill-chat-system-normal, bill-chat-system-hard）は
- * SourceCodePromptProviderから取得する。
- * それ以外のプロンプトはLangfusePromptProviderにフォールバックする。
+ * Langfuse の認証情報が設定されている場合は LangfusePromptProvider を返し、
+ * 設定されていない（ローカル開発や Langfuse 未契約の自前ホスト環境）場合は
+ * 直書きプロンプトを返す MockPromptProvider にフォールバックする。
  */
 export function createPromptProvider(): PromptProvider {
-  const sourceCodeProvider = new SourceCodePromptProvider();
-
-  return new CompositePromptProvider(
-    sourceCodeProvider,
-    () => {
+  if (process.env.LANGFUSE_PUBLIC_KEY && process.env.LANGFUSE_SECRET_KEY) {
+    try {
       const client = getLangfuseClient();
       return new LangfusePromptProvider(client);
-    },
-    SOURCE_CODE_PROMPT_NAMES
-  );
+    } catch (error) {
+      console.warn(
+        "Langfuse client init failed, falling back to MockPromptProvider:",
+        error
+      );
+    }
+  }
+  return new MockPromptProvider();
 }
 
-export type { PromptProvider } from "./interface/prompt-provider";
 export type { CompiledPrompt, PromptVariables } from "./interface/types";
+export type { PromptProvider } from "./interface/prompt-provider";

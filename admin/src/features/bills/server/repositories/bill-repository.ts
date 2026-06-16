@@ -10,22 +10,24 @@ import type {
 type BillContentInsert =
   Database["public"]["Tables"]["bill_contents"]["Insert"];
 
-export async function findBillsWithDietSessions(sortConfig?: BillSortConfig) {
+export async function findBillsWithCouncilSessions(
+  sortConfig?: BillSortConfig
+) {
   const supabase = createAdminClient();
-  const field = sortConfig?.field ?? "created_at";
+  const field = sortConfig?.field ?? "published_at";
   const ascending = (sortConfig?.order ?? "desc") === "asc";
 
   const orderOptions: { ascending: boolean; nullsFirst?: boolean } = {
     ascending,
   };
 
-  if (field === "submitted_date") {
+  if (field === "published_at") {
     orderOptions.nullsFirst = false;
   }
 
   const { data, error } = await supabase
     .from("bills")
-    .select("*, diet_sessions(name)")
+    .select("*, council_sessions(name)")
     .order(field, orderOptions);
 
   if (error) {
@@ -84,6 +86,28 @@ export async function updateBillPublishStatus(
   if (error) {
     throw new Error(`Failed to update bill publish status: ${error.message}`);
   }
+}
+
+export async function bulkUpdateBills(
+  billIds: string[],
+  patch: {
+    publish_status?: BillPublishStatus;
+    is_featured?: boolean;
+    published_at?: string | null;
+  }
+): Promise<number> {
+  if (billIds.length === 0) return 0;
+  if (Object.keys(patch).length === 0) return 0;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("bills")
+    .update(patch)
+    .in("id", billIds)
+    .select("id");
+  if (error) {
+    throw new Error(`Failed to bulk update bills: ${error.message}`);
+  }
+  return data?.length ?? 0;
 }
 
 export async function findBillContentsByBillId(billId: string) {

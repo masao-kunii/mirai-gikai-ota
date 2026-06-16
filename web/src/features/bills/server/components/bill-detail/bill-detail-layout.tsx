@@ -1,5 +1,7 @@
 import { Container } from "@/components/layouts/container";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
+import { FactionStancesSection } from "@/features/faction-stances/client/components/faction-stances-section";
+import { getFactionStancesByBillId } from "@/features/faction-stances/server/loaders/get-faction-stances-by-bill-id";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
 import { BillInterviewOpinionsSection } from "@/features/interview-report/server/components/bill-interview-opinions-section";
@@ -8,7 +10,10 @@ import { BillDetailClient } from "../../../client/components/bill-detail/bill-de
 import { BillDisclaimer } from "../../../client/components/bill-detail/bill-disclaimer";
 import { BillStatusProgress } from "../../../client/components/bill-detail/bill-status-progress";
 import { MiraiStanceCard } from "../../../client/components/bill-detail/mirai-stance-card";
-import type { BillWithContent } from "../../../shared/types";
+import {
+  type BillWithContent,
+  shouldShowFactionStances,
+} from "../../../shared/types";
 import { BillShareButtons } from "../share/bill-share-buttons";
 import { BillContent } from "./bill-content";
 import { BillDetailHeader } from "./bill-detail-header";
@@ -23,10 +28,12 @@ export async function BillDetailLayout({
   currentDifficulty,
 }: BillDetailLayoutProps) {
   const showMiraiStance = bill.status === "preparing" || bill.mirai_stance;
-  const [interviewConfig, publicReportsResult] = await Promise.all([
-    getInterviewConfig(bill.id),
-    getPublicReportsByBillId(bill.id),
-  ]);
+  const [interviewConfig, publicReportsResult, factionStances] =
+    await Promise.all([
+      getInterviewConfig(bill.id),
+      getPublicReportsByBillId(bill.id),
+      getFactionStancesByBillId(bill.id),
+    ]);
 
   return (
     <div className="container mx-auto pb-8 max-w-4xl">
@@ -51,7 +58,6 @@ export async function BillDetailLayout({
           <div className="my-8">
             <BillStatusProgress
               status={bill.status}
-              originatingHouse={bill.originating_house}
               statusNote={bill.status_note}
             />
           </div>
@@ -61,6 +67,12 @@ export async function BillDetailLayout({
       </BillDetailClient>
 
       <Container>
+        {shouldShowFactionStances(bill.proposal_type) &&
+          factionStances.length > 0 && (
+            <div className="my-8">
+              <FactionStancesSection stances={factionStances} />
+            </div>
+          )}
         {publicReportsResult.totalCount > 0 && (
           <div className="my-8">
             <BillInterviewOpinionsSection

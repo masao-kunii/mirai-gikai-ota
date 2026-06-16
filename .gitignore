@@ -10,3 +10,5 @@ node_modules
 .env
 .env.*
 !.env.example
+# AI情報収集のローカル実行成果物
+admin/collections/

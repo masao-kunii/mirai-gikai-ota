@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateObject } from "ai";
+import { generateObject } from "@mirai-gikai/shared/ai/sdk";
 import {
   TOPIC_ANALYSIS_BATCH_SIZE,
   TOPIC_ANALYSIS_MAX_CONCURRENCY,

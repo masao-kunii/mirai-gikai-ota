@@ -1,4 +1,5 @@
 import "server-only";
+import type { Database } from "@mirai-gikai/supabase";
 import { createAdminClient } from "@mirai-gikai/supabase";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
 
@@ -80,20 +81,13 @@ export async function findBillById(id: string) {
 
 /**
  * 議案のmirai_stanceを取得
+ *
+ * NOTE: 地方議会版では mirai_stances テーブルを持たないため常に null を返す。
+ * 既存呼び出し側コードとの互換性のため関数自体は残してある。
+ * 会派ごとの賛否は faction_stances を参照すること。
  */
-export async function findMiraiStanceByBillId(billId: string) {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("mirai_stances")
-    .select("*")
-    .eq("bill_id", billId)
-    .single();
-
-  if (error) {
-    return null;
-  }
-
-  return data;
+export async function findMiraiStanceByBillId(_billId: string) {
+  return null as null;
 }
 
 /**
@@ -174,10 +168,10 @@ export async function findTagsByBillIds(
 // ============================================================
 
 /**
- * 国会会期IDに紐づく公開済み議案を取得
+ * 議会会期IDに紐づく公開済み議案を取得
  */
-export async function findPublishedBillsByDietSession(
-  dietSessionId: string,
+export async function findPublishedBillsByCouncilSession(
+  councilSessionId: string,
   difficultyLevel: DifficultyLevelEnum
 ) {
   const supabase = createAdminClient();
@@ -198,7 +192,7 @@ export async function findPublishedBillsByDietSession(
       )
     `
     )
-    .eq("diet_session_id", dietSessionId)
+    .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel)
     .order("status_order", { ascending: true })
@@ -212,10 +206,54 @@ export async function findPublishedBillsByDietSession(
 }
 
 /**
- * 前回の国会会期の公開済み議案を取得（成立法案を優先、件数制限あり）
+ * 議題種別 (proposal_type) で公開済みの議題を取得する。
+ * council_session_id を指定すればその会期の議題のみ返す。
+ * 報告・請願・陳情のセクション表示などに使う。
+ */
+export async function findPublishedBillsByProposalType(
+  proposalType: Database["public"]["Enums"]["proposal_type_enum"],
+  difficultyLevel: DifficultyLevelEnum,
+  councilSessionId: string | null
+) {
+  const supabase = createAdminClient();
+  let query = supabase
+    .from("bills")
+    .select(
+      `
+      *,
+      bill_contents!inner (
+        id,
+        bill_id,
+        title,
+        summary,
+        content,
+        difficulty_level,
+        created_at,
+        updated_at
+      )
+    `
+    )
+    .eq("publish_status", "published")
+    .eq("proposal_type", proposalType)
+    .eq("bill_contents.difficulty_level", difficultyLevel)
+    .order("submitted_date", { ascending: false, nullsFirst: false });
+
+  if (councilSessionId) {
+    query = query.eq("council_session_id", councilSessionId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to fetch bills by proposal_type: ${error.message}`);
+  }
+  return data;
+}
+
+/**
+ * 前回の議会会期の公開済み議案を取得（成立法案を優先、件数制限あり）
  */
 export async function findPreviousSessionBills(
-  dietSessionId: string,
+  councilSessionId: string,
   difficultyLevel: DifficultyLevelEnum,
   limit: number
 ) {
@@ -237,7 +275,7 @@ export async function findPreviousSessionBills(
       )
     `
     )
-    .eq("diet_session_id", dietSessionId)
+    .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel)
     .order("status_order", { ascending: true })
@@ -253,10 +291,10 @@ export async function findPreviousSessionBills(
 }
 
 /**
- * 前回の国会会期の公開済み議案数を取得
+ * 前回の議会会期の公開済み議案数を取得
  */
-export async function countPublishedBillsByDietSession(
-  dietSessionId: string,
+export async function countPublishedBillsByCouncilSession(
+  councilSessionId: string,
   difficultyLevel: DifficultyLevelEnum
 ): Promise<number> {
   const supabase = createAdminClient();
@@ -266,7 +304,7 @@ export async function countPublishedBillsByDietSession(
       count: "exact",
       head: true,
     })
-    .eq("diet_session_id", dietSessionId)
+    .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
     .eq("bill_contents.difficulty_level", difficultyLevel);
 
@@ -307,7 +345,7 @@ export async function findFeaturedTags() {
 export async function findPublishedBillsByTag(
   tagId: string,
   difficultyLevel: DifficultyLevelEnum,
-  dietSessionId: string | null
+  councilSessionId: string | null
 ) {
   const supabase = createAdminClient();
   let query = supabase
@@ -340,8 +378,8 @@ export async function findPublishedBillsByTag(
     .eq("bills.publish_status", "published")
     .eq("bills.bill_contents.difficulty_level", difficultyLevel);
 
-  if (dietSessionId) {
-    query = query.eq("bills.diet_session_id", dietSessionId);
+  if (councilSessionId) {
+    query = query.eq("bills.council_session_id", councilSessionId);
   }
 
   const { data, error } = await query;
@@ -359,7 +397,7 @@ export async function findPublishedBillsByTag(
  */
 export async function findFeaturedBillsWithContents(
   difficultyLevel: DifficultyLevelEnum,
-  dietSessionId: string | null
+  councilSessionId: string | null
 ) {
   const supabase = createAdminClient();
   let query = supabase
@@ -389,8 +427,8 @@ export async function findFeaturedBillsWithContents(
     .eq("bill_contents.difficulty_level", difficultyLevel)
     .order("submitted_date", { ascending: false, nullsFirst: false });
 
-  if (dietSessionId) {
-    query = query.eq("diet_session_id", dietSessionId);
+  if (councilSessionId) {
+    query = query.eq("council_session_id", councilSessionId);
   }
 
   const { data, error } = await query;
@@ -410,7 +448,7 @@ export async function findFeaturedBillsWithContents(
 /**
  * Coming Soon議案を取得
  */
-export async function findComingSoonBills(dietSessionId: string | null) {
+export async function findComingSoonBills(councilSessionId: string | null) {
   const supabase = createAdminClient();
   let query = supabase
     .from("bills")
@@ -418,8 +456,6 @@ export async function findComingSoonBills(dietSessionId: string | null) {
       `
       id,
       name,
-      originating_house,
-      shugiin_url,
       bill_contents (
         title,
         difficulty_level
@@ -429,8 +465,8 @@ export async function findComingSoonBills(dietSessionId: string | null) {
     .eq("publish_status", "coming_soon")
     .order("created_at", { ascending: false });
 
-  if (dietSessionId) {
-    query = query.eq("diet_session_id", dietSessionId);
+  if (councilSessionId) {
+    query = query.eq("council_session_id", councilSessionId);
   }
 
   const { data, error } = await query;

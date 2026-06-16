@@ -3,16 +3,20 @@ import { About } from "@/components/top/about";
 import { ComingSoonSection } from "@/components/top/coming-soon-section";
 import { Hero } from "@/components/top/hero";
 import { TeamMirai } from "@/components/top/team-mirai";
+import { siteConfig } from "@/config/site.config";
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import { BillDisclaimer } from "@/features/bills/client/components/bill-detail/bill-disclaimer";
 import { BillsByTagSection } from "@/features/bills/server/components/bills-by-tag-section";
 import { FeaturedBillSection } from "@/features/bills/server/components/featured-bill-section";
 import { PreviousSessionSection } from "@/features/bills/server/components/previous-session-section";
+import { ProposalTypeSection } from "@/features/bills/server/components/proposal-type-section";
+import { getBillsByProposalType } from "@/features/bills/server/loaders/get-bills-by-proposal-type";
 import { loadHomeData } from "@/features/bills/server/loaders/load-home-data";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import { HomeChatClient } from "@/features/chat/client/components/home-chat-client";
-import { CurrentDietSession } from "@/features/diet-sessions/client/components/current-diet-session";
-import { getCurrentDietSession } from "@/features/diet-sessions/server/loaders/get-current-diet-session";
+import { CurrentCouncilSession } from "@/features/council-sessions/client/components/current-council-session";
+import { getCurrentCouncilSession } from "@/features/council-sessions/server/loaders/get-current-council-session";
+import { getUpcomingCouncilSession } from "@/features/council-sessions/server/loaders/get-upcoming-council-session";
 import { getJapanTime } from "@/lib/utils/date";
 
 export default async function Home() {
@@ -20,9 +24,19 @@ export default async function Home() {
     await loadHomeData();
 
   // ゆくゆくタグ機能がマージされたらBFFに統合する
-  const [currentSession, currentDifficulty] = await Promise.all([
-    getCurrentDietSession(getJapanTime()),
+  const now = getJapanTime();
+  const [
+    currentSession,
+    upcomingSession,
+    currentDifficulty,
+    reportBills,
+    petitionBills,
+  ] = await Promise.all([
+    getCurrentCouncilSession(now),
+    getUpcomingCouncilSession(now),
     getDifficultyLevel(),
+    getBillsByProposalType("report"),
+    getBillsByProposalType("petition"),
   ]);
 
   const toBillChatContext = (bill: BillWithContent) => {
@@ -38,18 +52,30 @@ export default async function Home() {
     <>
       <Hero />
 
-      {/* 本日の国会セクション */}
-      <CurrentDietSession session={currentSession} />
+      {/* 本日の議会セクション */}
+      <CurrentCouncilSession
+        session={currentSession}
+        upcomingSession={upcomingSession}
+      />
 
       {/* 議案一覧セクション */}
       <Container className="">
         <div className="py-10">
           <main className="flex flex-col gap-16">
-            {/* 注目の法案セクション */}
+            {/* 注目の議案セクション */}
             <FeaturedBillSection bills={featuredBills} />
 
             {/* タグ別議案一覧セクション */}
             <BillsByTagSection billsByTag={billsByTag} />
+
+            {/* 報告セクション */}
+            <ProposalTypeSection proposalType="report" bills={reportBills} />
+
+            {/* 請願・陳情セクション */}
+            <ProposalTypeSection
+              proposalType="petition"
+              bills={petitionBills}
+            />
 
             {/* Coming soonセクション */}
             <ComingSoonSection bills={comingSoonBills} />
@@ -57,7 +83,7 @@ export default async function Home() {
         </div>
       </Container>
 
-      {/* 前回の国会セクション（Archive） */}
+      {/* 前回の議会セクション（Archive） */}
       {previousSessionData && (
         <div className="bg-mirai-surface-muted py-10">
           <Container>
@@ -71,11 +97,11 @@ export default async function Home() {
       )}
 
       <Container>
-        {/* みらい議会とは セクション */}
+        {/* みらい議会＠大田区とは セクション */}
         <About />
 
-        {/* チームみらいについて セクション */}
-        <TeamMirai />
+        {/* チームみらいについて セクション（公式サービスではないため非表示） */}
+        {siteConfig.features.showTeamMiraiSection && <TeamMirai />}
 
         {/* 免責事項 */}
         <BillDisclaimer />

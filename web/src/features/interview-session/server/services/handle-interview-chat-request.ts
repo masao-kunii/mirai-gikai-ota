@@ -6,7 +6,7 @@ import {
   type LanguageModelUsage,
   Output,
   streamText,
-} from "ai";
+} from "@mirai-gikai/shared/ai/sdk";
 import { getBillByIdAdmin } from "@/features/bills/server/loaders/get-bill-by-id-admin";
 import {
   isWithinDailyCostLimit,

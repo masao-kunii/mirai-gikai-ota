@@ -1,0 +1,43 @@
+**/node_modules
+**/.next
+**/.turbo
+**/.cache
+**/.vscode
+**/.idea
+**/.DS_Store
+**/coverage
+**/.nyc_output
+**/*.log
+**/dist
+**/build
+
+# git / docs
+.git
+.github
+docs
+
+# env files (本番秘密は別ルートで注入する)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# テスト一時ファイル
+**/__snapshots__
+tmp_*
+
+# Cloud Run 不要
+README.md
+REVIEW.md
+LICENSE
+CLA.md
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+FORK_GUIDELINES.md
+.coderabbit.yml
+codecov.yml
+biome.json
+**/vitest.config.*
+**/vitest.setup.*
+**/vitest.integration.config.*

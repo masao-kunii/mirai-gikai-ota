@@ -3,4 +3,4 @@ packages:
   - "admin"
   - "web"
 
-minimumReleaseAge: 4320
+minimumReleaseAge: 0

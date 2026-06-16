@@ -19,7 +19,7 @@ import {
 } from "@/features/bills-edit/shared/types";
 import { billContentsUpdateSchema } from "@/features/bills-edit/shared/types/bill-contents";
 import {
-  findBillsWithDietSessions,
+  findBillsWithCouncilSessions,
   updateBillPublishStatus,
 } from "@/features/bills/server/repositories/bill-repository";
 import { calculateSetDiff } from "@/lib/utils/calculate-set-diff";
@@ -44,7 +44,7 @@ export function registerBillsTools(server: McpServer): void {
       },
     },
     async ({ publish_status, status }) => {
-      const bills = await findBillsWithDietSessions();
+      const bills = await findBillsWithCouncilSessions();
       const filtered = bills.filter((bill) => {
         if (publish_status && bill.publish_status !== publish_status)
           return false;
@@ -120,7 +120,7 @@ export function registerBillsTools(server: McpServer): void {
     {
       title: "議案を更新",
       description:
-        "指定IDの議案のメタ情報（name, status, originating_house 等）を部分更新する。指定したフィールドのみが更新され、省略したフィールドは変更されない。",
+        "指定IDの議案のメタ情報（name, status, bill_number 等）を部分更新する。指定したフィールドのみが更新され、省略したフィールドは変更されない。",
       inputSchema: {
         billId: z.string().uuid(),
         ...billUpdateSchema.partial().shape,

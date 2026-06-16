@@ -17,13 +17,15 @@ const billBaseSchema = z.object({
     .max(200, "議案名は200文字以内で入力してください"),
   status: z.enum([
     "preparing",
-    "introduced",
-    "in_originating_house",
-    "in_receiving_house",
-    "enacted",
+    "submitted",
+    "in_committee",
+    "plenary_session",
+    "approved",
     "rejected",
+    "adopted",
+    "partially_adopted",
   ]),
-  originating_house: z.enum(["HR", "HC"]),
+  bill_number: z.string().max(100, "議案番号は100文字以内で入力してください"),
   status_note: z
     .string()
     .max(500, "ステータス備考は500文字以内で入力してください")
@@ -37,17 +39,9 @@ const billBaseSchema = z.object({
     .optional(),
   thumbnail_url: z.string().nullable().optional(),
   share_thumbnail_url: z.string().nullable().optional(),
-  shugiin_url: z
-    .string()
-    .transform((val) => (val === "" ? null : val))
-    .nullable()
-    .refine((val) => val === null || val.startsWith("http"), {
-      message: "有効なURLを入力してください",
-    })
-    .optional(),
   is_featured: z.boolean(),
   is_review_completed: z.boolean(),
-  diet_session_id: z.string().uuid().nullable().optional(),
+  council_session_id: z.string().uuid().nullable().optional(),
   slug: z
     .string()
     .max(200, "slugは200文字以内で入力してください")

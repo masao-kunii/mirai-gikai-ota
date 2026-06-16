@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateObject } from "ai";
+import { generateObject } from "@mirai-gikai/shared/ai/sdk";
 import { TOPIC_ANALYSIS_MODEL } from "../../shared/constants";
 import { topicMergeSchema } from "../../shared/schemas";
 
