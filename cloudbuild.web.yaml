@@ -71,7 +71,9 @@ steps:
       - --min-instances=0
       - --max-instances=10
       - --timeout=3600
-      - --set-env-vars=GOOGLE_VERTEX_LOCATION=${_REGION},GOOGLE_VERTEX_PROJECT=${PROJECT_ID}
+      # チャットのコスト上限・回数レートリミット（--set-env-vars は全置換のため
+      # ここに含めないとデプロイ時に消える）
+      - --set-env-vars=GOOGLE_VERTEX_LOCATION=${_REGION},GOOGLE_VERTEX_PROJECT=${PROJECT_ID},CHAT_DAILY_USER_COST_LIMIT_USD=0.2,CHAT_DAILY_TOTAL_COST_LIMIT_USD=5,CHAT_MONTHLY_TOTAL_COST_LIMIT_USD=50,CHAT_RATE_LIMIT_PER_IP_PER_MIN=20,CHAT_RATE_LIMIT_PER_USER_PER_MIN=30
       # 機密値・接続情報は Secret Manager から読み込ませる
       - --update-secrets=SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_URL=next-public-supabase-url:latest,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=next-public-supabase-publishable-key:latest,SUPABASE_SECRET_KEY=supabase-secret-key:latest
 
