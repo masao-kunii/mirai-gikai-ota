@@ -1,0 +1,218 @@
+/**
+ * 区長提出議案の原文 PDF から AI 要約を生成し、Cloud の bill_contents を
+ * 「事実定型文」から「中身の要約」に差し替えるスクリプト。
+ *
+ * 実行方法:
+ *   SUPABASE_URL=... SUPABASE_SECRET_KEY=... \
+ *   GOOGLE_VERTEX_PROJECT=mirai-gikai-ota GOOGLE_VERTEX_LOCATION=asia-northeast1 \
+ *   [DRY_RUN=1] [LIMIT_PDFS=1] [SESSION=令和8年第1回定例会] \
+ *   npx tsx packages/seed/main/enrich-bill-summaries.ts
+ *
+ * - DRY_RUN=1: DB を書き換えず、生成結果を表示するだけ（品質確認用）
+ * - LIMIT_PDFS=N: 先頭 N 個の PDF グループのみ処理（テスト用）
+ * - SESSION: 対象会期名（未指定なら TARGETS 全部）
+ *
+ * 対象は区長提出議案（グループPDFがある）のみ。報告・請願は対象外。
+ */
+
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@mirai-gikai/supabase";
+import * as parseNs from "../../../admin/src/features/bills-import/server/utils/parse-teirei-pages";
+import * as mapNs from "../../../admin/src/features/bills-import/server/utils/teirei-mapping";
+import * as genNs from "../../../admin/src/features/bills-import/server/utils/generate-summaries-from-pdf";
+
+// CJS/ESM interop（tsx は admin の .ts を CJS 解決するため default 経由になりうる）
+const parse = (
+  "parseTeireiIndex" in parseNs
+    ? parseNs
+    : (parseNs as { default: typeof parseNs }).default
+) as typeof parseNs;
+const mapping = (
+  "formatGianBillNumber" in mapNs
+    ? mapNs
+    : (mapNs as { default: typeof mapNs }).default
+) as typeof mapNs;
+const gen = (
+  "generateBillSummariesFromPdf" in genNs
+    ? genNs
+    : (genNs as { default: typeof genNs }).default
+) as typeof genNs;
+
+const TARGETS: { sessionName: string; indexUrl: string }[] = [
+  {
+    sessionName: "令和8年第1回定例会",
+    indexUrl:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/1teirei/index.html",
+  },
+  {
+    sessionName: "令和8年第2回定例会",
+    indexUrl:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/index.html",
+  },
+];
+
+const DRY_RUN = process.env.DRY_RUN === "1";
+const LIMIT_PDFS = process.env.LIMIT_PDFS
+  ? Number(process.env.LIMIT_PDFS)
+  : Infinity;
+const SESSION_FILTER = process.env.SESSION;
+
+async function fetchText(url: string): Promise<string> {
+  const r = await fetch(url, {
+    headers: { "user-agent": "mirai-gikai-ota/enrich" },
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${url}`);
+  return r.text();
+}
+
+async function main() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error("SUPABASE_URL / SUPABASE_SECRET_KEY が必要です");
+
+  const supabase = createClient<Database>(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  console.log(`📝 Enrich bill summaries (${DRY_RUN ? "DRY-RUN" : "WRITE"}) → ${url}`);
+
+  const { data: sessions } = await supabase
+    .from("council_sessions")
+    .select("id, name");
+  const sessionIdByName = new Map(
+    (sessions ?? []).map((s) => [s.name.replace(/\s+/g, ""), s.id])
+  );
+
+  const targets = SESSION_FILTER
+    ? TARGETS.filter((t) => t.sessionName === SESSION_FILTER)
+    : TARGETS;
+
+  let pdfCount = 0;
+  let updated = 0;
+
+  for (const target of targets) {
+    const councilSessionId = sessionIdByName.get(
+      target.sessionName.replace(/\s+/g, "")
+    );
+    if (!councilSessionId) {
+      console.warn(`⚠️ 会期未登録: ${target.sessionName}`);
+      continue;
+    }
+
+    const indexHtml = await fetchText(target.indexUrl);
+    const index = parse.parseTeireiIndex(indexHtml, target.indexUrl);
+    if (!index.kuchogianUrl) {
+      console.warn(`⚠️ 区長提出議案ページなし: ${target.sessionName}`);
+      continue;
+    }
+
+    const gianHtml = await fetchText(index.kuchogianUrl);
+    const rows = parse.parseGianTable(gianHtml);
+    const pdfLinks = parse.parseGianPdfLinks(gianHtml, index.kuchogianUrl);
+
+    // PDF ごとに、含まれる議案（番号→件名）をまとめる
+    const byPdf = new Map<
+      string,
+      { url: string; bills: genNs.PdfBillInput[] }
+    >();
+    for (const r of rows) {
+      const n = Number(r.number);
+      const pdf = Number.isFinite(n)
+        ? parse.findPdfForNumber(pdfLinks, n)
+        : undefined;
+      if (!pdf) continue;
+      const entry = byPdf.get(pdf.url) ?? { url: pdf.url, bills: [] };
+      entry.bills.push({
+        billNumber: mapping.formatGianBillNumber(r.number),
+        title: r.title,
+      });
+      byPdf.set(pdf.url, entry);
+    }
+
+    console.log(`\n=== ${target.sessionName}: ${byPdf.size} PDF グループ ===`);
+
+    for (const [pdfUrl, entry] of byPdf) {
+      if (pdfCount >= LIMIT_PDFS) break;
+      pdfCount++;
+      console.log(`\n[PDF] ${pdfUrl.split("/").pop()} (${entry.bills.length}件)`);
+
+      const res = await fetch(pdfUrl, {
+        headers: { "user-agent": "mirai-gikai-ota/enrich" },
+      });
+      if (!res.ok) {
+        console.warn(`  PDF取得失敗 HTTP ${res.status}`);
+        continue;
+      }
+      const pdfBytes = Buffer.from(await res.arrayBuffer());
+
+      let generated: genNs.GeneratedPdfSummaries;
+      try {
+        generated = await gen.generateBillSummariesFromPdf(
+          pdfBytes,
+          entry.bills,
+          target.sessionName
+        );
+      } catch (e) {
+        console.warn(`  AI生成失敗: ${e instanceof Error ? e.message : e}`);
+        continue;
+      }
+
+      for (const b of generated.bills) {
+        if (!b.found || !b.normal.summary.trim()) {
+          console.log(`  - ${b.billNumber}: (PDFから読み取れず / スキップ)`);
+          continue;
+        }
+        console.log(`  - ${b.billNumber}: ${b.normal.summary.slice(0, 60)}`);
+
+        if (DRY_RUN) continue;
+
+        // DB の該当議案を取得
+        const { data: bill } = await supabase
+          .from("bills")
+          .select("id")
+          .eq("council_session_id", councilSessionId)
+          .eq("bill_number", b.billNumber)
+          .maybeSingle();
+        if (!bill) {
+          console.warn(`    ⚠️ DB未一致: ${b.billNumber}`);
+          continue;
+        }
+
+        const rows2 = [
+          {
+            bill_id: bill.id,
+            difficulty_level: "normal" as const,
+            title: entry.bills.find((x) => x.billNumber === b.billNumber)
+              ?.title ?? b.billNumber,
+            summary: b.normal.summary.slice(0, 500),
+            content: b.normal.content,
+          },
+          {
+            bill_id: bill.id,
+            difficulty_level: "hard" as const,
+            title: entry.bills.find((x) => x.billNumber === b.billNumber)
+              ?.title ?? b.billNumber,
+            summary: b.hard.summary.slice(0, 500),
+            content: b.hard.content,
+          },
+        ];
+        const { error } = await supabase
+          .from("bill_contents")
+          .upsert(rows2, { onConflict: "bill_id,difficulty_level" });
+        if (error) {
+          console.warn(`    ⚠️ 更新失敗: ${error.message}`);
+        } else {
+          updated++;
+        }
+      }
+    }
+  }
+
+  console.log(
+    `\n🎉 完了 (PDF処理 ${pdfCount} / ${DRY_RUN ? "DRY-RUN（書込なし）" : `更新議案 ${updated}件`})`
+  );
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
