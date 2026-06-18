@@ -3,6 +3,7 @@ import {
   findPdfForNumber,
   parseGianPdfLinks,
   parseGianTable,
+  parseHokokuPdfLinks,
   parseSeiganTable,
   parseStanceCell,
   parseTaidoTable,
@@ -77,6 +78,24 @@ describe("parseGianPdfLinks / findPdfForNumber", () => {
     expect(findPdfForNumber(links, 60)?.url).toContain("59_66.pdf");
     expect(findPdfForNumber(links, 58)?.url).toContain("kuchogian58.pdf");
     expect(findPdfForNumber(links, 99)).toBeUndefined();
+  });
+});
+
+describe("parseHokokuPdfLinks", () => {
+  const html = `
+    <a href="r0802hokoku26_29.pdf">報告第26号から第29号（PDF：4,859KB）</a>
+    <a href="r0802hokoku35.pdf">報告第35号（PDF：72KB）</a>
+  `;
+  const links = parseHokokuPdfLinks(html, BASE);
+  it("範囲報告は from/to を抽出（KB等の数字は拾わない）", () => {
+    expect(links[0]).toMatchObject({ numberFrom: 26, numberTo: 29 });
+  });
+  it("単一報告は from=to", () => {
+    expect(links[1]).toMatchObject({ numberFrom: 35, numberTo: 35 });
+  });
+  it("番号から該当PDFを引ける", () => {
+    expect(findPdfForNumber(links, 27)?.url).toContain("26_29");
+    expect(findPdfForNumber(links, 35)?.url).toContain("hokoku35");
   });
 });
 
