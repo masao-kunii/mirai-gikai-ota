@@ -179,6 +179,38 @@ export function parseGianPdfLinks(
 }
 
 /**
+ * 報告ページの PDF グループリンクを抽出する。
+ * 例: 「報告第26号から第29号（PDF：4,859KB）」→ numberFrom=26, numberTo=29
+ *     「報告第35号（PDF：72KB）」→ numberFrom=35, numberTo=35
+ *
+ * 区長提出議案は「N号議案」表記だが報告は「第N号」表記のため別関数にする。
+ * ファイルサイズ（KB）などの数字を拾わないよう「第(\d+)号」のみ対象にする。
+ */
+export function parseHokokuPdfLinks(
+  html: string,
+  baseUrl: string
+): GianPdfLink[] {
+  const links: GianPdfLink[] = [];
+  for (const m of html.matchAll(
+    /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi
+  )) {
+    const url = new URL(m[1], baseUrl).toString();
+    const label = cellText(m[2]);
+    const nums = [...toHalfWidthDigits(label).matchAll(/第(\d+)号/g)].map((x) =>
+      Number(x[1])
+    );
+    if (nums.length === 0) continue;
+    links.push({
+      label,
+      url,
+      numberFrom: nums[0],
+      numberTo: nums[nums.length - 1],
+    });
+  }
+  return links;
+}
+
+/**
  * 議案番号（数値）から、それを含む PDF グループリンクを返す。
  */
 export function findPdfForNumber(

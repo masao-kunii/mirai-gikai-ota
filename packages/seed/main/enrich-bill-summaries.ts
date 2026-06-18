@@ -56,6 +56,8 @@ const LIMIT_PDFS = process.env.LIMIT_PDFS
   ? Number(process.env.LIMIT_PDFS)
   : Infinity;
 const SESSION_FILTER = process.env.SESSION;
+// CATEGORY=報告 などでカテゴリーを絞る（テスト用。未指定なら全カテゴリー）
+const CATEGORY_FILTER = process.env.CATEGORY;
 
 async function fetchText(url: string): Promise<string> {
   const r = await fetch(url, {
@@ -100,108 +102,143 @@ async function main() {
 
     const indexHtml = await fetchText(target.indexUrl);
     const index = parse.parseTeireiIndex(indexHtml, target.indexUrl);
-    if (!index.kuchogianUrl) {
-      console.warn(`⚠️ 区長提出議案ページなし: ${target.sessionName}`);
-      continue;
-    }
 
-    const gianHtml = await fetchText(index.kuchogianUrl);
-    const rows = parse.parseGianTable(gianHtml);
-    const pdfLinks = parse.parseGianPdfLinks(gianHtml, index.kuchogianUrl);
+    // 原文PDFを持つカテゴリーごとに処理（区長提出議案・報告）
+    const categories: {
+      label: string;
+      sourceLabel: string;
+      pageUrl: string | null;
+      pdfParser: (
+        html: string,
+        base: string
+      ) => ReturnType<typeof parse.parseGianPdfLinks>;
+      formatNumber: (raw: string) => string;
+    }[] = [
+      {
+        label: "区長提出議案",
+        sourceLabel: "区長提出議案",
+        pageUrl: index.kuchogianUrl,
+        pdfParser: parse.parseGianPdfLinks,
+        formatNumber: mapping.formatGianBillNumber,
+      },
+      {
+        label: "報告",
+        sourceLabel: "区から議会への報告（専決処分等）",
+        pageUrl: index.hokokuUrl,
+        pdfParser: parse.parseHokokuPdfLinks,
+        formatNumber: mapping.formatHokokuBillNumber,
+      },
+    ];
 
-    // PDF ごとに、含まれる議案（番号→件名）をまとめる
-    const byPdf = new Map<
-      string,
-      { url: string; bills: genNs.PdfBillInput[] }
-    >();
-    for (const r of rows) {
-      const n = Number(r.number);
-      const pdf = Number.isFinite(n)
-        ? parse.findPdfForNumber(pdfLinks, n)
-        : undefined;
-      if (!pdf) continue;
-      const entry = byPdf.get(pdf.url) ?? { url: pdf.url, bills: [] };
-      entry.bills.push({
-        billNumber: mapping.formatGianBillNumber(r.number),
-        title: r.title,
-      });
-      byPdf.set(pdf.url, entry);
-    }
-
-    console.log(`\n=== ${target.sessionName}: ${byPdf.size} PDF グループ ===`);
-
-    for (const [pdfUrl, entry] of byPdf) {
-      if (pdfCount >= LIMIT_PDFS) break;
-      pdfCount++;
-      console.log(`\n[PDF] ${pdfUrl.split("/").pop()} (${entry.bills.length}件)`);
-
-      const res = await fetch(pdfUrl, {
-        headers: { "user-agent": "mirai-gikai-ota/enrich" },
-      });
-      if (!res.ok) {
-        console.warn(`  PDF取得失敗 HTTP ${res.status}`);
+    for (const cat of categories) {
+      if (CATEGORY_FILTER && cat.label !== CATEGORY_FILTER) continue;
+      if (!cat.pageUrl) {
+        console.warn(`⚠️ ${cat.label}ページなし: ${target.sessionName}`);
         continue;
       }
-      const pdfBytes = Buffer.from(await res.arrayBuffer());
+      const html = await fetchText(cat.pageUrl);
+      const rows = parse.parseGianTable(html);
+      const pdfLinks = cat.pdfParser(html, cat.pageUrl);
 
-      let generated: genNs.GeneratedPdfSummaries;
-      try {
-        generated = await gen.generateBillSummariesFromPdf(
-          pdfBytes,
-          entry.bills,
-          target.sessionName
+      // PDF ごとに、含まれる案件（番号→件名）をまとめる
+      const byPdf = new Map<
+        string,
+        { url: string; bills: genNs.PdfBillInput[] }
+      >();
+      for (const r of rows) {
+        const n = Number(r.number);
+        const pdf = Number.isFinite(n)
+          ? parse.findPdfForNumber(pdfLinks, n)
+          : undefined;
+        if (!pdf) continue;
+        const entry = byPdf.get(pdf.url) ?? { url: pdf.url, bills: [] };
+        entry.bills.push({
+          billNumber: cat.formatNumber(r.number),
+          title: r.title,
+        });
+        byPdf.set(pdf.url, entry);
+      }
+
+      console.log(
+        `\n=== ${target.sessionName} / ${cat.label}: ${byPdf.size} PDF グループ ===`
+      );
+
+      for (const [pdfUrl, entry] of byPdf) {
+        if (pdfCount >= LIMIT_PDFS) break;
+        pdfCount++;
+        console.log(
+          `\n[PDF] ${pdfUrl.split("/").pop()} (${entry.bills.length}件)`
         );
-      } catch (e) {
-        console.warn(`  AI生成失敗: ${e instanceof Error ? e.message : e}`);
-        continue;
-      }
 
-      for (const b of generated.bills) {
-        if (!b.found || !b.normal.summary.trim()) {
-          console.log(`  - ${b.billNumber}: (PDFから読み取れず / スキップ)`);
+        const res = await fetch(pdfUrl, {
+          headers: { "user-agent": "mirai-gikai-ota/enrich" },
+        });
+        if (!res.ok) {
+          console.warn(`  PDF取得失敗 HTTP ${res.status}`);
           continue;
         }
-        console.log(`  - ${b.billNumber}: ${b.normal.summary.slice(0, 60)}`);
+        const pdfBytes = Buffer.from(await res.arrayBuffer());
 
-        if (DRY_RUN) continue;
-
-        // DB の該当議案を取得
-        const { data: bill } = await supabase
-          .from("bills")
-          .select("id")
-          .eq("council_session_id", councilSessionId)
-          .eq("bill_number", b.billNumber)
-          .maybeSingle();
-        if (!bill) {
-          console.warn(`    ⚠️ DB未一致: ${b.billNumber}`);
+        let generated: genNs.GeneratedPdfSummaries;
+        try {
+          generated = await gen.generateBillSummariesFromPdf(
+            pdfBytes,
+            entry.bills,
+            target.sessionName,
+            cat.sourceLabel
+          );
+        } catch (e) {
+          console.warn(`  AI生成失敗: ${e instanceof Error ? e.message : e}`);
           continue;
         }
 
-        const rows2 = [
-          {
-            bill_id: bill.id,
-            difficulty_level: "normal" as const,
-            title: entry.bills.find((x) => x.billNumber === b.billNumber)
-              ?.title ?? b.billNumber,
-            summary: b.normal.summary.slice(0, 500),
-            content: b.normal.content,
-          },
-          {
-            bill_id: bill.id,
-            difficulty_level: "hard" as const,
-            title: entry.bills.find((x) => x.billNumber === b.billNumber)
-              ?.title ?? b.billNumber,
-            summary: b.hard.summary.slice(0, 500),
-            content: b.hard.content,
-          },
-        ];
-        const { error } = await supabase
-          .from("bill_contents")
-          .upsert(rows2, { onConflict: "bill_id,difficulty_level" });
-        if (error) {
-          console.warn(`    ⚠️ 更新失敗: ${error.message}`);
-        } else {
-          updated++;
+        for (const b of generated.bills) {
+          if (!b.found || !b.normal.summary.trim()) {
+            console.log(`  - ${b.billNumber}: (PDFから読み取れず / スキップ)`);
+            continue;
+          }
+          console.log(`  - ${b.billNumber}: ${b.normal.summary.slice(0, 60)}`);
+
+          if (DRY_RUN) continue;
+
+          const { data: bill } = await supabase
+            .from("bills")
+            .select("id")
+            .eq("council_session_id", councilSessionId)
+            .eq("bill_number", b.billNumber)
+            .maybeSingle();
+          if (!bill) {
+            console.warn(`    ⚠️ DB未一致: ${b.billNumber}`);
+            continue;
+          }
+
+          const title =
+            entry.bills.find((x) => x.billNumber === b.billNumber)?.title ??
+            b.billNumber;
+          const rows2 = [
+            {
+              bill_id: bill.id,
+              difficulty_level: "normal" as const,
+              title,
+              summary: b.normal.summary.slice(0, 500),
+              content: b.normal.content,
+            },
+            {
+              bill_id: bill.id,
+              difficulty_level: "hard" as const,
+              title,
+              summary: b.hard.summary.slice(0, 500),
+              content: b.hard.content,
+            },
+          ];
+          const { error } = await supabase
+            .from("bill_contents")
+            .upsert(rows2, { onConflict: "bill_id,difficulty_level" });
+          if (error) {
+            console.warn(`    ⚠️ 更新失敗: ${error.message}`);
+          } else {
+            updated++;
+          }
         }
       }
     }

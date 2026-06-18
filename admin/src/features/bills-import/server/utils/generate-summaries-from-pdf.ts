@@ -41,37 +41,41 @@ const summarySchema = z.object({
 
 export type GeneratedPdfSummaries = z.infer<typeof summarySchema>;
 
-const SYSTEM = `あなたは大田区議会の議案を住民にわかりやすく伝えるライターです。
-添付 PDF は区長提出議案の原文です。指定された各議案について、PDF 本文のみを根拠に解説を作成してください。
+function buildSystem(sourceLabel: string): string {
+  return `あなたは大田区議会の案件を住民にわかりやすく伝えるライターです。
+添付 PDF は${sourceLabel}の原文です。指定された各案件について、PDF 本文のみを根拠に解説を作成してください。
 
 # ルール
-- normal.summary: 1〜2文・150字以内。「何がどう変わる議案か」を端的に。
+- normal.summary: 1〜2文・150字以内。「何がどう変わる/何が報告されたか」を端的に。
 - normal.content: 500〜1000字。中学生〜大人が読める日常語。markdown（見出し/箇条書き可）。
 - hard.summary: 要点を簡潔に。
 - hard.content: 800〜1500字。条文番号・金額・制度・影響など踏み込む。markdown。
-- PDF に該当議案の記載が見つからない場合は found=false とし、summary/content は空文字にする。
+- PDF に該当案件の記載が見つからない場合は found=false とし、summary/content は空文字にする。
 - PDF に書かれていない事実は推測・補完しない。断定を避け、中立的なトーンを保つ。
 - billNumber は入力で与えた表記をそのまま返す（対応付けに使うため変更しない）。`;
+}
 
 /**
- * グループ PDF と、その PDF に含まれる議案リストから、議案ごとの解説を生成する。
+ * グループ PDF と、その PDF に含まれる案件リストから、案件ごとの解説を生成する。
+ * sourceLabel で原文の種別（例: 区長提出議案 / 区から議会への報告）を指定する。
  */
 export async function generateBillSummariesFromPdf(
   pdfBytes: Buffer,
   bills: PdfBillInput[],
-  sessionName: string
+  sessionName: string,
+  sourceLabel = "区長提出議案"
 ): Promise<GeneratedPdfSummaries> {
   const billList = bills.map((b) => `- ${b.billNumber}: ${b.title}`).join("\n");
 
   const prompt = `# 会期: ${sessionName}
-# 対象議案（この PDF に含まれるもの）
+# 対象案件（この PDF に含まれるもの）
 ${billList}
 
-上記の各議案について normal / hard の解説を生成してください。`;
+上記の各案件について normal / hard の解説を生成してください。`;
 
   const { object } = await generateObject({
     model: AI_MODELS.pro,
-    system: SYSTEM,
+    system: buildSystem(sourceLabel),
     schema: summarySchema,
     messages: [
       {
