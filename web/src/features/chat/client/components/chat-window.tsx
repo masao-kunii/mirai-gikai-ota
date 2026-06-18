@@ -1,5 +1,6 @@
 "use client";
 
+import { sendGAEvent } from "@next/third-parties/google";
 import { X } from "lucide-react";
 import Image from "next/image";
 import type { ChangeEvent } from "react";
@@ -199,6 +200,14 @@ export function ChatWindow({
     if (!hasText || isResponding) {
       return;
     }
+
+    // チャット送信を GA4 イベントとして計測（GA 未設定時は no-op）。
+    // 本文そのものは送らず、ページ種別・対象議案・難易度のみ。
+    sendGAEvent("event", "chat_send", {
+      page_type: pageContext?.type ?? (billContext ? "bill" : "unknown"),
+      bill_id: billContext?.id ?? "",
+      difficulty: difficultyLevel,
+    });
 
     // Send message with context and difficulty level in metadata
     // By default, this sends a HTTP POST request to the /api/chat endpoint.
