@@ -1,10 +1,14 @@
 import "./globals.css";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Lexend_Giga, Noto_Sans_JP } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { siteConfig } from "@/config/site.config";
 import type { ReactNode } from "react";
 import { env } from "@/lib/env";
+
+// GA4 測定ID（公開値）。ビルド時に埋め込まれる。未設定なら GA を読み込まない。
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -83,6 +87,7 @@ export default function RootLayout({
         <NextTopLoader showSpinner={false} color="#d76262" />
         {children}
       </body>
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }

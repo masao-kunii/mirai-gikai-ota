@@ -8,6 +8,8 @@ substitutions:
   _REPO: mirai-gikai-ota
   _SERVICE: mirai-gikai-ota-web
   _SERVICE_ACCOUNT: mirai-gikai-ota-web@mirai-gikai-ota.iam.gserviceaccount.com
+  # GA4 測定ID（公開値・機密でないため build-arg で直接渡す）
+  _GA_ID: G-Z1TBETQCTC
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -42,6 +44,7 @@ steps:
           --build-arg=SUPABASE_URL="$$SUPABASE_URL_VALUE" \
           --build-arg=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" \
           --build-arg=SUPABASE_SECRET_KEY="$$SUPABASE_SECRET_KEY" \
+          --build-arg=NEXT_PUBLIC_GA_ID="${_GA_ID}" \
           --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID} \
           --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest \
           .
