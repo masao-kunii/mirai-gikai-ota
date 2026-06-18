@@ -21,7 +21,7 @@ export default function PrivacyPage() {
     >
       <Container className="space-y-8">
         <p className="text-sm text-mirai-text-muted">
-          最終更新日：2026年3月24日
+          最終更新日：2026年6月18日
         </p>
 
         <section className="space-y-4">
@@ -90,9 +90,37 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4">
-          <LegalSectionTitle>5. Cookie（クッキー）について</LegalSectionTitle>
+          <LegalSectionTitle>
+            5. Cookie（クッキー）・アクセス解析について
+          </LegalSectionTitle>
           <LegalParagraph>
-            当ウェブサイトでは、利便性向上とアクセス解析（Googleアナリティクス等）のためにCookieを使用しています。これらは匿名で収集され、個人を特定するものではありません。
+            当ウェブサイトでは、サービスの利便性向上とアクセス状況の把握のため、Google
+            LLC が提供する Google アナリティクス（GA4）を利用しています。Google
+            アナリティクスは Cookie
+            を用いて、閲覧ページ・滞在時間・参照元・デバイス情報などの利用状況を収集します。これらは匿名で収集され、それ単体で特定の個人を識別するものではありません。
+          </LegalParagraph>
+          <LegalParagraph>
+            収集された情報は Google
+            のプライバシーポリシーに基づいて管理されます。詳細は{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Google のプライバシーポリシー
+            </a>
+            をご確認ください。収集を望まない場合は、ブラウザの Cookie
+            設定での無効化、または{" "}
+            <a
+              href="https://tools.google.com/dlpage/gaoptout"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Google アナリティクス オプトアウト アドオン
+            </a>
+            の利用により、計測を停止できます。
           </LegalParagraph>
         </section>
 
