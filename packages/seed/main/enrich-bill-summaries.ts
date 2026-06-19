@@ -249,6 +249,96 @@ async function main() {
         }
       }
     }
+
+    // その他（議員派遣等）はタイトル単位の PDF なので別処理（番号が無い）
+    if (
+      (!CATEGORY_FILTER || CATEGORY_FILTER === "その他") &&
+      index.sonotaUrl
+    ) {
+      const html = await fetchText(index.sonotaUrl);
+      const sonotaRows = parse.parseSonotaTable(html);
+      const sonotaPdfs = parse.parseSonotaPdfLinks(html, index.sonotaUrl);
+      console.log(
+        `\n=== ${target.sessionName} / その他: ${sonotaPdfs.length} PDF ===`
+      );
+      for (let i = 0; i < sonotaRows.length; i++) {
+        if (pdfCount >= LIMIT_PDFS) break;
+        const row = sonotaRows[i];
+        const billNumber = mapping.formatSonotaBillNumber(i + 1);
+        const pdf =
+          sonotaPdfs.find((p) => p.title === row.title) ??
+          sonotaPdfs.find(
+            (p) => row.title.includes(p.title) || p.title.includes(row.title)
+          );
+        if (!pdf) {
+          console.log(`  - ${billNumber}: PDF無し（${row.title.slice(0, 20)}）`);
+          continue;
+        }
+        pdfCount++;
+        console.log(`\n[PDF] ${pdf.url.split("/").pop()} (その他)`);
+        const res = await fetch(pdf.url, {
+          headers: { "user-agent": "mirai-gikai-ota/enrich" },
+        });
+        if (!res.ok) {
+          console.warn(`  PDF取得失敗 HTTP ${res.status}`);
+          continue;
+        }
+        const pdfBytes = Buffer.from(await res.arrayBuffer());
+        let generated: genNs.GeneratedPdfSummaries;
+        try {
+          generated = await gen.generateBillSummariesFromPdf(
+            pdfBytes,
+            [{ billNumber, title: row.title }],
+            target.sessionName,
+            "議会のその他の議決事項（議員派遣等）"
+          );
+        } catch (e) {
+          console.warn(`  AI生成失敗: ${e instanceof Error ? e.message : e}`);
+          continue;
+        }
+        const b = generated.bills[0];
+        if (!b || !b.found || !b.normal.summary.trim()) {
+          console.log(`  - ${billNumber}: (PDFから読み取れず)`);
+          continue;
+        }
+        console.log(`  - ${billNumber}: ${b.normal.summary.slice(0, 60)}`);
+        if (DRY_RUN) continue;
+        const { data: bill } = await supabase
+          .from("bills")
+          .select("id")
+          .eq("council_session_id", councilSessionId)
+          .eq("bill_number", billNumber)
+          .maybeSingle();
+        if (!bill) {
+          console.warn(`    ⚠️ DB未一致: ${billNumber}`);
+          continue;
+        }
+        const rows2 = [
+          {
+            bill_id: bill.id,
+            difficulty_level: "normal" as const,
+            title: row.title,
+            summary: b.normal.summary.slice(0, 500),
+            content: b.normal.content,
+          },
+          {
+            bill_id: bill.id,
+            difficulty_level: "hard" as const,
+            title: row.title,
+            summary: b.hard.summary.slice(0, 500),
+            content: b.hard.content,
+          },
+        ];
+        const { error } = await supabase
+          .from("bill_contents")
+          .upsert(rows2, { onConflict: "bill_id,difficulty_level" });
+        if (error) {
+          console.warn(`    ⚠️ 更新失敗: ${error.message}`);
+        } else {
+          updated++;
+        }
+      }
+    }
   }
 
   console.log(
