@@ -277,6 +277,28 @@ export function parseSonotaTable(html: string): SonotaRow[] {
 }
 
 /**
+ * その他ページの PDF リンクを抽出する（番号が無いためタイトルで対応付ける）。
+ * 例: 「セーラム市親善訪問に伴う議員の派遣について（PDF：77KB）」
+ *     → title="セーラム市親善訪問に伴う議員の派遣について"（（PDF…）以降を除去）
+ */
+export function parseSonotaPdfLinks(
+  html: string,
+  baseUrl: string
+): { title: string; url: string }[] {
+  const links: { title: string; url: string }[] = [];
+  for (const m of html.matchAll(
+    /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi
+  )) {
+    const url = new URL(m[1], baseUrl).toString();
+    const title = cellText(m[2])
+      .replace(/[（(]PDF[：:][^）)]*[）)]\s*$/i, "")
+      .trim();
+    if (title) links.push({ title, url });
+  }
+  return links;
+}
+
+/**
  * 会派態度セルをパースする。
  * 例: "賛成欠席１" → { main: "賛成", note: "欠席１" }
  *     "賛成"       → { main: "賛成", note: "" }

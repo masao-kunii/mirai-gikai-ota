@@ -5,6 +5,7 @@ import {
   parseGianTable,
   parseHokokuPdfLinks,
   parseSeiganTable,
+  parseSonotaPdfLinks,
   parseSonotaTable,
   parseStanceCell,
   parseTaidoTable,
@@ -137,6 +138,19 @@ describe("parseSonotaTable", () => {
       result: "原案可決（全会一致）",
       committee: "",
     });
+  });
+});
+
+describe("parseSonotaPdfLinks", () => {
+  const html = `
+    <a href="r0802sonota01_salem.pdf">セーラム市親善訪問に伴う議員の派遣について（PDF：77KB）</a>
+  `;
+  const links = parseSonotaPdfLinks(html, BASE);
+  it("タイトルから（PDF…）表記を除いて抽出", () => {
+    expect(links[0]).toMatchObject({
+      title: "セーラム市親善訪問に伴う議員の派遣について",
+    });
+    expect(links[0].url).toContain("salem.pdf");
   });
 });
 
