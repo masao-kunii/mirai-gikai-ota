@@ -32,15 +32,24 @@ export type ProposalTypeEnum =
 export const PROPOSAL_TYPE_LABELS: Record<ProposalTypeEnum, string> = {
   mayor_bill: "区長提出議案",
   committee_bill: "委員会提出議案",
+  member_bill: "議員提出議案",
   report: "報告",
   petition: "請願・陳情",
+  other: "その他",
 };
 
 // 議題種別ごとに賛否（faction_stances）を表示するか
 // report は賛否を取らない、petition は議会としての採択/不採択 が中心で
 // 会派ごとの賛否は後段で対応（今は非表示）
 export function shouldShowFactionStances(type: ProposalTypeEnum): boolean {
-  return type === "mayor_bill" || type === "committee_bill";
+  // 採決で会派ごとの賛否が出る種別。報告は賛否を取らず、請願は議会としての
+  // 採択/不採択が中心のため対象外。
+  return (
+    type === "mayor_bill" ||
+    type === "committee_bill" ||
+    type === "member_bill" ||
+    type === "other"
+  );
 }
 
 // 公開ステータス型（議案の公開/非公開を管理）

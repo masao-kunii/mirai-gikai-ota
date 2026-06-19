@@ -29,14 +29,20 @@ export default async function Home() {
     currentSession,
     upcomingSession,
     currentDifficulty,
+    committeeBills,
+    memberBills,
     reportBills,
     petitionBills,
+    otherBills,
   ] = await Promise.all([
     getCurrentCouncilSession(now),
     getUpcomingCouncilSession(now),
     getDifficultyLevel(),
+    getBillsByProposalType("committee_bill"),
+    getBillsByProposalType("member_bill"),
     getBillsByProposalType("report"),
     getBillsByProposalType("petition"),
+    getBillsByProposalType("other"),
   ]);
 
   const toBillChatContext = (bill: BillWithContent) => {
@@ -68,6 +74,18 @@ export default async function Home() {
             {/* タグ別議案一覧セクション */}
             <BillsByTagSection billsByTag={billsByTag} />
 
+            {/* 委員会提出議案セクション */}
+            <ProposalTypeSection
+              proposalType="committee_bill"
+              bills={committeeBills}
+            />
+
+            {/* 議員提出議案セクション */}
+            <ProposalTypeSection
+              proposalType="member_bill"
+              bills={memberBills}
+            />
+
             {/* 報告セクション */}
             <ProposalTypeSection proposalType="report" bills={reportBills} />
 
@@ -76,6 +94,9 @@ export default async function Home() {
               proposalType="petition"
               bills={petitionBills}
             />
+
+            {/* その他セクション */}
+            <ProposalTypeSection proposalType="other" bills={otherBills} />
 
             {/* Coming soonセクション */}
             <ComingSoonSection bills={comingSoonBills} />

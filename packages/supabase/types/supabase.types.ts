@@ -1245,6 +1245,8 @@ export type Database = {
         | "committee_bill"
         | "report"
         | "petition"
+        | "member_bill"
+        | "other"
       stance_type_enum:
         | "for"
         | "against"
@@ -1418,6 +1420,8 @@ export const Constants = {
         "committee_bill",
         "report",
         "petition",
+        "member_bill",
+        "other",
       ],
       stance_type_enum: [
         "for",

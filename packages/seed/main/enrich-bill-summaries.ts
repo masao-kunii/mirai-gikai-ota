@@ -122,6 +122,13 @@ async function main() {
         formatNumber: mapping.formatGianBillNumber,
       },
       {
+        label: "議員提出議案",
+        sourceLabel: "議員提出議案",
+        pageUrl: index.giingianUrl,
+        pdfParser: parse.parseGianPdfLinks,
+        formatNumber: mapping.formatMemberBillNumber,
+      },
+      {
         label: "報告",
         sourceLabel: "区から議会への報告（専決処分等）",
         pageUrl: index.hokokuUrl,

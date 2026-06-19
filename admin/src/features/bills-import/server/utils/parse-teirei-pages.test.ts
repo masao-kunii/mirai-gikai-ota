@@ -5,6 +5,7 @@ import {
   parseGianTable,
   parseHokokuPdfLinks,
   parseSeiganTable,
+  parseSonotaTable,
   parseStanceCell,
   parseTaidoTable,
   parseTeireiIndex,
@@ -19,13 +20,20 @@ describe("parseTeireiIndex", () => {
     <a href="/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/r0802teirei_hokoku.html">報告</a>
     <a href="/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/r0802teirei_giingian.html">議員提出議案</a>
     <a href="/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/r0802seigan20260219.html">請願・陳情</a>
+    <a href="/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/r0802teirei_sonota.html">その他</a>
     <a href="/gikai/segan_chinjo/index.html">請願・陳情</a>
     <a href="/gikai/kugikai_katsudou/honkaigi/r_8/1teirei/r0801teirei_taido.html">意見が異なった議案に対する各会派の態度</a>
   `;
   const idx = parseTeireiIndex(html, BASE);
 
-  it("区長提出議案ページを抽出", () => {
+  it("区長提出議案ページを抽出（議員提出は除外）", () => {
     expect(idx.kuchogianUrl).toContain("r0802teirei_kuchogian.html");
+  });
+  it("議員提出議案ページを抽出", () => {
+    expect(idx.giingianUrl).toContain("r0802teirei_giingian.html");
+  });
+  it("その他ページを抽出", () => {
+    expect(idx.sonotaUrl).toContain("r0802teirei_sonota.html");
   });
   it("報告ページを抽出（議案を含むものは除外）", () => {
     expect(idx.hokokuUrl).toContain("r0802teirei_hokoku.html");
@@ -111,6 +119,23 @@ describe("parseSeiganTable", () => {
       acceptNumber: "8第1号",
       title: "施設使用料金設定の考え方に関する陳情",
       result: "不採択",
+    });
+  });
+});
+
+describe("parseSonotaTable", () => {
+  const html = `<table>
+    <tr><th>件名</th><th>議決日</th><th>議決内容</th><th>付託委員会</th></tr>
+    <tr><td>宮城県東松島市議会親善訪問に伴う議員の派遣について</td><td>令和8年6月17日</td><td>原案可決（全会一致）</td><td>なし</td></tr>
+    <tr><td>セーラム市親善訪問に伴う議員の派遣について</td><td>令和8年6月17日</td><td>原案可決（賛成者多数）</td><td>なし</td></tr>
+  </table>`;
+  const rows = parseSonotaTable(html);
+  it("番号無しテーブルから件名・議決を抽出（ヘッダー除外）", () => {
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      title: "宮城県東松島市議会親善訪問に伴う議員の派遣について",
+      result: "原案可決（全会一致）",
+      committee: "",
     });
   });
 });

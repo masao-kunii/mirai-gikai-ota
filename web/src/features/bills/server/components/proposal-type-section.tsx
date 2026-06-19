@@ -1,25 +1,29 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { routes } from "@/lib/routes";
+import { CompactBillCard } from "../../client/components/bill-list/compact-bill-card";
 import {
-  PROPOSAL_TYPE_LABELS,
   type BillWithContent,
+  PROPOSAL_TYPE_LABELS,
   type ProposalTypeEnum,
 } from "../../shared/types";
-import { CompactBillCard } from "../../client/components/bill-list/compact-bill-card";
 
 const TYPE_DESCRIPTION: Record<ProposalTypeEnum, string> = {
   mayor_bill: "区長から議会に提出された議案",
   committee_bill: "委員会から議会に提出された議案",
+  member_bill: "議員から議会に提出された議案",
   report: "区から議会への報告事項",
   petition: "区民から議会へ提出された請願・陳情",
+  other: "議員派遣など、その他の議決事項",
 };
 
 const TYPE_EMOJI: Record<ProposalTypeEnum, string> = {
   mayor_bill: "📝",
   committee_bill: "📋",
+  member_bill: "🙋",
   report: "📣",
   petition: "📬",
+  other: "🗂️",
 };
 
 type Props = {

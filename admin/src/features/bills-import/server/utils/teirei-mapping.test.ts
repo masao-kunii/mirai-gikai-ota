@@ -4,6 +4,8 @@ import {
   formatGianBillNumber,
   formatHokokuBillNumber,
   formatIinkaiBillNumber,
+  formatMemberBillNumber,
+  formatSonotaBillNumber,
   mapGianResultToStatus,
   mapSeiganResultToStatus,
   mapStanceMainToType,
@@ -100,6 +102,19 @@ describe("formatIinkaiBillNumber", () => {
   it("委N 形式も同じ結果（taido の委1 参照と一致）", () => {
     expect(formatIinkaiBillNumber("委1")).toBe("委員会第1号議案");
     expect(formatGianBillNumber("委1")).toBe("委員会第1号議案");
+  });
+});
+
+describe("formatMemberBillNumber", () => {
+  it("議員提出議案は専用接頭辞（区長/委員会と衝突しない）", () => {
+    expect(formatMemberBillNumber("1")).toBe("議員提出第1号議案");
+  });
+});
+
+describe("formatSonotaBillNumber", () => {
+  it("番号無しの連番から bill_number を作る", () => {
+    expect(formatSonotaBillNumber(1)).toBe("その他第1号");
+    expect(formatSonotaBillNumber(2)).toBe("その他第2号");
   });
 });
 

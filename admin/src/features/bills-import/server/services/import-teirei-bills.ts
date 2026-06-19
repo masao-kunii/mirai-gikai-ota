@@ -28,6 +28,7 @@ import {
   parseGianPdfLinks,
   parseGianTable,
   parseSeiganTable,
+  parseSonotaTable,
   parseTaidoTable,
   parseTeireiIndex,
 } from "../utils/parse-teirei-pages";
@@ -36,6 +37,8 @@ import {
   formatGianBillNumber,
   formatHokokuBillNumber,
   formatIinkaiBillNumber,
+  formatMemberBillNumber,
+  formatSonotaBillNumber,
   mapGianResultToStatus,
   mapSeiganResultToStatus,
   mapStanceMainToType,
@@ -143,6 +146,18 @@ export async function importTeireiBills(
       ))
     );
   }
+  if (index.giingianUrl) {
+    pending.push(
+      ...(await collectGianBills(
+        fetchText,
+        index.giingianUrl,
+        "member_bill",
+        formatMemberBillNumber,
+        mapGianResultToStatus,
+        warnings
+      ))
+    );
+  }
   if (index.hokokuUrl) {
     pending.push(
       ...(await collectGianBills(
@@ -158,6 +173,11 @@ export async function importTeireiBills(
   if (index.seiganUrl) {
     pending.push(
       ...(await collectSeiganBills(fetchText, index.seiganUrl, warnings))
+    );
+  }
+  if (index.sonotaUrl) {
+    pending.push(
+      ...(await collectSonotaBills(fetchText, index.sonotaUrl, warnings))
     );
   }
 
@@ -251,6 +271,31 @@ async function collectSeiganBills(
     title: r.title,
     proposalType: "petition" as const,
     status: mapSeiganResultToStatus(r.result),
+    committee: r.committee,
+    resultDate: r.resultDate,
+    resultText: r.result,
+    pdfUrl: "",
+  }));
+}
+
+/** その他ページ（議員派遣等）から PendingBill[] を作る。番号が無いため連番を振る。 */
+async function collectSonotaBills(
+  fetchText: FetchText,
+  url: string,
+  warnings: string[]
+): Promise<PendingBill[]> {
+  let html: string;
+  try {
+    html = await fetchText(url);
+  } catch (e) {
+    warnings.push(`その他ページ取得失敗: ${errMsg(e)}`);
+    return [];
+  }
+  return parseSonotaTable(html).map((r, i) => ({
+    billNumber: formatSonotaBillNumber(i + 1),
+    title: r.title,
+    proposalType: "other" as const,
+    status: mapGianResultToStatus(r.result),
     committee: r.committee,
     resultDate: r.resultDate,
     resultText: r.result,
