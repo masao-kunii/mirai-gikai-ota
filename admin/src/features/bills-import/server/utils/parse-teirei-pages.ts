@@ -13,6 +13,7 @@ import type {
   GianPdfLink,
   GianRow,
   SeiganRow,
+  SonotaRow,
   StanceCell,
   TaidoRow,
   TaidoTable,
@@ -104,14 +105,19 @@ export function parseTeireiIndex(html: string, baseUrl: string): TeireiIndex {
   return {
     kuchogianUrl: pick(
       (l) => l.includes("区長提出議案"),
-      (l) => l.includes("委員会")
+      (l) => l.includes("委員会") || l.includes("議員")
     ),
     iinkaigianUrl: pick((l) => l.includes("委員会提出議案")),
+    giingianUrl: pick((l) => l.includes("議員提出議案")),
     hokokuUrl: pick(
       (l) => l.includes("報告"),
       (l) => l.includes("議案")
     ),
     seiganUrl: pick((l) => l.includes("請願") || l.includes("陳情")),
+    sonotaUrl: pick(
+      (l) => l === "その他" || l.startsWith("その他（"),
+      (l) => l.includes("案内")
+    ),
     taidoUrl: pick((l) => l.includes("態度")),
   };
 }
@@ -241,6 +247,30 @@ export function parseSeiganTable(html: string): SeiganRow[] {
       committee: (cells[3] ?? "").replace(/^なし$/, ""),
       resultDate: cells[4] ?? "",
       result: cells[5] ?? "",
+    });
+  }
+  return result;
+}
+
+/**
+ * その他ページのテーブルをパースする。
+ * 「件名 | 議決日 | 議決内容 | 付託委員会」の構造（番号列が無い）。
+ */
+export function parseSonotaTable(html: string): SonotaRow[] {
+  const table = firstTable(html);
+  if (!table) return [];
+  const rows = extractRows(table);
+  const result: SonotaRow[] = [];
+  for (const cells of rows) {
+    if (cells.length < 2) continue;
+    // ヘッダー行をスキップ（先頭セルが「件名」）
+    if (cells[0] === "件名" || cells[0] === "議題") continue;
+    if (!cells[0]) continue;
+    result.push({
+      title: cells[0],
+      resultDate: (cells[1] ?? "").replace(/[()（）]/g, ""),
+      result: (cells[2] ?? "").replace(/^-$/, ""),
+      committee: (cells[3] ?? "").replace(/^なし$/, ""),
     });
   }
   return result;

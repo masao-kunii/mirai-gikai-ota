@@ -15,8 +15,10 @@ type ProposalType = Database["public"]["Enums"]["proposal_type_enum"];
 const PROPOSAL_TYPE_LABEL: Record<ProposalType, string> = {
   mayor_bill: "区長提出議案",
   committee_bill: "委員会提出議案",
+  member_bill: "議員提出議案",
   report: "報告",
   petition: "請願・陳情",
+  other: "その他",
 };
 
 const STATUS_LABEL: Record<BillStatus, string> = {
@@ -63,7 +65,9 @@ function buildSummary(input: BuildBillContentInput): string {
       ? `${input.sessionName}で審査された${typeLabel}です。`
       : input.proposalType === "report"
         ? `${input.sessionName}で大田区から議会へ提出された${typeLabel}です。`
-        : `${input.sessionName}に提出された${typeLabel}です。`;
+        : input.proposalType === "other"
+          ? `${input.sessionName}で議決された事項（${typeLabel}）です。`
+          : `${input.sessionName}に提出された${typeLabel}です。`;
   const statusPart =
     input.status === "submitted"
       ? ""

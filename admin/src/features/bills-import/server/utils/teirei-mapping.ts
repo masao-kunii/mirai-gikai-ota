@@ -116,6 +116,20 @@ export function formatHokokuBillNumber(rawNumber: string): string {
   return n;
 }
 
+/** 議員提出議案の番号 → 表示用 bill_number（"1" → "議員提出第1号議案"）。
+ *  区長/委員会提出議案と番号が衝突しないよう専用接頭辞を付ける。 */
+export function formatMemberBillNumber(rawNumber: string): string {
+  const n = rawNumber.trim();
+  const m = n.match(/^議員?(\d+)$/) ?? n.match(/^(\d+)$/);
+  if (m) return `議員提出第${m[1]}号議案`;
+  return n;
+}
+
+/** その他は番号が無いため、出現順の連番から bill_number を作る（"その他第N号"）。 */
+export function formatSonotaBillNumber(index: number): string {
+  return `その他第${index}号`;
+}
+
 /**
  * 会派態度ページの議案番号（"1" や "委1"）を、区長/委員会提出議案の
  * bill_number 形式へ正規化して照合できるようにする。

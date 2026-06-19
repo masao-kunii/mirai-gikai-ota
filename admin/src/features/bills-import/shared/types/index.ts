@@ -23,10 +23,14 @@ export type TeireiIndex = {
   kuchogianUrl: string | null;
   /** 委員会提出議案ページ URL（無ければ null） */
   iinkaigianUrl: string | null;
+  /** 議員提出議案ページ URL（無ければ null） */
+  giingianUrl: string | null;
   /** 報告ページ URL（無ければ null） */
   hokokuUrl: string | null;
   /** 請願・陳情ページ URL（無ければ null） */
   seiganUrl: string | null;
+  /** その他ページ URL（無ければ null） */
+  sonotaUrl: string | null;
   /** 会派態度ページ URL（無ければ null） */
   taidoUrl: string | null;
 };
@@ -71,6 +75,18 @@ export type SeiganRow = {
   resultDate: string;
   /** 結果（例: 採択、不採択） */
   result: string;
+};
+
+/** その他（議員派遣等）の 1 行。番号列が無く件名から始まる構造。 */
+export type SonotaRow = {
+  /** 件名 */
+  title: string;
+  /** 議決日 */
+  resultDate: string;
+  /** 議決内容（例: 原案可決） */
+  result: string;
+  /** 付託委員会（通常「なし」） */
+  committee: string;
 };
 
 /** 会派態度テーブルの 1 セル分の解析結果 */
