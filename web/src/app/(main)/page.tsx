@@ -29,6 +29,7 @@ export default async function Home() {
     currentSession,
     upcomingSession,
     currentDifficulty,
+    mayorBills,
     committeeBills,
     memberBills,
     reportBills,
@@ -38,6 +39,7 @@ export default async function Home() {
     getCurrentCouncilSession(now),
     getUpcomingCouncilSession(now),
     getDifficultyLevel(),
+    getBillsByProposalType("mayor_bill"),
     getBillsByProposalType("committee_bill"),
     getBillsByProposalType("member_bill"),
     getBillsByProposalType("report"),
@@ -73,6 +75,9 @@ export default async function Home() {
 
             {/* タグ別議案一覧セクション */}
             <BillsByTagSection billsByTag={billsByTag} />
+
+            {/* 区長提出議案セクション */}
+            <ProposalTypeSection proposalType="mayor_bill" bills={mayorBills} />
 
             {/* 委員会提出議案セクション */}
             <ProposalTypeSection
