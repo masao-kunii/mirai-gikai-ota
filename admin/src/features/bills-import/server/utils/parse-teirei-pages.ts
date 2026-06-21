@@ -314,8 +314,10 @@ export function parseStanceCell(raw: string): StanceCell {
 
 /**
  * 会派態度ページのテーブルをパースする。
- * 「議案番号 | 件名 | (会派列...) | 結果」の構造。
- * 会派列はヘッダー行から動的に取得する。
+ * レイアウトは会期により2種類:
+ *   A) 「議案番号 | 件名 | (会派列...) | 結果」（番号あり）
+ *   B) 「件名 | (会派列...) | 結果」（番号なし。その他の議決等で出現）
+ * ヘッダー先頭セルが「番号」を含むかで判定する。会派列はヘッダーから動的取得。
  */
 export function parseTaidoTable(html: string): TaidoTable {
   const table = firstTable(html);
@@ -324,21 +326,25 @@ export function parseTaidoTable(html: string): TaidoTable {
   if (rows.length === 0) return { factionColumns: [], rows: [] };
 
   const header = rows[0];
-  // 先頭2列（議案番号・件名）と末尾1列（結果）を除いた中間が会派列
-  const factionColumns = header.slice(2, header.length - 1);
+  const hasNumberColumn = header[0].includes("番号");
+  const titleIdx = hasNumberColumn ? 1 : 0;
+  const factionStart = hasNumberColumn ? 2 : 1;
+  const factionColumns = header.slice(factionStart, header.length - 1);
 
   const dataRows: TaidoRow[] = [];
   for (const cells of rows.slice(1)) {
     if (cells.length < header.length) continue;
-    if (isHeaderRow(cells[0])) continue;
+    // ヘッダー再掲行をスキップ
+    if (cells[0] === header[0]) continue;
+    if (!cells[titleIdx]) continue;
     const stancesByFactionColumn: Record<string, StanceCell> = {};
     factionColumns.forEach((col, i) => {
-      const cell = cells[2 + i] ?? "";
+      const cell = cells[factionStart + i] ?? "";
       if (cell) stancesByFactionColumn[col] = parseStanceCell(cell);
     });
     dataRows.push({
-      number: toHalfWidthDigits(cells[0]),
-      title: cells[1],
+      number: hasNumberColumn ? toHalfWidthDigits(cells[0]) : "",
+      title: cells[titleIdx],
       stancesByFactionColumn,
       result: cells[cells.length - 1],
     });

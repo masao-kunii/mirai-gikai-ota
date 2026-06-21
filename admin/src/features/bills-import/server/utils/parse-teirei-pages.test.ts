@@ -186,4 +186,21 @@ describe("parseTaidoTable", () => {
     expect(row.stancesByFactionColumn["共産"].main).toBe("反対");
     expect(row.result).toBe("原案可決");
   });
+
+  it("番号列が無いレイアウト（件名始まり）も解析できる", () => {
+    const noNumber = `<table>
+      <tr><th>件名</th><th>自民・無所属</th><th>無所属</th><th>国民</th><th>結果</th></tr>
+      <tr><td>セーラム市親善訪問に伴う議員の派遣について</td><td>賛成</td><td>賛成欠席１</td><td>賛成</td><td>原案可決</td></tr>
+    </table>`;
+    const t = parseTaidoTable(noNumber);
+    expect(t.factionColumns).toEqual(["自民・無所属", "無所属", "国民"]);
+    const row = t.rows[0];
+    expect(row.number).toBe("");
+    expect(row.title).toBe("セーラム市親善訪問に伴う議員の派遣について");
+    expect(row.stancesByFactionColumn["国民"].main).toBe("賛成");
+    expect(row.stancesByFactionColumn["無所属"]).toMatchObject({
+      main: "賛成",
+      note: "欠席１",
+    });
+  });
 });

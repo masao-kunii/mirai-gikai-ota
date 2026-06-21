@@ -183,6 +183,7 @@ export async function importTeireiBills(
 
   // 4. 議案を upsert
   const billIdByNumber = new Map<string, string>();
+  const billIdByTitle = new Map<string, string>();
   let billsUpserted = 0;
   for (const b of pending) {
     const committeeId =
@@ -198,6 +199,7 @@ export async function importTeireiBills(
     );
     if (billId) {
       billIdByNumber.set(b.billNumber, billId);
+      billIdByTitle.set(b.title, billId);
       billsUpserted++;
     }
   }
@@ -210,6 +212,7 @@ export async function importTeireiBills(
       fetchText,
       index.taidoUrl,
       billIdByNumber,
+      billIdByTitle,
       warnings
     );
   }
@@ -403,6 +406,7 @@ async function importStances(
   fetchText: FetchText,
   taidoUrl: string,
   billIdByNumber: Map<string, string>,
+  billIdByTitle: Map<string, string>,
   warnings: string[]
 ): Promise<number> {
   let html: string;
@@ -421,12 +425,13 @@ async function importStances(
   const table = parseTaidoTable(html);
   let count = 0;
   for (const row of table.rows) {
-    const billNumber = taidoNumberToGianBillNumber(row.number);
-    const billId = billIdByNumber.get(billNumber);
+    // 番号があれば番号で、無ければ件名で議案を特定する
+    // （その他の議決等は番号が無く件名のみの行になる）
+    const billId = row.number
+      ? billIdByNumber.get(taidoNumberToGianBillNumber(row.number))
+      : billIdByTitle.get(row.title);
     if (!billId) {
-      warnings.push(
-        `会派態度: 議案「${row.title}」(${billNumber}) が見つからずスキップ`
-      );
+      warnings.push(`会派態度: 議案「${row.title}」が見つからずスキップ`);
       continue;
     }
 

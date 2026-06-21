@@ -127,9 +127,11 @@ export const factions: FactionInsert[] = [
     is_active: true,
   },
   {
+    // 令和8年4月の会派再編で「つばさ大田区議団」→「大田区無所属議員団」へ名称変更。
+    // 第1回の会派態度ページでは「つばさ」、第2回では「無所属」表記。
     name: "tsubasa",
-    display_name: "つばさ",
-    alternative_names: ["つばさ大田区議団"],
+    display_name: "大田区無所属議員団",
+    alternative_names: ["無所属", "つばさ", "つばさ大田区議団"],
     sort_order: 3,
     is_active: true,
   },
@@ -199,6 +201,14 @@ export const factions: FactionInsert[] = [
     display_name: "未来創志会",
     alternative_names: ["おおた未来創志会", "大田未来創志会"],
     sort_order: 11,
+    is_active: true,
+  },
+  {
+    // 令和8年4月新設（都ファ・国民の解散後）。会派態度ページでは「国民」表記。
+    name: "kokumin",
+    display_name: "大田区議会国民民主党",
+    alternative_names: ["国民"],
+    sort_order: 12,
     is_active: true,
   },
 ];
