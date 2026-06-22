@@ -80,17 +80,6 @@ export async function findBillById(id: string) {
 }
 
 /**
- * 議案のmirai_stanceを取得
- *
- * NOTE: 地方議会版では mirai_stances テーブルを持たないため常に null を返す。
- * 既存呼び出し側コードとの互換性のため関数自体は残してある。
- * 会派ごとの賛否は faction_stances を参照すること。
- */
-export async function findMiraiStanceByBillId(_billId: string) {
-  return null as null;
-}
-
-/**
  * 議案のタグを取得
  */
 export async function findTagsByBillId(billId: string) {

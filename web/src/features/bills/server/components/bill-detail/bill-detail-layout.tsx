@@ -9,7 +9,6 @@ import { getPublicReportsByBillId } from "@/features/interview-report/server/loa
 import { BillDetailClient } from "../../../client/components/bill-detail/bill-detail-client";
 import { BillDisclaimer } from "../../../client/components/bill-detail/bill-disclaimer";
 import { BillStatusProgress } from "../../../client/components/bill-detail/bill-status-progress";
-import { MiraiStanceCard } from "../../../client/components/bill-detail/mirai-stance-card";
 import {
   type BillWithContent,
   shouldShowFactionStances,
@@ -27,7 +26,6 @@ export async function BillDetailLayout({
   bill,
   currentDifficulty,
 }: BillDetailLayoutProps) {
-  const showMiraiStance = bill.status === "preparing" || bill.mirai_stance;
   const [interviewConfig, publicReportsResult, factionStances] =
     await Promise.all([
       getInterviewConfig(bill.id),
@@ -85,14 +83,6 @@ export async function BillDetailLayout({
         {interviewConfig != null && (
           <div className="my-8">
             <InterviewLandingSection billId={bill.id} />
-          </div>
-        )}
-        {showMiraiStance && (
-          <div className="my-8">
-            <MiraiStanceCard
-              stance={bill.mirai_stance}
-              billStatus={bill.status}
-            />
           </div>
         )}
         {/* シェアボタン */}

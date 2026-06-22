@@ -57,10 +57,5 @@ export const siteConfig = {
     aiChat: true,
     /** AIインタビュー機能（議案当事者へのヒアリング）*/
     aiInterview: true,
-    /**
-     * チームみらいセクションの表示（トップページ・フッター・デスクトップメニュー）
-     * 非公式運営など、党の公式サービスとして出さない場合は false にする。
-     */
-    showTeamMiraiSection: false as boolean,
   },
 } as const;
