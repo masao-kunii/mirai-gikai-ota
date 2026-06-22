@@ -86,8 +86,10 @@ export default function RootLayout({
       >
         <NextTopLoader showSpinner={false} color="#d76262" />
         {children}
+        {/* GoogleAnalytics は body 内に置く（html 直下だと afterInteractive
+            スクリプトが実行されず計測されない） */}
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
-      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }
