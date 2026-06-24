@@ -1,10 +1,7 @@
 "use client";
 
-import { Loader2, PauseCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { CollectionForm } from "./collection-form";
 import { DraftReview } from "./draft-review";
 import { RunHistory } from "./run-history";
 import type { CollectionRun } from "../../shared/types";
@@ -75,9 +72,6 @@ export function AiCollectionPage({
         if (updated.status !== "running") {
           stopPolling();
         }
-        if (updated.status === "paused") {
-          toast.warning("Claude制限に達した為、一時停止しています");
-        }
       } catch {
         // Ignore polling errors
       }
@@ -97,14 +91,6 @@ export function AiCollectionPage({
     [pollRun, stopPolling]
   );
 
-  const handleRunStarted = useCallback(
-    (runId: string) => {
-      setActiveRunId(runId);
-      startPolling(runId);
-    },
-    [startPolling]
-  );
-
   const handleSelectRun = useCallback(
     (run: CollectionRun) => {
       setActiveRunId(run.id);
@@ -119,31 +105,6 @@ export function AiCollectionPage({
 
   const elapsed = useElapsedSeconds(
     activeRun?.status === "running" ? (activeRun.createdAt ?? null) : null
-  );
-
-  const [isResuming, setIsResuming] = useState(false);
-
-  const handleResume = useCallback(
-    async (runId: string) => {
-      setIsResuming(true);
-      try {
-        const res = await fetch(`/api/ai-collection/${runId}`, {
-          method: "POST",
-        });
-        const data = (await res.json()) as { runId?: string; error?: string };
-        if (!res.ok) {
-          toast.error(data.error ?? "収集の再開に失敗しました");
-          return;
-        }
-        toast.success("情報収集を再開しました");
-        startPolling(runId);
-      } catch {
-        toast.error("収集の再開に失敗しました");
-      } finally {
-        setIsResuming(false);
-      }
-    },
-    [startPolling]
   );
 
   // Resume polling for any in-progress run on mount
@@ -162,30 +123,15 @@ export function AiCollectionPage({
 
   return (
     <div className="space-y-8">
-      {/* Web 検索ベースの収集は地方議会版では未対応 */}
-      <section className="rounded-lg border border-yellow-300 bg-yellow-50 p-6">
-        <h2 className="mb-2 text-lg font-semibold text-yellow-900">
-          Web 検索ベースの情報収集について
-        </h2>
-        <p className="text-sm leading-relaxed text-yellow-900">
-          地方議会版では、Web 検索で議案を自動収集する機能
-          (上流の国会版で使われている Claude CLI ベースの収集)
-          には現在対応していません。
-          <br />
-          代わりに <strong>議事録 PDF からの AI 抽出</strong>{" "}
-          をご利用ください。「議事録管理」→「議事録詳細」画面の{" "}
-          <strong>「AIで議案・会派見解を抽出」</strong> ボタンから実行できます。
+      {/* 議事録 PDF からの AI 抽出結果をレビューする画面 */}
+      <section className="rounded-lg border bg-white p-6">
+        <h2 className="mb-2 text-lg font-semibold">議案・会派見解の AI 抽出</h2>
+        <p className="text-sm leading-relaxed text-gray-600">
+          議案・会派見解は <strong>議事録 PDF からの AI 抽出</strong>{" "}
+          で取り込みます。「議事録管理」→「議事録詳細」画面の{" "}
+          <strong>「AIで議案・会派見解を抽出」</strong>{" "}
+          ボタンから実行すると、この画面に抽出結果（ドラフト）が表示されます。
         </p>
-      </section>
-
-      {/* Collection form (disabled) */}
-      <section className="rounded-lg border bg-white p-6 opacity-60">
-        <h2 className="mb-4 text-lg font-semibold">
-          情報収集（地方議会版では無効化中）
-        </h2>
-        <div className="pointer-events-none select-none">
-          <CollectionForm onRunStarted={handleRunStarted} />
-        </div>
       </section>
 
       {/* Active run status */}
@@ -198,48 +144,15 @@ export function AiCollectionPage({
               <div className="flex items-center gap-3 text-blue-600">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="font-medium">
-                  {activeRun.mode === "minutes"
-                    ? "Gemini が議事録から議案・会派見解を抽出中です..."
-                    : activeRun.mode === "status_check"
-                      ? "Claude がステータスをチェック中です..."
-                      : "Claude がウェブ検索・情報収集中です..."}
+                  Gemini が議事録から議案・会派見解を抽出中です...
                 </span>
                 <span className="tabular-nums text-sm text-blue-400">
                   {formatElapsed(elapsed)} 経過
                 </span>
               </div>
               <p className="ml-8 text-xs text-gray-400">
-                {activeRun.mode === "minutes"
-                  ? "議事録の長さによって数十秒〜数分かかります。このページを開いたままお待ちください。"
-                  : "ウェブ検索を伴うため数分〜10分程度かかります。このページを開いたままお待ちください。"}
+                議事録の長さによって数十秒〜数分かかります。このページを開いたままお待ちください。
               </p>
-            </div>
-          )}
-
-          {activeRun.status === "paused" && (
-            <div className="rounded-md bg-yellow-50 p-4 text-yellow-800">
-              <div className="flex items-center gap-3">
-                <PauseCircle className="h-5 w-5 shrink-0 text-yellow-600" />
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    Claude制限に達した為、一時停止しています
-                  </p>
-                  <p className="mt-1 text-sm text-yellow-700">
-                    しばらく待ってから再開ボタンを押してください。
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  disabled={isResuming}
-                  onClick={() => void handleResume(activeRun.id)}
-                  className="shrink-0 border-yellow-400 text-yellow-800 hover:bg-yellow-100"
-                >
-                  {isResuming && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  再開
-                </Button>
-              </div>
             </div>
           )}
 
