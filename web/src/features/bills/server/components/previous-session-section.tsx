@@ -29,7 +29,7 @@ export function PreviousSessionSection({
     return null;
   }
 
-  const sessionBillsUrl = routes.kokkaiSessionBills(session.slug);
+  const sessionBillsUrl = routes.sessionBills(session.slug);
   const startDate = new Date(session.start_date);
   const endDate = session.end_date ? new Date(session.end_date) : null;
   const sessionDescription = endDate

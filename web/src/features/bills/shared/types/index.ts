@@ -11,17 +11,6 @@ export type BillContentInsert =
 export type BillContentUpdate =
   Database["public"]["Tables"]["bill_contents"]["Update"];
 
-// 地方議会版では mirai_stances テーブルは存在しないが、互換性のため
-// stance-styles.ts などで使われる型はローカル定義する
-export type MiraiStance = {
-  id: string;
-  bill_id: string;
-  type: StanceTypeEnum;
-  comment: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
 // Enums
 export type BillStatusEnum = Database["public"]["Enums"]["bill_status_enum"];
 export type StanceTypeEnum = Database["public"]["Enums"]["stance_type_enum"];
@@ -63,11 +52,6 @@ export type ComingSoonBill = {
   council_url: string | null;
 };
 
-// Combined types for UI
-export type BillWithStance = Bill & {
-  mirai_stance?: MiraiStance;
-};
-
 export type BillTag = {
   id: string;
   label: string;
@@ -81,7 +65,6 @@ export type FeaturedTag = {
 
 export type BillWithContent = Bill & {
   bill_content?: BillContent;
-  mirai_stance?: MiraiStance;
   tags: BillTag[];
   featured_tag?: FeaturedTag;
   hasPublicInterview?: boolean;

@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/config/site.config";
 import { usePathname } from "next/navigation";
 import { isInterviewPage } from "@/lib/page-layout-utils";
 import { policyLinks, primaryLinks } from "./footer.config";
@@ -17,11 +15,9 @@ export function Footer() {
   return (
     <footer className="bg-mirai-gradient text-slate-900">
       <div className="mx-auto flex w-full max-w-[500px] flex-col items-center px-6 py-14 pb-20 text-center">
-        {siteConfig.features.showTeamMiraiSection && <FooterLogoSection />}
         <FooterPrimaryLinks />
         <FooterPolicies />
         <FooterDisclaimer />
-        {siteConfig.features.showTeamMiraiSection && <FooterCopyright />}
       </div>
     </footer>
   );
@@ -46,22 +42,6 @@ function FooterDisclaimer() {
         </Link>{" "}
         でご覧いただけます。
       </p>
-    </div>
-  );
-}
-
-function FooterLogoSection() {
-  return (
-    <div className="flex flex-col items-center text-center mb-9">
-      <Link href="/" aria-label={`${siteConfig.siteName} トップページ`}>
-        <Image
-          src="/img/logo.svg"
-          alt={siteConfig.siteName}
-          width={150}
-          height={128}
-          className="h-auto"
-        />
-      </Link>
     </div>
   );
 }
@@ -110,14 +90,6 @@ function FooterPolicies() {
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-function FooterCopyright() {
-  return (
-    <div className="text-center text-sm font-medium text-slate-800">
-      © 2025 Team Mirai All rights Reserved
     </div>
   );
 }
