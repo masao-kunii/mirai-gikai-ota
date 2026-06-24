@@ -107,6 +107,7 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 ## Build, Test, and Development Commands
 - 依存導入は `pnpm install`、全てのスクリプトは pnpm 経由で実行します。
 - `pnpm dev` は `.env` を共有しつつ `web`・`admin`・各パッケージの dev サーバーを並列起動します。
+- `pnpm dev:secrets` は公開チャット用の `GEMINI_API_KEY` を Secret Manager（`gemini-api-key`）から実行時取得して環境変数に注入したうえで dev を起動します。本番と同じ Gemini Developer API キー・モデルでローカルチャットを動かせます（取得できない場合は Vertex AI/ADC にフォールバック。`gcloud auth application-default login` が必要）。引数はそのまま `pnpm` に渡るため `pnpm dev:secrets --filter web dev` のように web だけ起動も可能です。
 - `pnpm test` でワークスペース横断の Vitest を実行。局所実行は `pnpm --filter web test` や `test:watch` を利用します。
 - 品質ゲートとして `pnpm lint`（Biome format+lint）と `pnpm typecheck` を PR 前に通過させます。
 - DB 関連は `pnpm db:reset`、`pnpm db:migrate`、`pnpm db:types:gen`、`pnpm seed` を用途に応じて組み合わせます。
