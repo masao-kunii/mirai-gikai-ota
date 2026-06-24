@@ -1,6 +1,7 @@
-export type CollectionStatus = "running" | "completed" | "failed" | "paused";
+export type CollectionStatus = "running" | "completed" | "failed";
 
-export type CollectionMode = "full" | "status_check" | "minutes";
+// 地方議会版は議事録 PDF からの抽出のみ対応（Web 検索ベースの収集は廃止）。
+export type CollectionMode = "minutes";
 
 export type FactionMatchStatus = {
   factionName: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Loader2, PauseCircle, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CollectionRun } from "../../shared/types";
 
@@ -69,9 +69,6 @@ function StatusIcon({ status }: { status: CollectionRun["status"] }) {
   if (status === "completed") {
     return <CheckCircle className="h-4 w-4 text-green-500" />;
   }
-  if (status === "paused") {
-    return <PauseCircle className="h-4 w-4 text-yellow-500" />;
-  }
   return <XCircle className="h-4 w-4 text-red-500" />;
 }
 
@@ -81,13 +78,6 @@ function StatusBadge({ status }: { status: CollectionRun["status"] }) {
   }
   if (status === "completed") {
     return <Badge variant="secondary">完了</Badge>;
-  }
-  if (status === "paused") {
-    return (
-      <Badge className="border-yellow-400 bg-yellow-100 text-yellow-800">
-        一時停止
-      </Badge>
-    );
   }
   return <Badge variant="destructive">失敗</Badge>;
 }
