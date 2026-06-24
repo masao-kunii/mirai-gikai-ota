@@ -2,9 +2,9 @@ name: Code Check
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, ota/develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, ota/develop]
 
 jobs:
   lint-and-typecheck:
@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -42,6 +42,8 @@ jobs:
         run: pnpm run test:coverage
 
       - name: Upload coverage to Codecov
+        # CODECOV_TOKEN 未設定でも CI を落とさない（カバレッジ送信は任意）
+        continue-on-error: true
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
           files: ./web/coverage/coverage-final.json
