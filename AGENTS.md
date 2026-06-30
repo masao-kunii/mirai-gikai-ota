@@ -109,6 +109,7 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - `pnpm dev` は `.env` を共有しつつ `web`・`admin`・各パッケージの dev サーバーを並列起動します。
 - `pnpm dev:secrets` は公開チャット用の `GEMINI_API_KEY` を Secret Manager（`gemini-api-key`）から実行時取得して環境変数に注入したうえで dev を起動します。本番と同じ Gemini Developer API キー・モデルでローカルチャットを動かせます（取得できない場合は Vertex AI/ADC にフォールバック。`gcloud auth application-default login` が必要）。引数はそのまま `pnpm` に渡るため `pnpm dev:secrets --filter web dev` のように web だけ起動も可能です。
 - `pnpm test` でワークスペース横断の Vitest を実行。局所実行は `pnpm --filter web test` や `test:watch` を利用します。
+- E2E スモーク（Playwright）は `pnpm --filter web test:e2e`。`E2E_BASE_URL` 未指定ならローカル（`http://127.0.0.1:3010`、dev サーバーを自動起動/再利用）に対して実行します。デプロイ後スモークは `E2E_BASE_URL=https://ota.aix.tokyo pnpm --filter web test:e2e`。AIチャットの E2E は既定 skip で、`E2E_CHAT=1` 指定時のみ実行（要 Gemini キー）。初回は `pnpm --filter web exec playwright install chromium` でブラウザを取得します。
 - 品質ゲートとして `pnpm lint`（Biome format+lint）と `pnpm typecheck` を PR 前に通過させます。
 - DB 関連は `pnpm db:reset`、`pnpm db:migrate`、`pnpm db:types:gen`、`pnpm seed` を用途に応じて組み合わせます。
 

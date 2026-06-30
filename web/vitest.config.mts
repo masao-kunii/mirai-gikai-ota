@@ -9,7 +9,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    exclude: ["**/*.integration.test.ts", "**/node_modules/**"],
+    // e2e は Playwright が実行するため Vitest の対象から除外する
+    exclude: ["**/*.integration.test.ts", "**/node_modules/**", "**/e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "json-summary"],
