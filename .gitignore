@@ -12,3 +12,9 @@ node_modules
 !.env.example
 # AI情報収集のローカル実行成果物
 admin/collections/
+
+# Playwright E2E の生成物
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/.playwright/
