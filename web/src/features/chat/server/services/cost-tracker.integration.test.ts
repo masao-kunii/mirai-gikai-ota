@@ -40,7 +40,7 @@ describe("cost-tracker 統合テスト", () => {
     it("usage を DB に記録できる", async () => {
       await recordChatUsage({
         userId: testUser.id,
-        model: "openai/gpt-4o",
+        model: "gemini-2.5-flash",
         usage: mockUsage(500, 100, 600),
       });
 
@@ -51,7 +51,7 @@ describe("cost-tracker 統合テスト", () => {
         .eq("user_id", testUser.id);
 
       expect(data).toHaveLength(1);
-      expect(data?.[0].model).toBe("openai/gpt-4o");
+      expect(data?.[0].model).toBe("gemini-2.5-flash");
       expect(data?.[0].input_tokens).toBe(500);
       expect(data?.[0].output_tokens).toBe(100);
       expect(data?.[0].total_tokens).toBe(600);
@@ -61,7 +61,7 @@ describe("cost-tracker 統合テスト", () => {
     it("costUsd が指定された場合はそれを使う", async () => {
       await recordChatUsage({
         userId: testUser.id,
-        model: "openai/gpt-4o",
+        model: "gemini-2.5-flash",
         usage: mockUsage(500, 100, 600),
         costUsd: 0.05,
       });
@@ -78,7 +78,7 @@ describe("cost-tracker 統合テスト", () => {
     it("sessionId と metadata を記録できる", async () => {
       await recordChatUsage({
         userId: testUser.id,
-        model: "openai/gpt-4o",
+        model: "gemini-2.5-flash",
         sessionId: "test-session-123",
         promptName: "bill-chat-system-normal",
         usage: mockUsage(100, 50, 150),
@@ -107,13 +107,13 @@ describe("cost-tracker 統合テスト", () => {
       // 2 レコード挿入
       await recordChatUsage({
         userId: testUser.id,
-        model: "openai/gpt-4o",
+        model: "gemini-2.5-flash",
         usage: mockUsage(1000, 500, 1500),
         costUsd: 0.01,
       });
       await recordChatUsage({
         userId: testUser.id,
-        model: "openai/gpt-4o",
+        model: "gemini-2.5-flash",
         usage: mockUsage(2000, 1000, 3000),
         costUsd: 0.02,
       });

@@ -5,14 +5,12 @@
   "type": "module",
   "scripts": {
     "seed": "tsx main/run.ts",
-    "seed:csv": "tsx csv/import-csv.ts",
     "import:teirei": "tsx main/import-teirei-cloud.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@mirai-gikai/supabase": "workspace:*",
-    "@supabase/supabase-js": "^2.57.0",
-    "csv-parse": "^6.1.0"
+    "@supabase/supabase-js": "^2.57.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",

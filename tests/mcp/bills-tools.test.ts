@@ -3,12 +3,12 @@ import { registerBillsTools } from "../../admin/src/features/mcp/server/tools/re
 import {
   adminClient,
   cleanupTestBill,
-  cleanupTestDietSession,
+  cleanupTestCouncilSession,
   cleanupTestTag,
   createTestBill,
   createTestBillContent,
   createTestBillTag,
-  createTestDietSession,
+  createTestCouncilSession,
   createTestTag,
 } from "../supabase/utils";
 import { createTestRegistry, type TestMcpRegistry } from "./utils";
@@ -17,7 +17,7 @@ describe("MCP bills tools", () => {
   let registry: TestMcpRegistry;
   const billIds: string[] = [];
   const tagIds: string[] = [];
-  const dietSessionIds: string[] = [];
+  const councilSessionIds: string[] = [];
 
   beforeEach(() => {
     registry = createTestRegistry();
@@ -27,7 +27,8 @@ describe("MCP bills tools", () => {
   afterEach(async () => {
     for (const id of billIds.splice(0)) await cleanupTestBill(id);
     for (const id of tagIds.splice(0)) await cleanupTestTag(id);
-    for (const id of dietSessionIds.splice(0)) await cleanupTestDietSession(id);
+    for (const id of councilSessionIds.splice(0))
+      await cleanupTestCouncilSession(id);
   });
 
   describe("list_bills", () => {
@@ -35,7 +36,7 @@ describe("MCP bills tools", () => {
       const draftBill = await createTestBill({ publish_status: "draft" });
       const publishedBill = await createTestBill({
         publish_status: "published",
-        status: "enacted",
+        status: "approved",
       });
       billIds.push(draftBill.id, publishedBill.id);
 
@@ -47,27 +48,27 @@ describe("MCP bills tools", () => {
       expect(draftIds).not.toContain(publishedBill.id);
       expect(draftResult.every((b) => b.publish_status === "draft")).toBe(true);
 
-      const enactedResult = await registry.callTool<
+      const approvedResult = await registry.callTool<
         Array<{ id: string; status: string }>
-      >("list_bills", { status: "enacted" });
-      const enactedIds = enactedResult.map((b) => b.id);
-      expect(enactedIds).toContain(publishedBill.id);
-      expect(enactedIds).not.toContain(draftBill.id);
+      >("list_bills", { status: "approved" });
+      const approvedIds = approvedResult.map((b) => b.id);
+      expect(approvedIds).toContain(publishedBill.id);
+      expect(approvedIds).not.toContain(draftBill.id);
     });
 
-    it("レスポンスに diet_sessions(name) が含まれる", async () => {
-      const session = await createTestDietSession({
+    it("レスポンスに council_sessions(name) が含まれる", async () => {
+      const session = await createTestCouncilSession({
         name: `テスト会期-${Date.now()}`,
       });
-      dietSessionIds.push(session.id);
-      const bill = await createTestBill({ diet_session_id: session.id });
+      councilSessionIds.push(session.id);
+      const bill = await createTestBill({ council_session_id: session.id });
       billIds.push(bill.id);
 
       const result = await registry.callTool<
-        Array<{ id: string; diet_sessions: { name: string } | null }>
+        Array<{ id: string; council_sessions: { name: string } | null }>
       >("list_bills", {});
       const found = result.find((b) => b.id === bill.id);
-      expect(found?.diet_sessions?.name).toBe(session.name);
+      expect(found?.council_sessions?.name).toBe(session.name);
     });
   });
 
@@ -135,8 +136,8 @@ describe("MCP bills tools", () => {
         bill: { id: string };
       }>("create_bill", {
         name: `MCP作成テスト-${Date.now()}`,
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
+        bill_number: "第1号",
         status_note: null,
         submitted_date: "2025-04-01",
         is_featured: false,
@@ -165,8 +166,8 @@ describe("MCP bills tools", () => {
         bill: { id: string };
       }>("create_bill", {
         name: `MCP作成テスト空-${Date.now()}`,
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
+        bill_number: "第2号",
         status_note: null,
         submitted_date: "",
         is_featured: false,
@@ -190,8 +191,8 @@ describe("MCP bills tools", () => {
         bill: { id: string };
       }>("create_bill", {
         name: `MCP作成テスト省略-${Date.now()}`,
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
+        bill_number: "第3号",
         status_note: null,
         is_featured: false,
         is_review_completed: false,
@@ -218,8 +219,7 @@ describe("MCP bills tools", () => {
       const result = await registry.callTool<{ ok: boolean }>("update_bill", {
         billId: bill.id,
         name: "更新後",
-        status: "enacted",
-        originating_house: "HC",
+        status: "approved",
         status_note: null,
         is_featured: false,
         is_review_completed: true,
@@ -230,20 +230,18 @@ describe("MCP bills tools", () => {
 
       const { data } = await adminClient
         .from("bills")
-        .select("name, status, originating_house, is_review_completed")
+        .select("name, status, is_review_completed")
         .eq("id", bill.id)
         .single();
       expect(data?.name).toBe("更新後");
-      expect(data?.status).toBe("enacted");
-      expect(data?.originating_house).toBe("HC");
+      expect(data?.status).toBe("approved");
       expect(data?.is_review_completed).toBe(true);
     });
 
     it("billId 以外を省略すると updated_at だけが更新される", async () => {
       const bill = await createTestBill({
         name: "部分更新元",
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
       });
       billIds.push(bill.id);
 
@@ -254,19 +252,17 @@ describe("MCP bills tools", () => {
 
       const { data } = await adminClient
         .from("bills")
-        .select("name, status, originating_house")
+        .select("name, status")
         .eq("id", bill.id)
         .single();
       expect(data?.name).toBe("部分更新元");
-      expect(data?.status).toBe("introduced");
-      expect(data?.originating_house).toBe("HR");
+      expect(data?.status).toBe("submitted");
     });
 
     it("一部のフィールドのみ指定した場合、他のフィールドは変更されない", async () => {
       const bill = await createTestBill({
         name: "更新前の名前",
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
         is_featured: false,
       });
       billIds.push(bill.id);
@@ -286,14 +282,11 @@ describe("MCP bills tools", () => {
 
       const { data } = await adminClient
         .from("bills")
-        .select(
-          "name, status, originating_house, is_featured, submitted_date, status_note"
-        )
+        .select("name, status, is_featured, submitted_date, status_note")
         .eq("id", bill.id)
         .single();
       expect(data?.name).toBe("更新後の名前のみ");
-      expect(data?.status).toBe("introduced");
-      expect(data?.originating_house).toBe("HR");
+      expect(data?.status).toBe("submitted");
       expect(data?.is_featured).toBe(false);
       expect(data?.status_note).toBe("初期備考");
       expect(new Date(data?.submitted_date ?? "").toISOString()).toBe(
@@ -338,8 +331,7 @@ describe("MCP bills tools", () => {
       const result = await registry.callTool<{ ok: boolean }>("update_bill", {
         billId: bill.id,
         name: "ナレッジ無し更新後",
-        status: "introduced",
-        originating_house: "HR",
+        status: "submitted",
         status_note: null,
         is_featured: false,
         is_review_completed: false,

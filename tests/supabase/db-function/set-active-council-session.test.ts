@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   adminClient,
-  createTestDietSession,
-  cleanupTestDietSession,
+  createTestCouncilSession,
+  cleanupTestCouncilSession,
 } from "../utils";
 
-describe("set_active_diet_session() 関数", () => {
+describe("set_active_council_session() 関数", () => {
   let sessionIds: string[] = [];
 
   beforeEach(async () => {
@@ -14,28 +14,28 @@ describe("set_active_diet_session() 関数", () => {
 
   afterEach(async () => {
     for (const id of sessionIds) {
-      await cleanupTestDietSession(id);
+      await cleanupTestCouncilSession(id);
     }
   });
 
   it("指定したセッションのみ active になる", async () => {
-    const a = await createTestDietSession({
+    const a = await createTestCouncilSession({
       slug: `test-a-${Date.now()}`,
     });
-    const b = await createTestDietSession({
+    const b = await createTestCouncilSession({
       slug: `test-b-${Date.now()}`,
     });
-    const c = await createTestDietSession({
+    const c = await createTestCouncilSession({
       slug: `test-c-${Date.now()}`,
     });
     sessionIds.push(a.id, b.id, c.id);
 
-    await adminClient.rpc("set_active_diet_session", {
+    await adminClient.rpc("set_active_council_session", {
       target_session_id: b.id,
     });
 
     const { data } = await adminClient
-      .from("diet_sessions")
+      .from("council_sessions")
       .select("id, is_active")
       .in("id", [a.id, b.id, c.id]);
 
@@ -46,22 +46,22 @@ describe("set_active_diet_session() 関数", () => {
   });
 
   it("active を別のセッションにアトミックに切り替えられる", async () => {
-    const a = await createTestDietSession({
+    const a = await createTestCouncilSession({
       slug: `test-a-${Date.now()}`,
       is_active: true,
     });
-    const b = await createTestDietSession({
+    const b = await createTestCouncilSession({
       slug: `test-b-${Date.now()}`,
     });
     sessionIds.push(a.id, b.id);
 
     // a が active な状態で b に切り替え
-    await adminClient.rpc("set_active_diet_session", {
+    await adminClient.rpc("set_active_council_session", {
       target_session_id: b.id,
     });
 
     const { data } = await adminClient
-      .from("diet_sessions")
+      .from("council_sessions")
       .select("id, is_active")
       .in("id", [a.id, b.id]);
 
@@ -71,18 +71,18 @@ describe("set_active_diet_session() 関数", () => {
   });
 
   it("存在しない UUID を指定すると全セッションが非 active になる", async () => {
-    const a = await createTestDietSession({
+    const a = await createTestCouncilSession({
       slug: `test-a-${Date.now()}`,
       is_active: true,
     });
     sessionIds.push(a.id);
 
-    await adminClient.rpc("set_active_diet_session", {
+    await adminClient.rpc("set_active_council_session", {
       target_session_id: "00000000-0000-0000-0000-000000000000",
     });
 
     const { data } = await adminClient
-      .from("diet_sessions")
+      .from("council_sessions")
       .select("id, is_active")
       .eq("id", a.id)
       .single();
