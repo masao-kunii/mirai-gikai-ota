@@ -1,6 +1,8 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { adminClient, cleanupTestUser } from "../utils";
 
+const ADMIN_DOMAIN = "app.masao-kunii.jp";
+
 describe("apply_admin_role_if_eligible 関数", () => {
   const createdUserIds: string[] = [];
 
@@ -31,8 +33,8 @@ describe("apply_admin_role_if_eligible 関数", () => {
     createdUserIds.length = 0;
   });
 
-  it("team-mir.ai + Google ログインユーザーに admin ロールが付与される", async () => {
-    const email = `test-google-${Date.now()}@team-mir.ai`;
+  it(`${ADMIN_DOMAIN} + Google ログインユーザーに admin ロールが付与される`, async () => {
+    const email = `test-google-${Date.now()}@${ADMIN_DOMAIN}`;
     const userId = await createUserWithProvider(email, "google");
 
     const { data: applied } = await adminClient.rpc(
@@ -45,7 +47,7 @@ describe("apply_admin_role_if_eligible 関数", () => {
     expect(roles).toEqual(["admin"]);
   });
 
-  it("team-mir.ai 以外のドメイン + Google ログインユーザーには付与されない", async () => {
+  it(`${ADMIN_DOMAIN} 以外のドメイン + Google ログインユーザーには付与されない`, async () => {
     const email = `test-google-${Date.now()}@gmail.com`;
     const userId = await createUserWithProvider(email, "google");
 
@@ -59,8 +61,8 @@ describe("apply_admin_role_if_eligible 関数", () => {
     expect(roles).toBeUndefined();
   });
 
-  it("team-mir.ai + email プロバイダーのユーザーには付与されない", async () => {
-    const email = `test-email-${Date.now()}@team-mir.ai`;
+  it(`${ADMIN_DOMAIN} + email プロバイダーのユーザーには付与されない`, async () => {
+    const email = `test-email-${Date.now()}@${ADMIN_DOMAIN}`;
     const userId = await createUserWithProvider(email, "email");
 
     const { data: applied } = await adminClient.rpc(
