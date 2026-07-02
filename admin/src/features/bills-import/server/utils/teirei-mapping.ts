@@ -135,11 +135,20 @@ export function formatSonotaBillNumber(index: number): string {
 }
 
 /**
- * 会派態度ページの議案番号（"1" や "委1"）を、区長/委員会提出議案の
- * bill_number 形式へ正規化して照合できるようにする。
+ * 会派態度ページの議案番号を、議案側の bill_number 形式へ正規化して照合できるようにする。
+ * 会派態度ページは議案種別ごとに接頭辞付きで番号を振る:
+ *   - 区長提出議案:   "58"   → "第58号議案"       (formatGianBillNumber)
+ *   - 委員会提出議案: "委1"  → "委員会第1号議案"   (formatGianBillNumber)
+ *   - 議員提出議案:   "議1"  → "議員提出第1号議案" (formatMemberBillNumber)
+ * 議員提出の条例等（例: 「大田区高齢者補聴器購入費助成条例」）は "議N" で参照されるため、
+ * 議員提出形式へ正規化しないと議案が照合できず会派見解が丸ごとスキップされる。
  */
 export function taidoNumberToGianBillNumber(rawNumber: string): string {
-  return formatGianBillNumber(rawNumber);
+  const n = rawNumber.trim();
+  // 議員提出議案: "議1" / "議員1" / "議提1" → "議員提出第1号議案"
+  const member = n.match(/^議(?:員|提)?(\d+)$/);
+  if (member) return formatMemberBillNumber(member[1]);
+  return formatGianBillNumber(n);
 }
 
 /** 付託委員会の略称 → committees.name（「委員会」を補う） */
