@@ -123,6 +123,18 @@ describe("taidoNumberToGianBillNumber", () => {
     expect(taidoNumberToGianBillNumber("1")).toBe("第1号議案");
     expect(taidoNumberToGianBillNumber("委1")).toBe("委員会第1号議案");
   });
+
+  it("議員提出議案（議N / 議員N / 議提N）を議員提出形式に正規化", () => {
+    // 会派態度ページは議員提出議案を "議1" で参照する
+    // （例: 「大田区高齢者補聴器購入費助成条例」）。
+    expect(taidoNumberToGianBillNumber("議1")).toBe("議員提出第1号議案");
+    expect(taidoNumberToGianBillNumber("議員1")).toBe("議員提出第1号議案");
+    expect(taidoNumberToGianBillNumber("議提2")).toBe("議員提出第2号議案");
+  });
+
+  it("前後の空白を無視して正規化する", () => {
+    expect(taidoNumberToGianBillNumber(" 議1 ")).toBe("議員提出第1号議案");
+  });
 });
 
 describe("normalizeCommitteeName", () => {
