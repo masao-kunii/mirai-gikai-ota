@@ -10,33 +10,24 @@ export const MAX_PERSONA_SLOTS = 10;
 /** UI 上で推奨する上限。これを超えると警告を出す想定 */
 export const RECOMMENDED_PERSONA_SLOTS = 6;
 
-/** UI のモデル選択肢として提示するモデル一覧 */
+/** UI のモデル選択肢として提示するモデル一覧（実体は Vertex AI Gemini） */
 export const SIMULATION_MODEL_OPTIONS = [
-  { value: AI_MODELS.gpt5_2, label: "GPT-5.2" },
-  { value: AI_MODELS.gpt5_1_thinking, label: "GPT-5.1 Thinking" },
-  { value: AI_MODELS.gpt5_1_instant, label: "GPT-5.1 Instant" },
-  { value: AI_MODELS.gpt4_1, label: "GPT-4.1" },
-  { value: AI_MODELS.gpt4_1_mini, label: "GPT-4.1 mini" },
-  { value: AI_MODELS.gemini3_flash_preview, label: "Gemini 3 Flash (preview)" },
-  { value: AI_MODELS.gemini3_1_pro_preview, label: "Gemini 3.1 Pro (preview)" },
-  {
-    value: AI_MODELS.gemini3_1_flash_lite_preview,
-    label: "Gemini 3.1 Flash Lite (preview)",
-  },
-  { value: AI_MODELS.claude_sonnet_4_6, label: "Claude Sonnet 4.6" },
+  { value: AI_MODELS.pro, label: "Gemini 2.5 Pro" },
+  { value: AI_MODELS.flash, label: "Gemini 2.5 Flash" },
+  { value: AI_MODELS.flash_lite, label: "Gemini 2.5 Flash Lite" },
 ] as const;
 
-/** インタビュアー側のデフォルトモデル（プロダクション既存値と一致） */
-export const DEFAULT_INTERVIEWER_MODEL = AI_MODELS.gpt5_2;
+/** インタビュアー側のデフォルトモデル（プロダクション既存値 gemini-2.5-pro と一致） */
+export const DEFAULT_INTERVIEWER_MODEL = AI_MODELS.pro;
 
 /** インタビュイー（ペルソナ）側のデフォルトモデル */
-export const DEFAULT_INTERVIEWEE_MODEL = AI_MODELS.gemini3_1_flash_lite_preview;
+export const DEFAULT_INTERVIEWEE_MODEL = AI_MODELS.flash_lite;
 
 /** ペルソナ抽出のデフォルトモデル */
-export const DEFAULT_PERSONA_MODEL = AI_MODELS.gemini3_1_flash_lite_preview;
+export const DEFAULT_PERSONA_MODEL = AI_MODELS.flash_lite;
 
 /** AI Judge のデフォルトモデル */
-export const DEFAULT_JUDGE_MODEL = AI_MODELS.gpt5_2;
+export const DEFAULT_JUDGE_MODEL = AI_MODELS.pro;
 
 /** 比較対象のプロンプト種別 */
 export const PROMPT_KIND = {

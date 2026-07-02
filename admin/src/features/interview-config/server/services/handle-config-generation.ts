@@ -92,7 +92,7 @@ export async function handleConfigGeneration({
   const result =
     stage === "default_questions"
       ? streamText({
-          model: AI_MODELS.gpt5_2,
+          model: AI_MODELS.pro,
           system: systemPrompt,
           messages: modelMessages,
           output: Output.object({ schema: defaultQuestionsGenerationSchema }),
@@ -100,14 +100,14 @@ export async function handleConfigGeneration({
         })
       : stage === "theme_proposal"
         ? streamText({
-            model: AI_MODELS.gpt5_2,
+            model: AI_MODELS.pro,
             system: systemPrompt,
             messages: modelMessages,
             output: Output.object({ schema: themeProposalSchema }),
             onError,
           })
         : streamText({
-            model: AI_MODELS.gpt5_2,
+            model: AI_MODELS.pro,
             system: systemPrompt,
             messages: modelMessages,
             output: Output.object({ schema: questionProposalSchema }),

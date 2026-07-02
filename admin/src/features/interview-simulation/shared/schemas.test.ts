@@ -40,9 +40,9 @@ function baseValidRequest(): ValidRequest {
         },
       ],
     },
-    interviewerModel: AI_MODELS.gpt5_2,
-    intervieweeModel: AI_MODELS.gpt5_2,
-    personaModel: AI_MODELS.gpt5_2,
+    interviewerModel: AI_MODELS.pro,
+    intervieweeModel: AI_MODELS.pro,
+    personaModel: AI_MODELS.pro,
   };
 }
 
