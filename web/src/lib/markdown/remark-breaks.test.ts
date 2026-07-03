@@ -56,10 +56,10 @@ describe("remarkBreaks", () => {
 
     // mdastにはbreakノードが含まれない（softBreakのまま）
     const blockquote = mdast.children[0];
-    expect(blockquote.type).toBe("blockquote");
-    if (blockquote.type === "blockquote") {
+    expect(blockquote?.type).toBe("blockquote");
+    if (blockquote?.type === "blockquote") {
       const paragraph = blockquote.children[0];
-      if (paragraph.type === "paragraph") {
+      if (paragraph?.type === "paragraph") {
         const hasBreak = paragraph.children.some(
           (child: { type: string }) => child.type === "break"
         );

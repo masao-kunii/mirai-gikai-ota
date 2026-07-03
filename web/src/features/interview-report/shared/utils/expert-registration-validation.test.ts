@@ -24,7 +24,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("お名前を入力してください");
+      expect(result.error.issues[0]?.message).toBe("お名前を入力してください");
     }
   });
 
@@ -35,7 +35,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "お名前は100文字以内で入力してください"
       );
     }
@@ -48,7 +48,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "ご所属・肩書を入力してください"
       );
     }
@@ -61,7 +61,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "ご所属・肩書は200文字以内で入力してください"
       );
     }
@@ -74,7 +74,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "メールアドレスを入力してください"
       );
     }
@@ -87,7 +87,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "正しいメールアドレスを入力してください"
       );
     }
@@ -100,7 +100,7 @@ describe("expertRegistrationSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         "プライバシーポリシーへの同意が必要です"
       );
     }

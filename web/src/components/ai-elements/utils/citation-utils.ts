@@ -4,10 +4,11 @@
  * Returns "unknown" if no sources are provided.
  */
 export function formatCitationLabel(sources: string[]): string {
-  if (sources.length === 0) {
+  const [firstSource] = sources;
+  if (firstSource === undefined) {
     return "unknown";
   }
-  const hostname = new URL(sources[0]).hostname;
+  const hostname = new URL(firstSource).hostname;
   if (sources.length > 1) {
     return `${hostname} +${sources.length - 1}`;
   }

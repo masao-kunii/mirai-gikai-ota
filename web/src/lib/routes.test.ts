@@ -45,7 +45,7 @@ function collectDefinedRoutes(): string[] {
     );
     const result = routeFn(...args);
     // クエリパラメータ除去
-    const withoutQuery = result.split("?")[0];
+    const withoutQuery = result.split("?")[0] ?? "";
     // ダミー引数 → [param] に変換
     const normalized = withoutQuery.replace(/__PARAM_\d+__/g, "[param]");
     if (!patterns.includes(normalized)) {

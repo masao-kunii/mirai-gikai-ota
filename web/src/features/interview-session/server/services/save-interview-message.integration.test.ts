@@ -41,8 +41,8 @@ describe("saveInterviewMessage 統合テスト", () => {
       .order("created_at", { ascending: true });
 
     expect(data).toHaveLength(1);
-    expect(data?.[0].role).toBe("user");
-    expect(data?.[0].content).toBe("テストメッセージです");
+    expect(data?.[0]?.role).toBe("user");
+    expect(data?.[0]?.content).toBe("テストメッセージです");
   });
 
   it("assistant メッセージも保存できる", async () => {
@@ -93,6 +93,6 @@ describe("saveInterviewMessage 統合テスト", () => {
       .eq("interview_session_id", sessionId);
 
     expect(data).toHaveLength(1);
-    expect(data?.[0].content).toBe("リトライ時のAI応答");
+    expect(data?.[0]?.content).toBe("リトライ時のAI応答");
   });
 });

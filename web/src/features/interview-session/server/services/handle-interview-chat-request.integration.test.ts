@@ -117,10 +117,10 @@ describe("handleInterviewChatRequest 統合テスト", () => {
 
       // user: 1件 + assistant: 1件
       expect(messages).toHaveLength(2);
-      expect(messages[0].role).toBe("user");
-      expect(messages[0].content).toBe("この法案についてどう思いますか？");
-      expect(messages[1].role).toBe("assistant");
-      expect(messages[1].content).toBe(validChatResponse);
+      expect(messages[0]?.role).toBe("user");
+      expect(messages[0]?.content).toBe("この法案についてどう思いますか？");
+      expect(messages[1]?.role).toBe("assistant");
+      expect(messages[1]?.content).toBe(validChatResponse);
     });
 
     it("空白のみのユーザーメッセージはDBに保存されない", async () => {
@@ -148,7 +148,7 @@ describe("handleInterviewChatRequest 統合テスト", () => {
 
       // assistant のみ保存される（空白のuserメッセージはスキップ）
       expect(messages).toHaveLength(1);
-      expect(messages[0].role).toBe("assistant");
+      expect(messages[0]?.role).toBe("assistant");
     });
 
     it("リトライ時はユーザーメッセージが重複して保存されない", async () => {
@@ -185,8 +185,8 @@ describe("handleInterviewChatRequest 統合テスト", () => {
 
       // user: 1件（重複なし）+ assistant: 1件 = 2件
       expect(messages).toHaveLength(2);
-      expect(messages[0].role).toBe("user");
-      expect(messages[1].role).toBe("assistant");
+      expect(messages[0]?.role).toBe("user");
+      expect(messages[1]?.role).toBe("assistant");
     });
   });
 
@@ -216,10 +216,10 @@ describe("handleInterviewChatRequest 統合テスト", () => {
 
       // user: 1件 + assistant: 1件
       expect(messages).toHaveLength(2);
-      expect(messages[0].role).toBe("user");
-      expect(messages[0].content).toBe("まとめてください");
-      expect(messages[1].role).toBe("assistant");
-      expect(messages[1].content).toBe(validSummaryResponse);
+      expect(messages[0]?.role).toBe("user");
+      expect(messages[0]?.content).toBe("まとめてください");
+      expect(messages[1]?.role).toBe("assistant");
+      expect(messages[1]?.content).toBe(validSummaryResponse);
     });
 
     it("summaryフェーズではsummaryModelが使用される（chatModelは無視される）", async () => {
@@ -251,7 +251,7 @@ describe("handleInterviewChatRequest 統合テスト", () => {
 
       // summaryModel の出力が保存されていること
       expect(messages).toHaveLength(2);
-      expect(messages[1].content).toBe(validSummaryResponse);
+      expect(messages[1]?.content).toBe(validSummaryResponse);
     });
   });
 });

@@ -73,7 +73,7 @@ describe("useInterviewChat", () => {
       );
 
       expect(result.current.messages).toHaveLength(1);
-      expect(result.current.messages[0].content).toBe("こんにちは");
+      expect(result.current.messages[0]?.content).toBe("こんにちは");
       expect(result.current.stage).toBe("chat");
     });
 
@@ -119,8 +119,8 @@ describe("useInterviewChat", () => {
       );
 
       expect(result.current.messages).toHaveLength(1);
-      expect(result.current.messages[0].role).toBe("user");
-      expect(result.current.messages[0].content).toBe("ユーザーの入力");
+      expect(result.current.messages[0]?.role).toBe("user");
+      expect(result.current.messages[0]?.content).toBe("ユーザーの入力");
     });
   });
 
@@ -174,8 +174,8 @@ describe("useInterviewChat", () => {
       });
 
       expect(result.current.messages).toHaveLength(1);
-      expect(result.current.messages[0].role).toBe("user");
-      expect(result.current.messages[0].content).toBe("テスト入力");
+      expect(result.current.messages[0]?.role).toBe("user");
+      expect(result.current.messages[0]?.content).toBe("テスト入力");
       expect(result.current.input).toBe("");
       expect(mockSubmit).toHaveBeenCalledOnce();
     });
@@ -206,7 +206,7 @@ describe("useInterviewChat", () => {
         result.current.handleSubmit({ text: "テスト入力" });
       });
 
-      const calledWith = mockSubmit.mock.calls[0][0] as {
+      const calledWith = mockSubmit.mock.calls[0]?.[0] as {
         messages: Array<{ role: string; content: string }>;
       };
       const userMsg = calledWith.messages.find((m) => m.role === "user");
@@ -225,8 +225,8 @@ describe("useInterviewChat", () => {
       });
 
       expect(result.current.messages).toHaveLength(1);
-      expect(result.current.messages[0].role).toBe("user");
-      expect(result.current.messages[0].content).toBe("賛成");
+      expect(result.current.messages[0]?.role).toBe("user");
+      expect(result.current.messages[0]?.content).toBe("賛成");
       expect(mockSubmit).toHaveBeenCalledOnce();
     });
 
@@ -265,8 +265,8 @@ describe("useInterviewChat", () => {
       });
 
       expect(result.current.messages).toHaveLength(2);
-      expect(result.current.messages[1].role).toBe("assistant");
-      expect(result.current.messages[1].content).toBe("AIの回答です");
+      expect(result.current.messages[1]?.role).toBe("assistant");
+      expect(result.current.messages[1]?.content).toBe("AIの回答です");
     });
 
     it("next_stageがsummary: stageがsummaryに更新される", () => {

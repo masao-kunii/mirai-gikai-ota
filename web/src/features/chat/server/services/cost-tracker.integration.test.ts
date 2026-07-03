@@ -51,11 +51,11 @@ describe("cost-tracker 統合テスト", () => {
         .eq("user_id", testUser.id);
 
       expect(data).toHaveLength(1);
-      expect(data?.[0].model).toBe("gemini-2.5-flash");
-      expect(data?.[0].input_tokens).toBe(500);
-      expect(data?.[0].output_tokens).toBe(100);
-      expect(data?.[0].total_tokens).toBe(600);
-      expect(Number(data?.[0].cost_usd)).toBeGreaterThan(0);
+      expect(data?.[0]?.model).toBe("gemini-2.5-flash");
+      expect(data?.[0]?.input_tokens).toBe(500);
+      expect(data?.[0]?.output_tokens).toBe(100);
+      expect(data?.[0]?.total_tokens).toBe(600);
+      expect(Number(data?.[0]?.cost_usd)).toBeGreaterThan(0);
     });
 
     it("costUsd が指定された場合はそれを使う", async () => {
