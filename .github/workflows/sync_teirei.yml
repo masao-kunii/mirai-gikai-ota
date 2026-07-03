@@ -9,6 +9,10 @@ name: Sync Teirei Bills
 #   - 新規議案のみ bill_contents を生成
 #   - 会派見解は (bill_id, faction_id) で upsert
 #
+# 静かなスキップ禁止（TARGET_ARCHITECTURE §8-4）:
+#   照合失敗・スキップ等の警告が 1 件でもあるとジョブは失敗する（同期自体は完了済み）。
+#   失敗通知を受けたらログの警告アノテーションを確認し、原因を修正すること。
+#
 # 必要な GitHub Secrets:
 #   - SUPABASE_URL          : Cloud Supabase の URL（https://<ref>.supabase.co）
 #   - SUPABASE_SECRET_KEY   : Cloud Supabase の secret key（sb_secret_...）
@@ -39,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
