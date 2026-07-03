@@ -31,7 +31,9 @@ export function buildToc(
     entries.push({ id: toSlug("全体サマリ"), label: "全体サマリ" });
   }
   for (let i = 0; i < topics.length; i++) {
-    const label = `トピック${i + 1}. ${topics[i].name}`;
+    const topic = topics[i];
+    if (!topic) continue;
+    const label = `トピック${i + 1}. ${topic.name}`;
     entries.push({ id: toSlug(label), label });
   }
   return entries;
@@ -54,6 +56,7 @@ export function buildReportMarkdown(
 
     for (let i = 0; i < topics.length; i++) {
       const topic = topics[i];
+      if (!topic) continue;
       const representatives = (
         Array.isArray(topic.representative_opinions)
           ? topic.representative_opinions

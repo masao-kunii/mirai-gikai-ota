@@ -111,12 +111,15 @@ ${opinionsText}
   // LLMが返した連番IDを元のinterview_report_id + opinion_indexにマッピング
   return object.classifications
     .filter((c) => c.opinion_id >= 1 && c.opinion_id <= opinions.length)
-    .map((c) => {
+    .flatMap((c) => {
       const opinion = opinions[c.opinion_id - 1];
-      return {
-        interview_report_id: opinion.interview_report_id,
-        opinion_index: opinion.opinion_index,
-        topic_names: c.topic_names,
-      };
+      if (!opinion) return [];
+      return [
+        {
+          interview_report_id: opinion.interview_report_id,
+          opinion_index: opinion.opinion_index,
+          topic_names: c.topic_names,
+        },
+      ];
     });
 }

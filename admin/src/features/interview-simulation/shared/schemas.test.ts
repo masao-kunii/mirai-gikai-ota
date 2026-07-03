@@ -153,6 +153,7 @@ describe("multiSimulationRunRequestSchema", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       const slot = result.data.personaSlots[0];
+      if (!slot) throw new Error("personaSlots が空です");
       expect(slot.kind).toBe("bill");
       if (slot.kind === "bill") {
         expect(slot.roleHint).toBeUndefined();
@@ -162,7 +163,9 @@ describe("multiSimulationRunRequestSchema", () => {
 
   it("question が 2000 文字を超えると拒否", () => {
     const body = baseValidRequest();
-    body.improvedConfig.questions[0].question = "a".repeat(2_001);
+    const firstQuestion = body.improvedConfig.questions[0];
+    if (!firstQuestion) throw new Error("questions が空です");
+    firstQuestion.question = "a".repeat(2_001);
     const result = multiSimulationRunRequestSchema.safeParse(body);
     expect(result.success).toBe(false);
   });

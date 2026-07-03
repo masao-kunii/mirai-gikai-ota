@@ -54,14 +54,14 @@ describe("prepareQuestionsForDuplication", () => {
       "new-config-id"
     );
     expect(result).toHaveLength(2);
-    expect(result[0].question).toBe("質問1");
-    expect(result[0].follow_up_guide).toBe("指示1");
-    expect(result[0].quick_replies).toEqual(["はい", "いいえ"]);
-    expect(result[0].question_order).toBe(1);
-    expect(result[1].question).toBe("質問2");
-    expect(result[1].follow_up_guide).toBeNull();
-    expect(result[1].quick_replies).toBeNull();
-    expect(result[1].question_order).toBe(2);
+    expect(result[0]?.question).toBe("質問1");
+    expect(result[0]?.follow_up_guide).toBe("指示1");
+    expect(result[0]?.quick_replies).toEqual(["はい", "いいえ"]);
+    expect(result[0]?.question_order).toBe(1);
+    expect(result[1]?.question).toBe("質問2");
+    expect(result[1]?.follow_up_guide).toBeNull();
+    expect(result[1]?.quick_replies).toBeNull();
+    expect(result[1]?.question_order).toBe(2);
   });
 
   it("空配列を渡すと空配列を返す", () => {

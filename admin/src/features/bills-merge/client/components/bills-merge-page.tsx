@@ -148,10 +148,11 @@ type GroupCardProps = {
 
 function GroupCard({ group, onMerged }: GroupCardProps) {
   const bills = group.bills;
+  const firstBill = bills[0];
 
   // スカラーフィールド: fieldKey -> 選択中のbillId
   const [fieldChoices, setFieldChoices] = useState<Record<string, string>>(() =>
-    Object.fromEntries(SCALAR_FIELDS.map((f) => [f.key, bills[0].id]))
+    Object.fromEntries(SCALAR_FIELDS.map((f) => [f.key, firstBill?.id ?? ""]))
   );
 
   // コンテンツ: difficultyLevel -> 選択中のcontentId
@@ -196,8 +197,11 @@ function GroupCard({ group, onMerged }: GroupCardProps) {
 
   const [isMerging, setIsMerging] = useState(false);
 
+  // 重複グループは常に2件以上の想定。万一空ならレンダリングしない
+  if (!firstBill) return null;
+
   const handleMerge = async () => {
-    const keepBill = bills[0];
+    const keepBill = firstBill;
     const deleteBillIds = bills.slice(1).map((b) => b.id);
 
     // スカラーフィールドの値を選択済みbillから収集
@@ -297,7 +301,7 @@ function GroupCard({ group, onMerged }: GroupCardProps) {
               <tbody>
                 {SCALAR_FIELDS.map((field) => {
                   const allSame = bills.every(
-                    (b) => field.format(b) === field.format(bills[0])
+                    (b) => field.format(b) === field.format(firstBill)
                   );
                   return (
                     <tr key={field.key} className="border-b last:border-0">
@@ -309,7 +313,7 @@ function GroupCard({ group, onMerged }: GroupCardProps) {
                           colSpan={bills.length}
                           className="px-3 py-2 text-sm text-gray-700"
                         >
-                          {field.format(bills[0])}
+                          {field.format(firstBill)}
                           <span className="ml-2 text-xs text-gray-400">
                             （全議案同一）
                           </span>

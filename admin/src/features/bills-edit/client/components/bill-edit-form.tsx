@@ -27,8 +27,7 @@ export function BillEditForm({ bill, councilSessions }: BillEditFormProps) {
 
   // If bill has no council_session_id, default to the latest session (first in the list)
   const defaultCouncilSessionId =
-    bill.council_session_id ??
-    (councilSessions.length > 0 ? councilSessions[0].id : null);
+    bill.council_session_id ?? councilSessions[0]?.id ?? null;
 
   const form = useForm<BillUpdateInput>({
     resolver: zodResolver(billUpdateSchema),

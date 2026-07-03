@@ -28,24 +28,24 @@ describe("prepareQuestionsForInsert", () => {
 
   it("question_orderを1始まりのインデックスで設定する", () => {
     const result = prepareQuestionsForInsert(questions, "config-123");
-    expect(result[0].question_order).toBe(1);
-    expect(result[1].question_order).toBe(2);
-    expect(result[2].question_order).toBe(3);
+    expect(result[0]?.question_order).toBe(1);
+    expect(result[1]?.question_order).toBe(2);
+    expect(result[2]?.question_order).toBe(3);
   });
 
   it("質問内容を保持する", () => {
     const result = prepareQuestionsForInsert(questions, "config-123");
-    expect(result[0].question).toBe("質問A");
-    expect(result[0].follow_up_guide).toBe("指示A");
-    expect(result[0].quick_replies).toEqual(["選択肢1", "選択肢2"]);
+    expect(result[0]?.question).toBe("質問A");
+    expect(result[0]?.follow_up_guide).toBe("指示A");
+    expect(result[0]?.quick_replies).toEqual(["選択肢1", "選択肢2"]);
   });
 
   it("未設定のfollow_up_guide/quick_repliesをnullに変換する", () => {
     const result = prepareQuestionsForInsert(questions, "config-123");
-    expect(result[1].follow_up_guide).toBeNull();
-    expect(result[1].quick_replies).toBeNull();
-    expect(result[2].follow_up_guide).toBeNull();
-    expect(result[2].quick_replies).toBeNull();
+    expect(result[1]?.follow_up_guide).toBeNull();
+    expect(result[1]?.quick_replies).toBeNull();
+    expect(result[2]?.follow_up_guide).toBeNull();
+    expect(result[2]?.quick_replies).toBeNull();
   });
 
   it("空配列を渡すと空配列を返す", () => {

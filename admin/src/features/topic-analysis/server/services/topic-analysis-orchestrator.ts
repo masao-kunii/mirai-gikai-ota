@@ -62,15 +62,16 @@ async function runPhase1Steps(
   const flatOpinions: FlatOpinion[] = [];
   for (const report of reports) {
     for (let i = 0; i < report.opinions.length; i++) {
+      const opinion = report.opinions[i];
+      if (!opinion) continue;
       flatOpinions.push({
         interview_report_id: report.report_id,
         session_id: report.session_id,
         opinion_index: i,
-        title: report.opinions[i].title,
-        content: report.opinions[i].content,
-        source_message_id: report.opinions[i].source_message_id ?? null,
-        source_message_content:
-          report.opinions[i].source_message_content ?? null,
+        title: opinion.title,
+        content: opinion.content,
+        source_message_id: opinion.source_message_id ?? null,
+        source_message_content: opinion.source_message_content ?? null,
       });
     }
   }

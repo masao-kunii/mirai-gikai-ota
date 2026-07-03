@@ -115,7 +115,7 @@ export async function getReportDetailForSimulation(
   let summaryCutoffIndex = rawMessages.length;
   for (let i = 0; i < rawMessages.length; i++) {
     const m = rawMessages[i];
-    if (m.role !== "assistant") continue;
+    if (!m || m.role !== "assistant") continue;
     const parsed = parseAssistantMessage(m.content);
     if (parsed.hasReport || parsed.nextStage === "summary_complete") {
       summaryCutoffIndex = i;

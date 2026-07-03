@@ -89,8 +89,8 @@ describe("buildReportsByUserId", () => {
     expect(result.size).toBe(1);
     const reports = result.get("user-1");
     expect(reports).toHaveLength(2);
-    expect(reports?.[0].billName).toBe("議案A");
-    expect(reports?.[1].billName).toBe("議案B");
+    expect(reports?.[0]?.billName).toBe("議案A");
+    expect(reports?.[1]?.billName).toBe("議案B");
   });
 
   it("異なるユーザーのレポートを分離する", () => {
@@ -137,6 +137,6 @@ describe("buildReportsByUserId", () => {
     ]);
 
     const reports = result.get("user-1");
-    expect(reports?.[0].stance).toBeNull();
+    expect(reports?.[0]?.stance).toBeNull();
   });
 });
