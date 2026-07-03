@@ -147,7 +147,7 @@ export function taidoNumberToGianBillNumber(rawNumber: string): string {
   const n = rawNumber.trim();
   // 議員提出議案: "議1" / "議員1" / "議提1" → "議員提出第1号議案"
   const member = n.match(/^議(?:員|提)?(\d+)$/);
-  if (member) return formatMemberBillNumber(member[1]);
+  if (member?.[1] !== undefined) return formatMemberBillNumber(member[1]);
   return formatGianBillNumber(n);
 }
 

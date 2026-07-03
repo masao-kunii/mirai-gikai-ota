@@ -53,10 +53,10 @@ function extractRows(tableHtml: string): string[][] {
   const rows: string[][] = [];
   for (const rowMatch of tableHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
     const cells: string[] = [];
-    for (const cellMatch of rowMatch[1].matchAll(
+    for (const cellMatch of (rowMatch[1] ?? "").matchAll(
       /<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi
     )) {
-      cells.push(cellText(cellMatch[1]));
+      cells.push(cellText(cellMatch[1] ?? ""));
     }
     if (cells.length > 0) rows.push(cells);
   }
@@ -81,8 +81,10 @@ export function parseTeireiIndex(html: string, baseUrl: string): TeireiIndex {
   for (const m of html.matchAll(
     /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
   )) {
-    const url = new URL(m[1], baseUrl).toString();
-    const label = cellText(m[2]);
+    const [, href, inner] = m;
+    if (href === undefined || inner === undefined) continue;
+    const url = new URL(href, baseUrl).toString();
+    const label = cellText(inner);
     if (label) links.push({ label, url });
   }
 
@@ -99,7 +101,8 @@ export function parseTeireiIndex(html: string, baseUrl: string): TeireiIndex {
     );
     if (candidates.length === 0) return null;
     // 会期固有ページを優先、無ければ先頭
-    return (candidates.find(inSession) ?? candidates[0]).url;
+    const chosen = candidates.find(inSession) ?? candidates[0];
+    return chosen?.url ?? null;
   };
 
   return {
@@ -144,11 +147,12 @@ export function parseGianTable(html: string): GianRow[] {
   const rows = extractRows(table);
   const result: GianRow[] = [];
   for (const cells of rows) {
-    if (cells.length < 2) continue;
-    if (isHeaderRow(cells[0])) continue;
+    const [first, title] = cells;
+    if (first === undefined || title === undefined) continue;
+    if (isHeaderRow(first)) continue;
     result.push({
-      number: toHalfWidthDigits(cells[0]),
-      title: cells[1],
+      number: toHalfWidthDigits(first),
+      title,
       resultDate: (cells[2] ?? "").replace(/[()（）]/g, ""),
       result: (cells[3] ?? "").replace(/^-$/, ""),
       committee: (cells[4] ?? "").replace(/^なし$/, ""),
@@ -169,17 +173,17 @@ export function parseGianPdfLinks(
   for (const m of html.matchAll(
     /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi
   )) {
-    const url = new URL(m[1], baseUrl).toString();
-    const label = cellText(m[2]);
+    const [, href, inner] = m;
+    if (href === undefined || inner === undefined) continue;
+    const url = new URL(href, baseUrl).toString();
+    const label = cellText(inner);
     const nums = toHalfWidthDigits(label).match(/(\d+)\s*号議案/g);
     if (!nums || nums.length === 0) continue;
     const parsed = nums.map((n) => Number(n.match(/(\d+)/)?.[1]));
-    links.push({
-      label,
-      url,
-      numberFrom: parsed[0],
-      numberTo: parsed[parsed.length - 1],
-    });
+    const numberFrom = parsed[0];
+    const numberTo = parsed[parsed.length - 1];
+    if (numberFrom === undefined || numberTo === undefined) continue;
+    links.push({ label, url, numberFrom, numberTo });
   }
   return links;
 }
@@ -200,18 +204,17 @@ export function parseHokokuPdfLinks(
   for (const m of html.matchAll(
     /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi
   )) {
-    const url = new URL(m[1], baseUrl).toString();
-    const label = cellText(m[2]);
+    const [, href, inner] = m;
+    if (href === undefined || inner === undefined) continue;
+    const url = new URL(href, baseUrl).toString();
+    const label = cellText(inner);
     const nums = [...toHalfWidthDigits(label).matchAll(/第(\d+)号/g)].map((x) =>
       Number(x[1])
     );
-    if (nums.length === 0) continue;
-    links.push({
-      label,
-      url,
-      numberFrom: nums[0],
-      numberTo: nums[nums.length - 1],
-    });
+    const numberFrom = nums[0];
+    const numberTo = nums[nums.length - 1];
+    if (numberFrom === undefined || numberTo === undefined) continue;
+    links.push({ label, url, numberFrom, numberTo });
   }
   return links;
 }
@@ -236,13 +239,14 @@ export function parseSeiganTable(html: string): SeiganRow[] {
   const rows = extractRows(table);
   const result: SeiganRow[] = [];
   for (const cells of rows) {
-    if (cells.length < 2) continue;
+    const [acceptNumber, title] = cells;
+    if (acceptNumber === undefined || title === undefined) continue;
     // ヘッダー行（受理番号 で始まる）をスキップ
-    if (cells[0].includes("受理番号") || cells[0] === "件名") continue;
-    if (!/第?\d+号/.test(toHalfWidthDigits(cells[0]))) continue;
+    if (acceptNumber.includes("受理番号") || acceptNumber === "件名") continue;
+    if (!/第?\d+号/.test(toHalfWidthDigits(acceptNumber))) continue;
     result.push({
-      acceptNumber: cells[0],
-      title: cells[1],
+      acceptNumber,
+      title,
       referredDate: cells[2] ?? "",
       committee: (cells[3] ?? "").replace(/^なし$/, ""),
       resultDate: cells[4] ?? "",
@@ -289,8 +293,10 @@ export function parseSonotaPdfLinks(
   for (const m of html.matchAll(
     /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi
   )) {
-    const url = new URL(m[1], baseUrl).toString();
-    const title = cellText(m[2])
+    const [, href, inner] = m;
+    if (href === undefined || inner === undefined) continue;
+    const url = new URL(href, baseUrl).toString();
+    const title = cellText(inner)
       .replace(/[（(]PDF[：:][^）)]*[）)]\s*$/i, "")
       .trim();
     if (title) links.push({ title, url });
@@ -306,7 +312,7 @@ export function parseSonotaPdfLinks(
 export function parseStanceCell(raw: string): StanceCell {
   const trimmed = raw.trim();
   const m = trimmed.match(/^(賛成|反対|棄権|退席|欠席)(.*)$/);
-  if (m) {
+  if (m && m[1] !== undefined && m[2] !== undefined) {
     return { raw: trimmed, main: m[1], note: m[2].trim() };
   }
   return { raw: trimmed, main: trimmed, note: "" };
@@ -326,7 +332,11 @@ export function parseTaidoTable(html: string): TaidoTable {
   if (rows.length === 0) return { factionColumns: [], rows: [] };
 
   const header = rows[0];
-  const hasNumberColumn = header[0].includes("番号");
+  const headerFirst = header?.[0];
+  if (!header || headerFirst === undefined) {
+    return { factionColumns: [], rows: [] };
+  }
+  const hasNumberColumn = headerFirst.includes("番号");
   const titleIdx = hasNumberColumn ? 1 : 0;
   const factionStart = hasNumberColumn ? 2 : 1;
   const factionColumns = header.slice(factionStart, header.length - 1);
@@ -334,19 +344,21 @@ export function parseTaidoTable(html: string): TaidoTable {
   const dataRows: TaidoRow[] = [];
   for (const cells of rows.slice(1)) {
     if (cells.length < header.length) continue;
+    const firstCell = cells[0] ?? "";
     // ヘッダー再掲行をスキップ
-    if (cells[0] === header[0]) continue;
-    if (!cells[titleIdx]) continue;
+    if (firstCell === headerFirst) continue;
+    const title = cells[titleIdx];
+    if (!title) continue;
     const stancesByFactionColumn: Record<string, StanceCell> = {};
     factionColumns.forEach((col, i) => {
       const cell = cells[factionStart + i] ?? "";
       if (cell) stancesByFactionColumn[col] = parseStanceCell(cell);
     });
     dataRows.push({
-      number: hasNumberColumn ? toHalfWidthDigits(cells[0]) : "",
-      title: cells[titleIdx],
+      number: hasNumberColumn ? toHalfWidthDigits(firstCell) : "",
+      title,
       stancesByFactionColumn,
-      result: cells[cells.length - 1],
+      result: cells[cells.length - 1] ?? "",
     });
   }
 
