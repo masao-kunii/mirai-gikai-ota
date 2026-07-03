@@ -1,0 +1,44 @@
+name: AI Cost Check
+
+# 当月（JST）の AI 利用コスト（chat_usage_events の合計）を毎日確認し、
+# 月次上限を超えていたらジョブを失敗させて通知する。
+# TARGET_ARCHITECTURE §10.4「AI コストの月次上限アラート」の実装。
+#
+# 上限は Repository Variable `AI_COST_MONTHLY_LIMIT_USD` で変更できる（未設定時 $50）。
+# 上限の 80% 以上で警告アノテーション、100% 以上でジョブ失敗。
+#
+# 必要な GitHub Secrets:
+#   - SUPABASE_URL          : Cloud Supabase の URL（https://<ref>.supabase.co）
+#   - SUPABASE_SECRET_KEY   : Cloud Supabase の secret key（sb_secret_...）
+
+on:
+  # 毎日 11:00 JST（02:00 UTC）にチェック
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check monthly AI cost
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          AI_COST_MONTHLY_LIMIT_USD: ${{ vars.AI_COST_MONTHLY_LIMIT_USD }}
+        run: pnpm --filter @mirai-gikai/seed run check:ai-cost
