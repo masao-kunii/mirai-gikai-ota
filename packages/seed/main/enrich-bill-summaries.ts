@@ -264,6 +264,7 @@ async function main() {
       for (let i = 0; i < sonotaRows.length; i++) {
         if (pdfCount >= LIMIT_PDFS) break;
         const row = sonotaRows[i];
+        if (!row) continue;
         const billNumber = mapping.formatSonotaBillNumber(i + 1);
         const pdf =
           sonotaPdfs.find((p) => p.title === row.title) ??

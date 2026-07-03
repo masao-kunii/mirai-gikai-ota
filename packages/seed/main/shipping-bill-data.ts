@@ -389,6 +389,7 @@ export function createShippingBillMessages(
     const sessionId = sessionIds[i];
     const pattern =
       opinionPatterns[i % opinionPatterns.length];
+    if (sessionId === undefined || pattern === undefined) continue;
 
     messages.push({
       interview_session_id: sessionId,
@@ -437,17 +438,20 @@ export function createShippingBillMessages(
 export function createShippingBillReports(
   sessionIds: string[]
 ): Omit<InterviewReportInsert, "id" | "created_at" | "updated_at">[] {
-  return sessionIds.map((sessionId, index) => {
+  return sessionIds.flatMap((sessionId, index) => {
     const pattern =
       opinionPatterns[index % opinionPatterns.length];
-    return {
-      interview_session_id: sessionId,
-      stance: pattern.stance,
-      summary: pattern.summary,
-      role: pattern.role,
-      role_description: pattern.role_description,
-      opinions: pattern.opinions,
-      is_public_by_user: true,
-    };
+    if (!pattern) return [];
+    return [
+      {
+        interview_session_id: sessionId,
+        stance: pattern.stance,
+        summary: pattern.summary,
+        role: pattern.role,
+        role_description: pattern.role_description,
+        opinions: pattern.opinions,
+        is_public_by_user: true,
+      },
+    ];
   });
 }

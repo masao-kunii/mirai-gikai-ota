@@ -807,6 +807,7 @@ export function createInterviewMessages(
     // 5パターンをループ
     const patternIndex = sessionIndex % 5;
     const conversation = conversations[patternIndex];
+    if (!conversation) return;
     conversation.forEach((msg) => {
       messages.push({
         interview_session_id: sessionId,
