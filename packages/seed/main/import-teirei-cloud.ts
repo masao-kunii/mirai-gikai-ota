@@ -71,10 +71,14 @@ async function main() {
     (sessions ?? []).map((s) => [s.name.replace(/\s+/g, ""), s.id])
   );
 
+  let totalWarnings = 0;
+  let failedTargets = 0;
+
   for (const target of TARGETS) {
     const normalized = target.sessionName.replace(/\s+/g, "");
     const councilSessionId = sessionIdByNormalizedName.get(normalized);
     if (!councilSessionId) {
+      totalWarnings += 1;
       console.warn(
         `⚠️  会期「${target.sessionName}」が DB に未登録のためスキップ`
       );
@@ -90,6 +94,7 @@ async function main() {
     });
 
     if (!result.ok) {
+      failedTargets += 1;
       console.error(`❌ 取り込み失敗: ${result.error}`);
     } else {
       console.log(
@@ -97,12 +102,32 @@ async function main() {
       );
     }
     if (result.warnings.length > 0) {
+      totalWarnings += result.warnings.length;
       console.log(`  警告 ${result.warnings.length} 件:`);
-      for (const w of result.warnings) console.log(`   - ${w}`);
+      for (const w of result.warnings) {
+        console.log(`   - ${w}`);
+        // GitHub Actions 上では警告アノテーションとして実行ページに表示する
+        if (process.env.GITHUB_ACTIONS) {
+          console.log(`::warning title=sync-teirei::${w}`);
+        }
+      }
     }
   }
 
-  console.log("\n🎉 完了");
+  // 静かなスキップ禁止（TARGET_ARCHITECTURE §8-4）:
+  // 取り込み失敗・警告があれば非ゼロ終了し、GitHub Actions の失敗通知で気づけるようにする。
+  // upsert は全会期分完了した後なので、失敗扱いでもデータ同期自体は最新化されている。
+  if (failedTargets > 0) {
+    console.error(`\n❌ ${failedTargets} 会期の取り込みに失敗しました`);
+    process.exitCode = 1;
+  } else if (totalWarnings > 0) {
+    console.error(
+      `\n⚠️  警告 ${totalWarnings} 件。照合失敗やスキップが発生しています。上記ログを確認してください。`
+    );
+    process.exitCode = 1;
+  } else {
+    console.log("\n🎉 完了（警告なし）");
+  }
 }
 
 main().catch((e) => {
