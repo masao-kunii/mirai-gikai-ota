@@ -21,8 +21,7 @@ export function BillCreateForm({ councilSessions }: BillCreateFormProps) {
   const { isSubmitting, error, handleSubmit, handleCancel } = useBillForm();
 
   // Default to the latest session (first in the list, sorted by start_date desc)
-  const defaultCouncilSessionId =
-    councilSessions.length > 0 ? councilSessions[0].id : null;
+  const defaultCouncilSessionId = councilSessions[0]?.id ?? null;
 
   const form = useForm<BillCreateInput>({
     resolver: zodResolver(billCreateSchema),

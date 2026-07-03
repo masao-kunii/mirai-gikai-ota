@@ -49,7 +49,7 @@ function parseLinkLabel(label: string): {
   const sessionMatch = label.match(/(令和\d+年第\d+回(?:定例|臨時)会)/);
   const dayMatch = label.match(/[（(]第(\d+)日[）)]/);
   return {
-    sessionName: sessionMatch ? sessionMatch[1] : null,
+    sessionName: sessionMatch?.[1] ?? null,
     dayNumber: dayMatch ? Number(dayMatch[1]) : null,
   };
 }
@@ -62,17 +62,18 @@ export function parseSokuhouHtml(
   const anchorRe = /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi;
   const results: ScrapedMinute[] = [];
   for (const match of html.matchAll(anchorRe)) {
-    const hrefRaw = match[1];
-    const inner = match[2]
+    const [, hrefRaw, innerRaw] = match;
+    if (hrefRaw === undefined || innerRaw === undefined) continue;
+    const inner = innerRaw
       .replace(/<[^>]+>/g, "")
       .replace(/&nbsp;/g, " ")
       .trim();
     if (!inner) continue;
 
     const pdfUrl = new URL(hrefRaw, baseUrl).toString();
-    const filenameMatch = pdfUrl.match(/\/([^/]+)\.pdf$/i);
-    if (!filenameMatch) continue;
-    const meetingDate = parseFilenameToDate(filenameMatch[1]);
+    const filename = pdfUrl.match(/\/([^/]+)\.pdf$/i)?.[1];
+    if (filename === undefined) continue;
+    const meetingDate = parseFilenameToDate(filename);
     if (!meetingDate) continue;
     const { sessionName, dayNumber } = parseLinkLabel(inner);
 

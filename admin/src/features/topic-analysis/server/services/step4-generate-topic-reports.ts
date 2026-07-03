@@ -116,18 +116,21 @@ ${opinionsText}`,
   const enrichedRepresentatives: RepresentativeOpinion[] =
     report.representative_opinion_ids
       .filter((id) => id >= 1 && id <= input.opinions.length)
-      .map((id) => {
+      .flatMap((id) => {
         const opinion = input.opinions[id - 1];
+        if (!opinion) return [];
         const ref = validReferences.find(
           (r) => r.session_id === opinion.session_id
         );
-        return {
-          session_id: opinion.session_id,
-          opinion_title: opinion.title,
-          opinion_content: opinion.content,
-          source_message_content: opinion.source_message_content ?? null,
-          ref_id: ref?.ref_id ?? null,
-        };
+        return [
+          {
+            session_id: opinion.session_id,
+            opinion_title: opinion.title,
+            opinion_content: opinion.content,
+            source_message_content: opinion.source_message_content ?? null,
+            ref_id: ref?.ref_id ?? null,
+          },
+        ];
       })
       .filter((op) => validSessionIds.has(op.session_id));
 
@@ -149,7 +152,9 @@ async function runWithConcurrency<T, R>(
   async function worker() {
     while (nextIndex < items.length) {
       const index = nextIndex++;
-      results[index] = await fn(items[index], index);
+      const item = items[index];
+      if (item === undefined) continue;
+      results[index] = await fn(item, index);
     }
   }
 

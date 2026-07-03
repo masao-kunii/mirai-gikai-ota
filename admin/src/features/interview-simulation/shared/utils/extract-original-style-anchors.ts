@@ -55,9 +55,10 @@ export function extractOriginalStyleAnchors(
     .sort((a, b) => a - b);
   const total = sortedLengths.reduce((acc, n) => acc + n, 0);
   const avg = Math.round(total / sortedLengths.length);
-  const median = sortedLengths[Math.floor(sortedLengths.length / 2)];
-  const max = sortedLengths[sortedLengths.length - 1];
-  const min = sortedLengths[0];
+  // intervieweeTurns は上のガードで非空なので、各インデックスは必ず存在する
+  const median = sortedLengths[Math.floor(sortedLengths.length / 2)] ?? 0;
+  const max = sortedLengths[sortedLengths.length - 1] ?? 0;
+  const min = sortedLengths[0] ?? 0;
 
   // 代表サンプル: 3 件以下ならそのまま、4 件以上なら先頭 / 中央 / 末尾を選ぶ
   const sampleResponses =
@@ -67,7 +68,7 @@ export function extractOriginalStyleAnchors(
           intervieweeTurns[0],
           intervieweeTurns[Math.floor(intervieweeTurns.length / 2)],
           intervieweeTurns[intervieweeTurns.length - 1],
-        ];
+        ].filter((s) => s !== undefined);
 
   return {
     avgResponseChars: avg,

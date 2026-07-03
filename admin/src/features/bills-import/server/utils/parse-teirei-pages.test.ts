@@ -150,7 +150,7 @@ describe("parseSonotaPdfLinks", () => {
     expect(links[0]).toMatchObject({
       title: "セーラム市親善訪問に伴う議員の派遣について",
     });
-    expect(links[0].url).toContain("salem.pdf");
+    expect(links[0]?.url).toContain("salem.pdf");
   });
 });
 
@@ -181,9 +181,10 @@ describe("parseTaidoTable", () => {
   });
   it("行ごとに会派別スタンスを抽出", () => {
     const row = table.rows[0];
+    if (!row) throw new Error("行が抽出されていません");
     expect(row.number).toBe("1");
-    expect(row.stancesByFactionColumn["自民・無所属"].main).toBe("賛成");
-    expect(row.stancesByFactionColumn["共産"].main).toBe("反対");
+    expect(row.stancesByFactionColumn["自民・無所属"]?.main).toBe("賛成");
+    expect(row.stancesByFactionColumn["共産"]?.main).toBe("反対");
     expect(row.result).toBe("原案可決");
   });
 
@@ -195,9 +196,10 @@ describe("parseTaidoTable", () => {
     const t = parseTaidoTable(noNumber);
     expect(t.factionColumns).toEqual(["自民・無所属", "無所属", "国民"]);
     const row = t.rows[0];
+    if (!row) throw new Error("行が抽出されていません");
     expect(row.number).toBe("");
     expect(row.title).toBe("セーラム市親善訪問に伴う議員の派遣について");
-    expect(row.stancesByFactionColumn["国民"].main).toBe("賛成");
+    expect(row.stancesByFactionColumn["国民"]?.main).toBe("賛成");
     expect(row.stancesByFactionColumn["無所属"]).toMatchObject({
       main: "賛成",
       note: "欠席１",

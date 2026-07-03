@@ -29,8 +29,8 @@ export function validateAndReplaceReferences(
   const cleanedMd = descriptionMd.replace(
     /\[ref:\d+(?:,\s*ref:\d+)*\](?:\[ref:\d+(?:,\s*ref:\d+)*\])*/g,
     (match) => {
-      const refIds = [...match.matchAll(/ref:(\d+)/g)].map((m) =>
-        Number.parseInt(m[1], 10)
+      const refIds = [...match.matchAll(/ref:(\d+)/g)].flatMap((m) =>
+        m[1] === undefined ? [] : [Number.parseInt(m[1], 10)]
       );
       const replaced = refIds
         .map((refId) => {

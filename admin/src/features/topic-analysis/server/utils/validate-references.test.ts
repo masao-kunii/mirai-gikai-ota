@@ -50,7 +50,7 @@ describe("validateAndReplaceReferences", () => {
       "See [[1]](/bills/bill-abc/interview/config-1/reports/session-1) and ."
     );
     expect(result.validReferences).toHaveLength(1);
-    expect(result.validReferences[0].session_id).toBe("session-1");
+    expect(result.validReferences[0]?.session_id).toBe("session-1");
   });
 
   it("removes [ref:N] markers that have no matching reference", () => {

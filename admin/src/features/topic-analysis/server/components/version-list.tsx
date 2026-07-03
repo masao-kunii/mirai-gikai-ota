@@ -12,11 +12,13 @@ interface VersionListProps {
   configId: string;
 }
 
+const pendingStatusLabel = {
+  label: "待機中",
+  className: "text-yellow-600 bg-yellow-50",
+};
+
 const statusLabels: Record<string, { label: string; className: string }> = {
-  pending: {
-    label: "待機中",
-    className: "text-yellow-600 bg-yellow-50",
-  },
+  pending: pendingStatusLabel,
   running: {
     label: "実行中",
     className: "text-blue-600 bg-blue-50",
@@ -62,7 +64,7 @@ export function VersionList({ versions, billId, configId }: VersionListProps) {
         </thead>
         <tbody className="divide-y">
           {versions.map((version) => {
-            const status = statusLabels[version.status] ?? statusLabels.pending;
+            const status = statusLabels[version.status] ?? pendingStatusLabel;
             return (
               <tr key={version.id}>
                 <td className="px-4 py-3 text-sm">v{version.version}</td>

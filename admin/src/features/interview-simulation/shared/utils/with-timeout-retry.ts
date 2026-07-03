@@ -27,7 +27,8 @@ function combineAbortSignals(signals: AbortSignal[]): {
 } {
   // 1 件だけならそのまま
   if (signals.length === 1) {
-    return { signal: signals[0], cleanup: () => {} };
+    const [only] = signals;
+    if (only) return { signal: only, cleanup: () => {} };
   }
   const controller = new AbortController();
   const listeners: Array<() => void> = [];

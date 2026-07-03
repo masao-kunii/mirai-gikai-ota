@@ -17,8 +17,7 @@ export async function createVersion(billId: string) {
     .order("version", { ascending: false })
     .limit(1);
 
-  const nextVersion =
-    existing && existing.length > 0 ? existing[0].version + 1 : 1;
+  const nextVersion = (existing?.[0]?.version ?? 0) + 1;
 
   const { data, error } = await supabase
     .from("topic_analysis_versions")
