@@ -11,14 +11,29 @@ const BILL_REQUIRED_KEYS = [
   "billContent",
 ] as const;
 
-/** 法案チャットプロンプトの必須変数を検証する */
-function validateBillVariables(v: PromptVariables, promptName: string): void {
-  const missing = BILL_REQUIRED_KEYS.filter((key) => !(key in v));
-  if (missing.length > 0) {
+/** 法案チャットプロンプトの必須変数を検証して返す */
+function validateBillVariables(
+  v: PromptVariables,
+  promptName: string
+): {
+  billName: string;
+  billTitle: string;
+  billSummary: string;
+  billContent: string;
+} {
+  const { billName, billTitle, billSummary, billContent } = v;
+  if (
+    billName === undefined ||
+    billTitle === undefined ||
+    billSummary === undefined ||
+    billContent === undefined
+  ) {
+    const missing = BILL_REQUIRED_KEYS.filter((key) => !(key in v));
     throw new Error(
       `Missing required variables for prompt "${promptName}": ${missing.join(", ")}`
     );
   }
+  return { billName, billTitle, billSummary, billContent };
 }
 
 /** プロンプト名からビルド関数へのマップ */
@@ -33,22 +48,24 @@ const PROMPT_BUILDERS: Record<string, (variables: PromptVariables) => string> =
       return buildTopChatSystemPrompt(v.billSummary);
     },
     "bill-chat-system-normal": (v) => {
-      validateBillVariables(v, "bill-chat-system-normal");
+      const { billName, billTitle, billSummary, billContent } =
+        validateBillVariables(v, "bill-chat-system-normal");
       return buildBillChatSystemNormalPrompt(
-        v.billName,
-        v.billTitle,
-        v.billSummary,
-        v.billContent,
+        billName,
+        billTitle,
+        billSummary,
+        billContent,
         v.knowledgeSource
       );
     },
     "bill-chat-system-hard": (v) => {
-      validateBillVariables(v, "bill-chat-system-hard");
+      const { billName, billTitle, billSummary, billContent } =
+        validateBillVariables(v, "bill-chat-system-hard");
       return buildBillChatSystemHardPrompt(
-        v.billName,
-        v.billTitle,
-        v.billSummary,
-        v.billContent,
+        billName,
+        billTitle,
+        billSummary,
+        billContent,
         v.knowledgeSource
       );
     },

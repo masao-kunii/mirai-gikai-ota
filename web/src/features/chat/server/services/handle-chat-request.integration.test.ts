@@ -321,8 +321,8 @@ describe("handleChatRequest 統合テスト", () => {
         .eq("user_id", testUser.id);
 
       expect(usageEvents).toHaveLength(1);
-      expect(usageEvents?.[0].user_id).toBe(testUser.id);
-      expect(usageEvents?.[0].session_id).toBe(sessionId);
+      expect(usageEvents?.[0]?.user_id).toBe(testUser.id);
+      expect(usageEvents?.[0]?.session_id).toBe(sessionId);
     });
 
     it("sessionId が空の場合は session_id が null として保存される", async () => {
@@ -345,7 +345,7 @@ describe("handleChatRequest 統合テスト", () => {
         .eq("user_id", testUser.id);
 
       expect(usageEvents).toHaveLength(1);
-      expect(usageEvents?.[0].session_id).toBeNull();
+      expect(usageEvents?.[0]?.session_id).toBeNull();
     });
   });
 

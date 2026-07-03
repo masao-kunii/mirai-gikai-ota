@@ -55,13 +55,13 @@ describe("filterReportsByStance", () => {
   it("againstフィルターは懸念レポートのみ返す", () => {
     const result = filterReportsByStance(reports, "against");
     expect(result).toHaveLength(1);
-    expect(result[0].stance).toBe("against");
+    expect(result[0]?.stance).toBe("against");
   });
 
   it("neutralフィルターは両方レポートのみ返す", () => {
     const result = filterReportsByStance(reports, "neutral");
     expect(result).toHaveLength(1);
-    expect(result[0].stance).toBe("neutral");
+    expect(result[0]?.stance).toBe("neutral");
   });
 });
 

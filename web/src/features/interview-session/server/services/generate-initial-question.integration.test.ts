@@ -70,9 +70,9 @@ describe("generateInitialQuestion 統合テスト", () => {
       .order("created_at", { ascending: true });
 
     expect(messages).toHaveLength(1);
-    expect(messages?.[0].role).toBe("assistant");
-    expect(messages?.[0].content).toBe(expectedResponse);
-    expect(messages?.[0].interview_session_id).toBe(sessionId);
+    expect(messages?.[0]?.role).toBe("assistant");
+    expect(messages?.[0]?.content).toBe(expectedResponse);
+    expect(messages?.[0]?.interview_session_id).toBe(sessionId);
   });
 
   it("LLMが空テキストを返した場合はnullを返しDBに保存されない", async () => {

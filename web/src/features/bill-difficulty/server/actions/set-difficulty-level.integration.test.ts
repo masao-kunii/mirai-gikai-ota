@@ -44,10 +44,10 @@ describe("setDifficultyLevel 統合テスト", () => {
   it("Cookie設定オプションにhttpOnly・path・maxAgeが含まれる", async () => {
     await setDifficultyLevelCore("normal", deps);
 
-    const options = mockSet.mock.calls[0][2];
-    expect(options.httpOnly).toBe(true);
-    expect(options.path).toBe("/");
-    expect(options.maxAge).toBe(60 * 60 * 24 * 365);
-    expect(options.sameSite).toBe("lax");
+    const options = mockSet.mock.calls[0]?.[2];
+    expect(options?.httpOnly).toBe(true);
+    expect(options?.path).toBe("/");
+    expect(options?.maxAge).toBe(60 * 60 * 24 * 365);
+    expect(options?.sameSite).toBe("lax");
   });
 });

@@ -48,7 +48,7 @@ describe("getInterviewMessages 統合テスト", () => {
     });
 
     expect(messages).toHaveLength(3);
-    expect(messages[0].interview_session_id).toBe(sessionId);
+    expect(messages[0]?.interview_session_id).toBe(sessionId);
   });
 
   it("未認証の場合は空配列を返す", async () => {
@@ -105,7 +105,7 @@ describe("getInterviewMessages 統合テスト", () => {
     });
 
     expect(messages).toHaveLength(2);
-    expect(messages[0].content).toBe("最初の質問");
-    expect(messages[1].content).toBe("ユーザーの回答");
+    expect(messages[0]?.content).toBe("最初の質問");
+    expect(messages[1]?.content).toBe("ユーザーの回答");
   });
 });

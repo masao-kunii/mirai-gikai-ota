@@ -30,5 +30,5 @@ export function isInterviewSection(pathname: string): boolean {
 /** インタビューページからbillIdを抽出 */
 export function extractBillIdFromPath(pathname: string): string | null {
   const match = pathname.match(/\/bills\/([^/]+)/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }

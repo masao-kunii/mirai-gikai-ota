@@ -18,12 +18,13 @@ export function getBasicAuthConfig(): BasicAuthConfig | null {
 
 export function parseBasicAuth(
   authHeader: string
-): { username: string; password: string } | null {
+): { username: string; password: string | undefined } | null {
   try {
     const authValue = authHeader.split(" ")[1];
     if (!authValue) return null;
 
-    const [username, password] = atob(authValue).split(":");
+    // split() は必ず1要素以上返すため username の既定値は実行時に使われない
+    const [username = "", password] = atob(authValue).split(":");
     return { username, password };
   } catch {
     return null;
