@@ -1,0 +1,26 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:integration:coverage": "vitest run --config vitest.integration.config.mts"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.2",
+    "@mirai-gikai/db": "workspace:*",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.9.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.14.0",
+    "@types/node": "^22.5.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.4"
+  }
+}

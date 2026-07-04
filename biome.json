@@ -49,7 +49,10 @@
       "web/src/**/*",
       "admin/src/**/*",
       "tests/**/*",
-      "!.claude/worktrees"
+      "apps/**/*",
+      "packages/db/**/*",
+      "!.claude/worktrees",
+      "!packages/db/src/generated"
     ]
   }
 }
