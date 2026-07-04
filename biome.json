@@ -52,7 +52,12 @@
       "apps/**/*",
       "packages/db/**/*",
       "!.claude/worktrees",
-      "!packages/db/src/generated"
+      "!packages/db/src/generated",
+      "!apps/web/src/routeTree.gen.ts",
+      "!apps/**/dist",
+      "!apps/**/.tanstack",
+      "!apps/**/.nitro",
+      "!apps/**/.output"
     ]
   }
 }

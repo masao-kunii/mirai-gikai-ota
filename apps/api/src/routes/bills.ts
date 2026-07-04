@@ -60,17 +60,17 @@ export const billsRoute = new Hono()
     }
   )
   .get(
-    "/:slug",
-    zValidator("param", z.object({ slug: z.string().min(1).max(200) })),
+    "/:id",
+    // 現行サイトの公開 URL は /bills/<uuid>。カットオーバー時の URL 継続性のため
+    // id で照合する（slug は現データでは未使用。導入時に別途対応）
+    zValidator("param", z.object({ id: z.uuid() })),
     async (c) => {
-      const { slug } = c.req.valid("param");
+      const { id } = c.req.valid("param");
       const result = await publicQuery(async (tx) => {
         const [bill] = await tx
           .select(publicBillColumns)
           .from(bills)
-          .where(
-            and(eq(bills.slug, slug), eq(bills.publishStatus, "published"))
-          );
+          .where(and(eq(bills.id, id), eq(bills.publishStatus, "published")));
         if (!bill) return null;
 
         const contents = await tx
@@ -85,7 +85,7 @@ export const billsRoute = new Hono()
 
         const stances = await tx
           .select({
-            factionName: factions.name,
+            factionName: factions.displayName,
             type: factionStances.type,
             comment: factionStances.comment,
           })

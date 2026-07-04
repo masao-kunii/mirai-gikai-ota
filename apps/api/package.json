@@ -22,5 +22,13 @@
     "tsx": "^4.19.1",
     "typescript": "^5.0.0",
     "vitest": "^3.2.4"
+  },
+  "main": "./src/client-types.ts",
+  "types": "./src/client-types.ts",
+  "exports": {
+    ".": {
+      "types": "./src/client-types.ts",
+      "default": "./src/client-types.ts"
+    }
   }
 }

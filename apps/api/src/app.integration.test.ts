@@ -21,6 +21,8 @@ const sessionSlug = `api-test-session-${stamp}`;
 const publishedSlug = `api-test-published-${stamp}`;
 const draftSlug = `api-test-draft-${stamp}`;
 let sessionId: string;
+let publishedId: string;
+let draftId: string;
 const billIds: string[] = [];
 
 beforeAll(async () => {
@@ -60,7 +62,10 @@ beforeAll(async () => {
     billIds.push(...inserted.map((b) => b.id));
 
     const published = inserted.find((b) => b.slug === publishedSlug);
-    if (!published) throw new Error("公開議案のシードに失敗");
+    const draft = inserted.find((b) => b.slug === draftSlug);
+    if (!published || !draft) throw new Error("議案のシードに失敗");
+    publishedId = published.id;
+    draftId = draft.id;
     await tx.insert(billContents).values({
       billId: published.id,
       difficultyLevel: "normal",
@@ -112,9 +117,9 @@ describe("GET /api/bills", () => {
   });
 });
 
-describe("GET /api/bills/:slug", () => {
+describe("GET /api/bills/:id", () => {
   it("published 議案は本体・コンテンツ・会派見解を返す", async () => {
-    const res = await app.request(`/api/bills/${publishedSlug}`);
+    const res = await app.request(`/api/bills/${publishedId}`);
     expect(res.status).toBe(200);
     const body = await json<{
       bill: { slug: string | null; name: string };
@@ -131,13 +136,20 @@ describe("GET /api/bills/:slug", () => {
   });
 
   it("draft 議案は 404（RLS で行として存在しない）", async () => {
-    const res = await app.request(`/api/bills/${draftSlug}`);
+    const res = await app.request(`/api/bills/${draftId}`);
     expect(res.status).toBe(404);
   });
 
-  it("存在しない slug は 404", async () => {
-    const res = await app.request("/api/bills/no-such-bill");
+  it("存在しない id は 404", async () => {
+    const res = await app.request(
+      "/api/bills/00000000-0000-0000-0000-000000000000"
+    );
     expect(res.status).toBe(404);
+  });
+
+  it("uuid でない id は 400（バリデーション）", async () => {
+    const res = await app.request("/api/bills/not-a-uuid");
+    expect(res.status).toBe(400);
   });
 });
 
