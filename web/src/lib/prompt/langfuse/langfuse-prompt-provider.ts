@@ -1,7 +1,10 @@
 import type { Langfuse } from "langfuse";
-import type { PromptProvider } from "../interface/prompt-provider";
-import type { CompiledPrompt, PromptVariables } from "../interface/types";
-import { compilePrompt } from "../shared/compile-prompt";
+import type { PromptProvider } from "@mirai-gikai/shared/prompt/provider";
+import type {
+  CompiledPrompt,
+  PromptVariables,
+} from "@mirai-gikai/shared/prompt/types";
+import { compilePrompt } from "@mirai-gikai/shared/prompt/compile";
 import { env } from "@/lib/env";
 
 const FALLBACK_LABEL = "production";
