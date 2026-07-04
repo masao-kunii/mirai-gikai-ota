@@ -18,3 +18,9 @@ web/test-results/
 web/playwright-report/
 web/blob-report/
 web/.playwright/
+
+# apps/* のビルド生成物
+apps/**/dist/
+apps/**/.tanstack/
+apps/**/.nitro/
+apps/**/.output/
