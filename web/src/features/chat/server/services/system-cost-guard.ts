@@ -5,7 +5,7 @@ import { getTotalUsageCostUsd } from "./cost-tracker";
 import {
   getJstDayRange,
   getJstMonthRange,
-} from "../../shared/utils/jst-day-range";
+} from "@mirai-gikai/shared/time/jst-day-range";
 import { env } from "@/lib/env";
 
 /**

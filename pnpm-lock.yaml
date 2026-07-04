@@ -171,6 +171,12 @@ importers:
       '@mirai-gikai/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@mirai-gikai/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      ai:
+        specifier: ^6.0.3
+        version: 6.0.3(zod@4.1.12)
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.7(@opentelemetry/api@1.9.0)(postgres@3.4.9)

@@ -6,4 +6,5 @@
  * 混入するため禁止する（TARGET_ARCHITECTURE §6「型のみの依存」）。
  */
 export type { BillsRouteType } from "./routes/bills";
+export type { ChatRouteType } from "./routes/chat";
 export type { CouncilSessionsRouteType } from "./routes/council-sessions";

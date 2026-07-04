@@ -86,6 +86,14 @@
     "./prompt/fallback": {
       "types": "./src/prompt/fallback-prompt-provider.ts",
       "default": "./src/prompt/fallback-prompt-provider.ts"
+    },
+    "./ai/calculate-cost": {
+      "types": "./src/ai/calculate-ai-cost.ts",
+      "default": "./src/ai/calculate-ai-cost.ts"
+    },
+    "./time/jst-day-range": {
+      "types": "./src/time/jst-day-range.ts",
+      "default": "./src/time/jst-day-range.ts"
     }
   },
   "dependencies": {

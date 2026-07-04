@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { billsRoute } from "./routes/bills";
+import { createChatRoute } from "./routes/chat";
 import { councilSessionsRoute } from "./routes/council-sessions";
 
 /**
@@ -13,4 +14,5 @@ import { councilSessionsRoute } from "./routes/council-sessions";
 export const app = new Hono()
   .basePath("/api")
   .route("/bills", billsRoute)
+  .route("/chat", createChatRoute())
   .route("/council-sessions", councilSessionsRoute);
