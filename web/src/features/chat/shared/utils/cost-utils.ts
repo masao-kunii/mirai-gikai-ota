@@ -2,7 +2,7 @@ import {
   calculateUsageCostUsd,
   roundCost,
   type SanitizedUsage,
-} from "@/lib/ai/calculate-ai-cost";
+} from "@mirai-gikai/shared/ai/calculate-cost";
 
 /**
  * cost_usdカラムの値を安全にパースする

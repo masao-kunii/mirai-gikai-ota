@@ -66,3 +66,78 @@ body {
   padding: 0.4rem 0.6rem;
   text-align: left;
 }
+
+/* --- 議案チャット --- */
+.chat {
+  margin-top: 2.5rem;
+  border-top: 2px solid #e0e0e0;
+  padding-top: 1.5rem;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.chat-role {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.chat-msg--user .chat-text {
+  align-self: flex-end;
+  background: #e8f0fe;
+}
+
+.chat-msg--assistant .chat-text {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.chat-text {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  max-width: 90%;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-form input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.chat-form button {
+  padding: 0.6rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: #1a73e8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-form button:disabled {
+  background: #9bbcf0;
+  cursor: not-allowed;
+}
+
+.chat-error {
+  color: #c0392b;
+  font-size: 0.9rem;
+}

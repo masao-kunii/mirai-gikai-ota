@@ -17,7 +17,12 @@ const DEFAULT_LOCAL_DB_URL =
 
 let client: DbClient | undefined;
 
-function getDb(): DbClient {
+/**
+ * DB クライアント（モジュールシングルトン）。
+ * 公開ルートは publicQuery を、チャット等のサーバー内部処理は
+ * lib/chat/ のヘルパー経由で利用する（生の withAppAdmin をルートに書かない）。
+ */
+export function getDb(): DbClient {
   client ??= createDbClient(
     process.env.SUPABASE_DB_URL ?? DEFAULT_LOCAL_DB_URL
   );
