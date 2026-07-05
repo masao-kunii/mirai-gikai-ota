@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { BillChat } from "../components/bill-chat";
 import { billsApi } from "../lib/api";
 
 export const Route = createFileRoute("/bills/$id")({
@@ -87,6 +88,8 @@ function BillDetail() {
           </table>
         </>
       )}
+
+      <BillChat billId={bill.id} />
     </article>
   );
 }

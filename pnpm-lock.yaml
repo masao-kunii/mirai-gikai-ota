@@ -205,12 +205,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@ai-sdk/react':
+        specifier: ^3.0.3
+        version: 3.0.3(react@19.2.7)(zod@4.4.3)
       '@tanstack/react-router':
         specifier: ^1.170.17
         version: 1.170.17(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-start':
         specifier: ^1.168.27
         version: 1.168.27(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(rollup@4.52.4)(vite@7.3.6(@types/node@22.18.8)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.8.1))
+      ai:
+        specifier: ^6.0.3
+        version: 6.0.3(zod@4.4.3)
       api:
         specifier: workspace:*
         version: link:../api
@@ -6261,6 +6267,13 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 4.1.12
 
+  '@ai-sdk/gateway@3.0.2(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.0
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.4.3)
+      '@vercel/oidc': 3.0.5
+      zod: 4.4.3
+
   '@ai-sdk/google-vertex@4.0.125(zod@4.1.12)':
     dependencies:
       '@ai-sdk/anthropic': 3.0.76(zod@4.1.12)
@@ -6298,6 +6311,13 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 4.1.12
 
+  '@ai-sdk/provider-utils@4.0.1(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.0
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 4.4.3
+
   '@ai-sdk/provider-utils@4.0.27(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
@@ -6326,6 +6346,16 @@ snapshots:
       ai: 6.0.3(zod@4.1.12)
       react: 19.1.2
       swr: 2.3.6(react@19.1.2)
+      throttleit: 2.1.0
+    transitivePeerDependencies:
+      - zod
+
+  '@ai-sdk/react@3.0.3(react@19.2.7)(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.4.3)
+      ai: 6.0.3(zod@4.4.3)
+      react: 19.2.7
+      swr: 2.3.6(react@19.2.7)
       throttleit: 2.1.0
     transitivePeerDependencies:
       - zod
@@ -8844,6 +8874,14 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.1(zod@4.1.12)
       '@opentelemetry/api': 1.9.0
       zod: 4.1.12
+
+  ai@6.0.3(zod@4.4.3):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.2(zod@4.4.3)
+      '@ai-sdk/provider': 3.0.0
+      '@ai-sdk/provider-utils': 4.0.1(zod@4.4.3)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.4.3
 
   ajv-formats@3.0.1(ajv@8.18.0):
     optionalDependencies:
@@ -11640,6 +11678,12 @@ snapshots:
       dequal: 2.0.3
       react: 19.1.2
       use-sync-external-store: 1.6.0(react@19.1.2)
+
+  swr@2.3.6(react@19.2.7):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.7
+      use-sync-external-store: 1.6.0(react@19.2.7)
 
   symbol-tree@3.2.4: {}
 
