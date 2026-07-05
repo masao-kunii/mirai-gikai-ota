@@ -1,4 +1,4 @@
-import type { CompiledPrompt, PromptVariables } from "../interface/types";
+import type { CompiledPrompt, PromptVariables } from "./types";
 
 /**
  * Langfuseから取得したプロンプトをコンパイルする純粋関数

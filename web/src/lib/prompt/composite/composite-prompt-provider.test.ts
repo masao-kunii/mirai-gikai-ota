@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CompiledPrompt, PromptVariables } from "../interface/types";
+import type {
+  CompiledPrompt,
+  PromptVariables,
+} from "@mirai-gikai/shared/prompt/types";
 import { CompositePromptProvider } from "./composite-prompt-provider";
 
 function createFakeProvider(label: string): {

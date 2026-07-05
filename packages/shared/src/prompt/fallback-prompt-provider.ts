@@ -1,16 +1,15 @@
-import "server-only";
-
-import type { PromptProvider } from "./interface/prompt-provider";
-import type { CompiledPrompt, PromptVariables } from "./interface/types";
+import type { PromptProvider } from "./prompt-provider";
+import type { CompiledPrompt, PromptVariables } from "./types";
 
 /**
- * Langfuse が無いローカル開発・自前ホスト環境向けの最小プロンプト実装。
+ * Langfuse が無い環境向けのフォールバックプロンプト実装（旧称 MockPromptProvider）。
+ * web / apps-api の両方から使う単一ソース。
  *
  * 本番では Langfuse 経由でプロンプトを差し替える運用を想定するが、
  * Vertex AI + Cloud Run 構成で Langfuse 未契約の環境でも動かせるように
  * ベースのシステムプロンプトを直書きで提供する。
  */
-export class MockPromptProvider implements PromptProvider {
+export class FallbackPromptProvider implements PromptProvider {
   async getPrompt(
     name: string,
     variables?: PromptVariables

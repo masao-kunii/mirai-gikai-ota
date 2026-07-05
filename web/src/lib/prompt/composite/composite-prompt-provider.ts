@@ -1,5 +1,8 @@
-import type { PromptProvider } from "../interface/prompt-provider";
-import type { CompiledPrompt, PromptVariables } from "../interface/types";
+import type { PromptProvider } from "@mirai-gikai/shared/prompt/provider";
+import type {
+  CompiledPrompt,
+  PromptVariables,
+} from "@mirai-gikai/shared/prompt/types";
 
 /**
  * プロンプト名に基づいて適切なプロバイダーにルーティングする複合プロバイダー

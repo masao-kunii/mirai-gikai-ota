@@ -70,6 +70,22 @@
     "./interview-prompts/summary": {
       "types": "./src/interview-prompts/summary.ts",
       "default": "./src/interview-prompts/summary.ts"
+    },
+    "./prompt/types": {
+      "types": "./src/prompt/types.ts",
+      "default": "./src/prompt/types.ts"
+    },
+    "./prompt/provider": {
+      "types": "./src/prompt/prompt-provider.ts",
+      "default": "./src/prompt/prompt-provider.ts"
+    },
+    "./prompt/compile": {
+      "types": "./src/prompt/compile-prompt.ts",
+      "default": "./src/prompt/compile-prompt.ts"
+    },
+    "./prompt/fallback": {
+      "types": "./src/prompt/fallback-prompt-provider.ts",
+      "default": "./src/prompt/fallback-prompt-provider.ts"
     }
   },
   "dependencies": {
