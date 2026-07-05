@@ -12,6 +12,8 @@
   "dependencies": {
     "@hono/zod-validator": "^0.7.2",
     "@mirai-gikai/db": "workspace:*",
+    "@mirai-gikai/shared": "workspace:*",
+    "ai": "^6.0.3",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.9.0",
     "zod": "^4.1.12"
