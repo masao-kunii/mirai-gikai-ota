@@ -1,0 +1,12 @@
+# cp terraform.tfvars.example terraform.tfvars して埋める（terraform.tfvars は gitignore）。
+# cloudflare_api_token は環境変数 TF_VAR_cloudflare_api_token で渡すのが安全。
+cloudflare_account_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+supabase_db_host      = "aws-0-ap-northeast-1.pooler.supabase.com"
+supabase_db_user      = "postgres.sqjoswnprerzdkhcneni"
+# supabase_db_password は TF_VAR_supabase_db_password で渡すのを推奨
+# supabase_db_password = "..."
+
+# 独自ドメインに移行するとき:
+# custom_domain_enabled = true
+# zone_id               = "..."
+# preview_hostname      = "preview.example.jp"
