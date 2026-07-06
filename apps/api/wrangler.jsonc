@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mirai-gikai-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // 機密でない設定。機密（ANON_COOKIE_SECRET / GEMINI_API_KEY）は
+  // `wrangler secret put <NAME>` で登録する（docs/adr/0002 参照）。
+  "vars": {
+    "NODE_ENV": "production"
+  },
+  // 公開 Postgres への接続は Hyperdrive 経由。id は
+  // `wrangler hyperdrive create` で発行した ID に置き換える（プレースホルダのまま
+  //  deploy しないこと）。localConnectionString はローカル `wrangler dev` 用。
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_HYPERDRIVE_ID",
+      "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:54432/postgres"
+    }
+  ]
+}
