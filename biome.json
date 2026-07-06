@@ -57,7 +57,9 @@
       "!apps/**/dist",
       "!apps/**/.tanstack",
       "!apps/**/.nitro",
-      "!apps/**/.output"
+      "!apps/**/.output",
+      "!apps/**/playwright-report",
+      "!apps/**/test-results"
     ]
   }
 }

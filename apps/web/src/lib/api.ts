@@ -5,12 +5,20 @@ import type { BillsRouteType, CouncilSessionsRouteType } from "api";
 
 /**
  * 公開 API の型付きクライアント（Hono RPC）。
- * SSR ローダーとブラウザの両方から同じ URL で呼ぶ。
- * 本番では VITE_API_URL を環境変数で注入する。
+ *
+ * ローダーは isomorphic（初回 SSR はサーバー、SPA 遷移はブラウザ）で走るため、
+ * ベース URL を出し分ける:
+ *   - サーバー: 絶対 URL で apps/api を直接叩く（origin が無いので相対不可）
+ *   - ブラウザ: 相対 `/api`。dev は vite proxy、本番は web/api 同一ドメインで
+ *     apps/api にルーティングされ、同一オリジンなので匿名クッキーも一貫する
+ *
+ * サーバー側の宛先は API_URL_INTERNAL（本番の内部 URL）で上書きできる。
  */
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
+const API_BASE = import.meta.env.SSR
+  ? (process.env.API_URL_INTERNAL ?? "http://localhost:8787")
+  : "";
 
-export const billsApi = hc<BillsRouteType>(`${API_URL}/api/bills`);
+export const billsApi = hc<BillsRouteType>(`${API_BASE}/api/bills`);
 export const councilSessionsApi = hc<CouncilSessionsRouteType>(
-  `${API_URL}/api/council-sessions`
+  `${API_BASE}/api/council-sessions`
 );
