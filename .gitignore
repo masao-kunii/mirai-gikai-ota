@@ -26,3 +26,4 @@ apps/**/.nitro/
 apps/**/.output/
 apps/**/playwright-report/
 apps/**/test-results/
+apps/**/.wrangler/

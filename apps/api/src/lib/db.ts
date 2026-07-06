@@ -16,15 +16,27 @@ const DEFAULT_LOCAL_DB_URL =
   "postgresql://postgres:postgres@127.0.0.1:54432/postgres";
 
 let client: DbClient | undefined;
+let overrideUrl: string | undefined;
+
+/**
+ * 接続文字列を明示注入する（Workers エントリが Hyperdrive の connectionString を渡す）。
+ * Node の dev / test では呼ばれず、process.env.SUPABASE_DB_URL が使われる。
+ */
+export function setDbConnectionString(url: string): void {
+  if (url === overrideUrl) return;
+  overrideUrl = url;
+  client = undefined;
+}
 
 /**
  * DB クライアント（モジュールシングルトン）。
+ * 解決順: 明示注入(Hyperdrive) → process.env.SUPABASE_DB_URL → ローカル既定。
  * 公開ルートは publicQuery を、チャット等のサーバー内部処理は
  * lib/chat/ のヘルパー経由で利用する（生の withAppAdmin をルートに書かない）。
  */
 export function getDb(): DbClient {
   client ??= createDbClient(
-    process.env.SUPABASE_DB_URL ?? DEFAULT_LOCAL_DB_URL
+    overrideUrl ?? process.env.SUPABASE_DB_URL ?? DEFAULT_LOCAL_DB_URL
   );
   return client;
 }

@@ -7,7 +7,10 @@
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
     "test:integration": "vitest run --config vitest.integration.config.mts",
-    "test:integration:coverage": "vitest run --config vitest.integration.config.mts"
+    "test:integration:coverage": "vitest run --config vitest.integration.config.mts",
+    "dev:cf": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.2",
@@ -19,11 +22,13 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260705.1",
     "@hono/node-server": "^1.14.0",
     "@types/node": "^22.5.5",
     "tsx": "^4.19.1",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.107.0"
   },
   "main": "./src/client-types.ts",
   "types": "./src/client-types.ts",
