@@ -8,14 +8,16 @@ export default defineNitroConfig({
   cloudflare: {
     wrangler: {
       name: "mirai-gikai-web",
+      // api Worker への Service Binding。
+      // workers.dev の同一サブドメインでは Worker 間 HTTP（web→api）が
+      // error 1042 でブロックされるため、HTTP プロキシではなく binding の
+      // 内部呼び出し（env.API.fetch）で api を叩く。ローカルには binding が
+      // 無いので、各呼び出し側で localhost:8787 への HTTP fallback を持つ。
+      services: [{ binding: "API", service: "mirai-gikai-api" }],
     },
   },
-  // ブラウザからの /api を api Worker へ転送し、web と同一オリジンに保つ
-  // （匿名クッキー mg_anon が一貫し、SPA 遷移・チャットが同一オリジンで動く）。
-  // 転送先はビルド時に API_ORIGIN で注入（未指定はローカル dev の :8787）。
-  routeRules: {
-    "/api/**": {
-      proxy: `${process.env.API_ORIGIN ?? "http://localhost:8787"}/api/**`,
-    },
-  },
+  // ブラウザからの /api/** を api Worker へ Service Binding 経由で中継し、
+  // web と同一オリジンに保つ（匿名クッキー mg_anon が一貫する。ADR 0002 §2）。
+  // 実体は server/api-proxy.ts。
+  handlers: [{ route: "/api/**", handler: "./server/api-proxy.ts" }],
 });
