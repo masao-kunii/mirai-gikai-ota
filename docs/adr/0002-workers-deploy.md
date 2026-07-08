@@ -20,7 +20,9 @@
 - `…/api/*` → **api Worker**
 - `…/*`（それ以外） → **web Worker**
 
-これにより、ブラウザからは相対 `/api` が同一オリジンで api に届く（`apps/web/lib/api.ts` のブラウザ相対パスが機能し、匿名クッキー `mg_anon` も同一オリジンで一貫する）。SSR ローダーはサーバー内部 URL（`API_URL_INTERNAL`、web Worker → api Worker の Service Binding もしくは内部ホスト）で api を叩く。
+これにより、ブラウザからは相対 `/api` が同一オリジンで api に届く（`apps/web/lib/api.ts` のブラウザ相対パスが機能し、匿名クッキー `mg_anon` も同一オリジンで一貫する）。SSR ローダーはサーバー内部 URL（`API_URL_INTERNAL`、api Worker の URL）で api を叩く。
+
+**workers.dev 先行での同一オリジン化（実装済み・2c-2）**: 独自ドメインの Routes が使えない workers.dev では、web Worker の **Nitro `routeRules` で `/api/**` を api Worker（`API_ORIGIN`）へプロキシ**して単一オリジンを保つ。`API_ORIGIN` は web の Cloudflare ビルド時に注入する（`API_ORIGIN=<api workers.dev URL> pnpm run build:cf`）。独自ドメイン移行後は Routes が同機能を担い、この routeRules は無害に共存する。
 
 ### 3. DB 接続: Hyperdrive 経由
 - Workers から Postgres への直 TCP を避け、**Hyperdrive**（接続プール + キャッシュ）を経由する。
@@ -71,15 +73,15 @@ pnpm --filter api deploy
 
 ```bash
 cd apps/web
-# 1. Cloudflare preset でビルド（Nitro が .output と wrangler.json を生成）
-pnpm run build:cf
-# 2. 公開チャットのブラウザ結合のため、SSR ローダーの api 宛先を Worker の
-#    環境変数として設定（api Worker の URL）。Routes で同一ゾーンに載せる場合、
-#    ブラウザは相対 /api、SSR は API_URL_INTERNAL を使う
-npx wrangler secret put API_URL_INTERNAL   # 例: https://<preview-zone>（/api を含めない）
-# 3. デプロイ
+# 1. Cloudflare preset でビルド。ブラウザの /api → api への routeRules プロキシ先を
+#    API_ORIGIN で焼き込む（api Worker の URL、/api を含めない）
+API_ORIGIN="https://mirai-gikai-api.<account>.workers.dev" pnpm run build:cf
+# 2. SSR ローダーの api 宛先（サーバー内部から api Worker を叩く URL）
+npx wrangler secret put API_URL_INTERNAL   # 例: https://mirai-gikai-api.<account>.workers.dev
+# 3. デプロイ（Nitro 生成の wrangler.json 経由）
 pnpm run deploy
-# 4. Routes で <preview-zone>/* を mirai-gikai-web に（/api/* は api Worker 優先）
+# → mirai-gikai-web.<account>.workers.dev で web、/api はプロキシで api に届く
+# 独自ドメイン移行時は infra/ の custom_domain_enabled=true で Routes/DNS を張る
 ```
 
 ### ローカルでの Workers ランタイム確認（任意）
@@ -90,7 +92,8 @@ cd apps/api && npx wrangler dev
 
 ## 検証
 - api: `wrangler deploy --dry-run` バンドル成功（2.5 MiB / gzip 452 KiB）。`postgres.js` / Hono / Drizzle が `nodejs_compat` で Workers 向けにビルド可能。
-- web: `NITRO_PRESET=cloudflare_module vite build` + `wrangler deploy --dry-run` バンドル成功（1.17 MiB / gzip 233 KiB、`ASSETS` バインディング）。
+- web: `NITRO_PRESET=cloudflare_module vite build` + `wrangler deploy --dry-run` バンドル成功（約1.18 MiB / gzip 236 KiB、`ASSETS` バインディング）。
+- web の `/api` → api プロキシ（Nitro routeRules）をローカル preview で疎通確認（`/api/council-sessions` が api の JSON を返す）。`API_ORIGIN` がビルドに焼き込まれることも確認。
 - 両 typecheck 緑（`@cloudflare/workers-types`）。既存の Node dev / 統合テスト / E2E は無変更で維持。
 
 ## 却下・保留した選択肢
