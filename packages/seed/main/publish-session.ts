@@ -99,13 +99,25 @@ async function main() {
     `\n✓ 対象会期: ${matched.map((s) => `${s.name}(${s.id.slice(0, 8)})`).join(", ")}`
   );
 
-  // 対象会期の draft 議案
-  const drafts = bills.filter(
-    (b) =>
-      b.council_session_id &&
-      matchedIds.has(b.council_session_id) &&
-      b.publish_status === "draft"
+  // 対象会期の全議案（status 分布・一覧）。審議ステータス表示の差分調査用。
+  const sessionBills = bills.filter(
+    (b) => b.council_session_id && matchedIds.has(b.council_session_id)
   );
+  const statusDist = new Map<string, number>();
+  for (const b of sessionBills) {
+    statusDist.set(b.status, (statusDist.get(b.status) ?? 0) + 1);
+  }
+  console.log(`\n=== 対象会期の審議 status 分布（計 ${sessionBills.length}）===`);
+  for (const [st, n] of [...statusDist.entries()].sort()) {
+    console.log(`  ${st}: ${n} 件`);
+  }
+  console.log("\n--- 一覧（[番号] 名称 / status）---");
+  for (const b of sessionBills) {
+    console.log(`  [${b.bill_number ?? "-"}] ${b.name} / ${b.status}`);
+  }
+
+  // 対象会期の draft 議案
+  const drafts = sessionBills.filter((b) => b.publish_status === "draft");
   console.log(`\n対象 draft 議案: ${drafts.length} 件`);
   for (const b of drafts) {
     console.log(`  - [${b.bill_number ?? "-"}] ${b.name}（審議: ${b.status}）`);
