@@ -10,6 +10,7 @@ import { SiteChat } from "../components/site-chat";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { DifficultyProvider } from "../lib/difficulty";
+import { RubyfulInitializer } from "../lib/rubyful";
 import stylesUrl from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -48,6 +49,8 @@ function RootComponent() {
   return (
     <RootDocument>
       <DifficultyProvider>
+        {/* ふりがな ON のときのみ Rubyful V2 を読み込む */}
+        <RubyfulInitializer />
         <div className="flex min-h-dvh flex-col">
           <SiteHeader />
           {/* 2カラムの持続シェル: 左=Outlet（一覧/詳細が差し替わる）、

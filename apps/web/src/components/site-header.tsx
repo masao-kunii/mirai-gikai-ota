@@ -2,6 +2,52 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useDifficulty } from "../lib/difficulty";
+import { useRubyToggle } from "../lib/rubyful";
+
+/** 汎用トグルスイッチ（role="switch"） */
+function SwitchButton({
+  checked,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+        checked ? "bg-primary" : "bg-mirai-surface-muted"
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
+/** ふりがな表示トグル（Rubyful V2。切替でリロード） */
+function FuriganaToggle() {
+  const { enabled, setRuby } = useRubyToggle();
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-2.5">
+      <span className="font-medium text-mirai-text text-sm">ふりがな表示</span>
+      <SwitchButton
+        checked={enabled}
+        onChange={setRuby}
+        ariaLabel="ふりがな表示の切り替え"
+      />
+    </div>
+  );
+}
 
 /** 難易度トグル（説明をもっと詳しく＝normal↔hard）。ヘッダーとメニューで共用 */
 function DifficultyToggle() {
@@ -95,7 +141,10 @@ export function SiteHeader() {
               onClick={() => setMenuOpen(false)}
               className="fixed inset-0 z-40 cursor-default"
             />
-            <nav className="absolute top-full right-4 z-50 mt-2 flex w-56 flex-col overflow-hidden rounded-xl border border-mirai-border-light bg-card py-2 shadow-lg sm:right-6">
+            <nav className="absolute top-full right-4 z-50 mt-2 flex w-60 flex-col overflow-hidden rounded-xl border border-mirai-border-light bg-card py-2 shadow-lg sm:right-6">
+              {/* ふりがな表示トグル */}
+              <FuriganaToggle />
+              <div className="my-1 border-mirai-border-light border-t" />
               {MENU_LINKS.map((item) => (
                 <Link
                   key={item.to}
