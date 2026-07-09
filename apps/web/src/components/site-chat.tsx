@@ -3,6 +3,7 @@ import { useParams } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
 import { Send, X } from "lucide-react";
 import { useState } from "react";
+import { type DifficultyLevel, useDifficulty } from "../lib/difficulty";
 import { Markdown } from "./markdown";
 
 /**
@@ -29,15 +30,25 @@ export function SiteChat({ variant }: { variant: "sidebar" | "floating" }) {
   // strict:false で現在ルートの params を緩く取得（/bills/$id のとき id が入る）
   const params = useParams({ strict: false }) as { id?: string };
   const billId = params.id;
-  // 文脈（トップ / 議案 / 別議案）が変わったら会話をリセットする
-  return <ChatPane key={billId ?? "home"} billId={billId} variant={variant} />;
+  const { level } = useDifficulty();
+  // 文脈（トップ / 議案 / 別議案）や難易度が変わったら会話をリセットする
+  return (
+    <ChatPane
+      key={`${billId ?? "home"}:${level}`}
+      billId={billId}
+      difficultyLevel={level}
+      variant={variant}
+    />
+  );
 }
 
 function ChatPane({
   billId,
+  difficultyLevel,
   variant,
 }: {
   billId?: string;
+  difficultyLevel: DifficultyLevel;
   variant: "sidebar" | "floating";
 }) {
   const [open, setOpen] = useState(false);
@@ -45,9 +56,7 @@ function ChatPane({
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      body: billId
-        ? { billId, difficultyLevel: "normal" }
-        : { difficultyLevel: "normal" },
+      body: billId ? { billId, difficultyLevel } : { difficultyLevel },
     }),
   });
 
