@@ -87,6 +87,30 @@ function chatRequest(billId: string, cookie?: string): [string, RequestInit] {
   ];
 }
 
+/** billId 無し = トップ（議案未選択）チャットのリクエスト */
+function topChatRequest(cookie?: string): [string, RequestInit] {
+  return [
+    "/",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(cookie ? { cookie } : {}),
+      },
+      body: JSON.stringify({
+        difficultyLevel: "normal",
+        messages: [
+          {
+            id: "m1",
+            role: "user",
+            parts: [{ type: "text", text: "いま議論されている議案は？" }],
+          },
+        ],
+      }),
+    },
+  ];
+}
+
 /** Set-Cookie から mg_anon のクッキー文字列と匿名 ID を取り出す */
 function extractAnon(res: Response): { cookie: string; anonId: string } {
   const setCookie = res.headers.get("set-cookie") ?? "";
@@ -185,6 +209,25 @@ describe("POST /api/chat", () => {
     }
     expect(rows).toHaveLength(1);
     expect(rows[0]?.totalTokens).toBe(120);
+  });
+
+  it("billId 無しはトップチャット（top-chat-system プロンプト）で 200 応答する", async () => {
+    const receivedPromptNames: string[] = [];
+    const app = createChatRoute({
+      model: createStreamMock(["こんにちは", "！"]),
+      promptProvider: {
+        getPrompt: async (name: string) => {
+          receivedPromptNames.push(name);
+          return { content: "トップチャット用プロンプト", metadata: "{}" };
+        },
+      },
+    });
+    const res = await app.request(...topChatRequest());
+    expect(res.status).toBe(200);
+    extractAnon(res);
+    const body = await res.text();
+    expect(body).toContain("こんにちは");
+    expect(receivedPromptNames).toEqual(["top-chat-system"]);
   });
 
   it("draft 議案は 404（公開境界）", async () => {

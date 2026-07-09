@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
@@ -17,6 +18,8 @@ export default defineConfig({
     },
   },
   plugins: [
+    // Tailwind v4（現行 web と同じデザイントークンを styles.css で共有）。
+    tailwindcss(),
     // 公式の指定どおり react プラグインは start プラグインの後に置く。
     // nitro が SSR サーバーのビルドとデプロイ preset を担う。Cloudflare 向けは
     // `NITRO_PRESET=cloudflare_module vite build`（ADR 0002）。
