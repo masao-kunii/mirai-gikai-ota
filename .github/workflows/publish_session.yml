@@ -1,0 +1,56 @@
+name: Publish Session Bills
+
+# 指定会期の「下書き（draft）」議案だけを公開する運用ワークフロー（手動実行）。
+# 定例会同期(sync_teirei)は新規議案を draft で取り込むため、会期まるごと公開したい
+# ときにここから実行する。会期を限定でき、他会期・既公開分には触れない。
+#
+# 既定はドライラン（対象一覧だけ表示）。apply=true のときだけ実際に公開する。
+# 同期と同じ Secrets（SUPABASE_URL / SUPABASE_SECRET_KEY）を再利用する。
+
+on:
+  workflow_dispatch:
+    inputs:
+      session_name:
+        description: "公開する会期名（例: 令和8年第2回定例会）"
+        required: true
+        default: "令和8年第2回定例会"
+        type: string
+      apply:
+        description: "true で実際に公開（false はドライラン）"
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: publish-session
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish session bills
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          if [ "${{ inputs.apply }}" = "true" ]; then
+            pnpm --filter @mirai-gikai/seed run publish:session "${{ inputs.session_name }}" --apply
+          else
+            pnpm --filter @mirai-gikai/seed run publish:session "${{ inputs.session_name }}"
+          fi
