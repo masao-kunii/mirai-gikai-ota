@@ -14,16 +14,23 @@ const DB_URL =
   process.env.SUPABASE_DB_URL ??
   "postgresql://postgres:postgres@127.0.0.1:54432/postgres";
 const db = createDbClient(DB_URL);
-const { bills, billContents, councilSessions } = schema;
+const { bills, billContents, councilSessions, tags, billsTags } = schema;
 
 const stamp = Date.now();
 const sessionSlug = `api-test-session-${stamp}`;
 const publishedSlug = `api-test-published-${stamp}`;
 const draftSlug = `api-test-draft-${stamp}`;
+const featuredSlug = `api-test-featured-${stamp}`;
+const comingSoonSlug = `api-test-coming-${stamp}`;
+const featuredTagLabel = `APIテスト注目タグ-${stamp}`;
+const plainTagLabel = `APIテスト非注目タグ-${stamp}`;
 let sessionId: string;
 let publishedId: string;
 let draftId: string;
+let featuredId: string;
+let featuredTagId: string;
 const billIds: string[] = [];
+const tagIds: string[] = [];
 
 beforeAll(async () => {
   await withAppAdmin(db, async (tx) => {
@@ -73,13 +80,67 @@ beforeAll(async () => {
       summary: "やさしい要約",
       content: "やさしい本文",
     });
+
+    // フィルタ検証用: 注目（published+featured+review完了）と coming_soon。
+    const extra = await tx
+      .insert(bills)
+      .values([
+        {
+          name: "APIテスト注目議案",
+          slug: featuredSlug,
+          status: "submitted",
+          publishStatus: "published",
+          publishedAt: new Date().toISOString(),
+          councilSessionId: sessionId,
+          isFeatured: true,
+          isReviewCompleted: true,
+        },
+        {
+          name: "APIテスト予告議案",
+          slug: comingSoonSlug,
+          status: "submitted",
+          publishStatus: "coming_soon",
+          councilSessionId: sessionId,
+        },
+      ])
+      .returning({ id: bills.id, slug: bills.slug });
+    billIds.push(...extra.map((b) => b.id));
+    const featured = extra.find((b) => b.slug === featuredSlug);
+    if (!featured) throw new Error("注目議案のシードに失敗");
+    featuredId = featured.id;
+
+    // タグ: featured_priority あり（注目タグとして公開される）と なし（除外される）。
+    const insertedTags = await tx
+      .insert(tags)
+      .values([
+        {
+          label: featuredTagLabel,
+          description: "注目タグの説明",
+          featuredPriority: 1,
+        },
+        { label: plainTagLabel, description: null, featuredPriority: null },
+      ])
+      .returning({ id: tags.id, label: tags.label });
+    tagIds.push(...insertedTags.map((t) => t.id));
+    const featuredTag = insertedTags.find((t) => t.label === featuredTagLabel);
+    if (!featuredTag) throw new Error("タグのシードに失敗");
+    featuredTagId = featuredTag.id;
+
+    // 注目タグを注目議案に紐付け
+    await tx
+      .insert(billsTags)
+      .values({ billId: featuredId, tagId: featuredTagId });
   });
 });
 
 afterAll(async () => {
   await withAppAdmin(db, async (tx) => {
+    // bills 削除で bills_tags は cascade。tags は明示削除。
     if (billIds.length > 0) {
       await tx.delete(bills).where(inArray(bills.id, billIds));
+    }
+    if (tagIds.length > 0) {
+      await tx.delete(tags).where(inArray(tags.id, tagIds));
     }
     if (sessionId) {
       await tx.delete(councilSessions).where(eq(councilSessions.id, sessionId));
@@ -114,6 +175,69 @@ describe("GET /api/bills", () => {
     const long = "a".repeat(201);
     const res = await app.request(`/api/bills?sessionSlug=${long}`);
     expect(res.status).toBe(400);
+  });
+
+  it("一覧の各要素に isReviewCompleted が含まれる", async () => {
+    const res = await app.request(`/api/bills?sessionSlug=${sessionSlug}`);
+    const body = await json<{
+      bills: { slug: string | null; isReviewCompleted: boolean }[];
+    }>(res);
+    const featured = body.bills.find((b) => b.slug === featuredSlug);
+    expect(featured?.isReviewCompleted).toBe(true);
+  });
+
+  it("status=coming_soon は coming_soon のみ（published を含まない）", async () => {
+    const res = await app.request(
+      `/api/bills?status=coming_soon&sessionSlug=${sessionSlug}`
+    );
+    expect(res.status).toBe(200);
+    const body = await json<{ bills: { slug: string | null }[] }>(res);
+    const slugs = body.bills.map((b) => b.slug);
+    expect(slugs).toContain(comingSoonSlug);
+    expect(slugs).not.toContain(publishedSlug);
+  });
+
+  it("isFeatured=true は注目議案のみ", async () => {
+    const res = await app.request(
+      `/api/bills?isFeatured=true&sessionSlug=${sessionSlug}`
+    );
+    expect(res.status).toBe(200);
+    const body = await json<{
+      bills: { slug: string | null; isFeatured: boolean }[];
+    }>(res);
+    const slugs = body.bills.map((b) => b.slug);
+    expect(slugs).toContain(featuredSlug);
+    expect(slugs).not.toContain(publishedSlug);
+    expect(body.bills.every((b) => b.isFeatured)).toBe(true);
+  });
+
+  it("tagId 指定はそのタグを持つ議案のみ", async () => {
+    const res = await app.request(`/api/bills?tagId=${featuredTagId}`);
+    expect(res.status).toBe(200);
+    const body = await json<{ bills: { slug: string | null }[] }>(res);
+    const slugs = body.bills.map((b) => b.slug);
+    expect(slugs).toContain(featuredSlug);
+    expect(slugs).not.toContain(publishedSlug);
+  });
+
+  it("tagId が uuid でなければ 400", async () => {
+    const res = await app.request("/api/bills?tagId=not-a-uuid");
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/tags", () => {
+  it("featured_priority のあるタグのみ返る", async () => {
+    const res = await app.request("/api/tags");
+    expect(res.status).toBe(200);
+    const body = await json<{
+      tags: { label: string; featuredPriority: number | null }[];
+    }>(res);
+    const labels = body.tags.map((t) => t.label);
+    expect(labels).toContain(featuredTagLabel);
+    expect(labels).not.toContain(plainTagLabel);
+    const featured = body.tags.find((t) => t.label === featuredTagLabel);
+    expect(featured?.featuredPriority).toBe(1);
   });
 });
 

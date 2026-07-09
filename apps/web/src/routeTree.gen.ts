@@ -14,6 +14,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BillsIdRouteImport } from './routes/bills.$id'
+import { Route as SessionsSlugBillsRouteImport } from './routes/sessions.$slug.bills'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -40,6 +41,11 @@ const BillsIdRoute = BillsIdRouteImport.update({
   path: '/bills/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SessionsSlugBillsRoute = SessionsSlugBillsRouteImport.update({
+  id: '/sessions/$slug/bills',
+  path: '/sessions/$slug/bills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/archive' | '/privacy' | '/terms' | '/bills/$id'
+  fullPaths:
+    | '/'
+    | '/archive'
+    | '/privacy'
+    | '/terms'
+    | '/bills/$id'
+    | '/sessions/$slug/bills'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive' | '/privacy' | '/terms' | '/bills/$id'
-  id: '__root__' | '/' | '/archive' | '/privacy' | '/terms' | '/bills/$id'
+  to:
+    | '/'
+    | '/archive'
+    | '/privacy'
+    | '/terms'
+    | '/bills/$id'
+    | '/sessions/$slug/bills'
+  id:
+    | '__root__'
+    | '/'
+    | '/archive'
+    | '/privacy'
+    | '/terms'
+    | '/bills/$id'
+    | '/sessions/$slug/bills'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   BillsIdRoute: typeof BillsIdRoute
+  SessionsSlugBillsRoute: typeof SessionsSlugBillsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sessions/$slug/bills': {
+      id: '/sessions/$slug/bills'
+      path: '/sessions/$slug/bills'
+      fullPath: '/sessions/$slug/bills'
+      preLoaderRoute: typeof SessionsSlugBillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   BillsIdRoute: BillsIdRoute,
+  SessionsSlugBillsRoute: SessionsSlugBillsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

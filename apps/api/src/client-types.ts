@@ -8,3 +8,4 @@
 export type { BillsRouteType } from "./routes/bills";
 export type { ChatRouteType } from "./routes/chat";
 export type { CouncilSessionsRouteType } from "./routes/council-sessions";
+export type { TagsRouteType } from "./routes/tags";

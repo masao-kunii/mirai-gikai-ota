@@ -6,9 +6,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { GoogleAnalytics } from "../components/google-analytics";
 import { SiteChat } from "../components/site-chat";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
+import { TopLoader } from "../components/top-loader";
 import { DifficultyProvider } from "../lib/difficulty";
 import { RubyfulInitializer } from "../lib/rubyful";
 import stylesUrl from "../styles.css?url";
@@ -25,9 +27,25 @@ export const Route = createRootRoute({
         content:
           "大田区議会の議案をわかりやすく。議案の要約・会派の見解・審議状況を届けます。",
       },
+      // OGP / Twitter カード
+      { property: "og:site_name", content: "みらい議会＠大田区" },
+      { property: "og:type", content: "website" },
+      { property: "og:title", content: "みらい議会＠大田区" },
+      {
+        property: "og:description",
+        content:
+          "大田区議会の議案をわかりやすく。議案の要約・会派の見解・審議状況を届けます。",
+      },
+      { property: "og:image", content: "/ogp.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/ogp.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: stylesUrl },
+      // PWA / アイコン
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "icon", href: "/icons/pwa/icon_android_192.png" },
+      { rel: "apple-touch-icon", href: "/icons/pwa/icon_ios.png" },
       // フォント（現行と同じ Noto Sans JP + Lexend Giga）
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
@@ -51,6 +69,8 @@ function RootComponent() {
       <DifficultyProvider>
         {/* ふりがな ON のときのみ Rubyful V2 を読み込む */}
         <RubyfulInitializer />
+        <TopLoader />
+        <GoogleAnalytics />
         <div className="flex min-h-dvh flex-col">
           <SiteHeader />
           {/* 2カラムの持続シェル: 左=Outlet（一覧/詳細が差し替わる）、

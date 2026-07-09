@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { billsRoute } from "./routes/bills";
 import { createChatRoute } from "./routes/chat";
 import { councilSessionsRoute } from "./routes/council-sessions";
+import { tagsRoute } from "./routes/tags";
 
 /**
  * 公開 API（apps/api）の組み立て。
@@ -15,4 +16,5 @@ export const app = new Hono()
   .basePath("/api")
   .route("/bills", billsRoute)
   .route("/chat", createChatRoute())
-  .route("/council-sessions", councilSessionsRoute);
+  .route("/council-sessions", councilSessionsRoute)
+  .route("/tags", tagsRoute);
