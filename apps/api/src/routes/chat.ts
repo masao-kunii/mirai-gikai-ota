@@ -11,9 +11,9 @@ import type { PromptProvider } from "@mirai-gikai/shared/prompt/provider";
 import { Hono } from "hono";
 import { z } from "zod";
 import { resolveAnonId } from "../lib/anon";
-import { getDb } from "../lib/db";
 import {
   fetchBillChatContext,
+  fetchTopChatContext,
   recordChatUsage,
 } from "../lib/chat/context-and-usage";
 import {
@@ -25,6 +25,7 @@ import {
   assertWithinCostLimits,
   enforceChatRateLimit,
 } from "../lib/chat/guards";
+import { getDb } from "../lib/db";
 
 /** テスト時にモック注入するための外部依存 */
 export type ChatRouteDeps = {
@@ -55,7 +56,8 @@ const uiMessageSchema = z.looseObject({
 });
 
 const chatBodySchema = z.object({
-  billId: z.uuid(),
+  // billId 無し = トップ（議案未選択）チャット。有り = 議案チャット。
+  billId: z.uuid().optional(),
   difficultyLevel: z.enum(["normal", "hard"]).default("normal"),
   messages: z.array(uiMessageSchema).min(1).max(50),
 });
@@ -85,21 +87,30 @@ export function createChatRoute(deps?: ChatRouteDeps) {
       await enforceChatRateLimit(db, getClientIp(c.req.raw.headers), anonId);
       await assertWithinCostLimits(db, anonId);
 
-      const billContext = await fetchBillChatContext(
-        db,
-        billId,
-        difficultyLevel
-      );
-      if (!billContext) {
-        return withAnonCookie(c.json({ error: "not_found" as const }, 404));
-      }
-
       const promptProvider =
         deps?.promptProvider ?? new FallbackPromptProvider();
-      const prompt = await promptProvider.getPrompt(
-        `bill-chat-system-${difficultyLevel}`,
-        { ...billContext }
-      );
+
+      // billId 有り = 議案チャット、無し = トップチャット（議案一覧を文脈に）
+      let prompt: Awaited<ReturnType<PromptProvider["getPrompt"]>>;
+      if (billId) {
+        const billContext = await fetchBillChatContext(
+          db,
+          billId,
+          difficultyLevel
+        );
+        if (!billContext) {
+          return withAnonCookie(c.json({ error: "not_found" as const }, 404));
+        }
+        prompt = await promptProvider.getPrompt(
+          `bill-chat-system-${difficultyLevel}`,
+          { ...billContext }
+        );
+      } else {
+        const topContext = await fetchTopChatContext(db);
+        prompt = await promptProvider.getPrompt("top-chat-system", {
+          ...topContext,
+        });
+      }
 
       // 公開チャットは gemini-3.1-flash-lite（web 版と同一の選定理由:
       // 2.5-flash より新しく安価。Developer API キー経由）
@@ -121,7 +132,11 @@ export function createChatRoute(deps?: ChatRouteDeps) {
               anonId,
               model: modelName,
               usage: event.totalUsage,
-              metadata: { billId, difficultyLevel },
+              metadata: {
+                billId: billId ?? null,
+                difficultyLevel,
+                context: billId ? "bill" : "home",
+              },
             });
           } catch (usageError) {
             console.error("Failed to record chat usage:", usageError);

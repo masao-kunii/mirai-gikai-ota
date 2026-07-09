@@ -1,5 +1,11 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { BillChat } from "../components/bill-chat";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { OctagonAlert } from "lucide-react";
+import { BillStatusBadge, ProposalTypeBadge } from "../components/bill-badges";
+import { Container } from "../components/container";
+import { FactionStances } from "../components/faction-stances";
+import { Markdown } from "../components/markdown";
+import { ShareButton } from "../components/share-button";
+import { StatusProgress } from "../components/status-progress";
 import { billsApi } from "../lib/api";
 
 export const Route = createFileRoute("/bills/$id")({
@@ -34,62 +40,96 @@ export const Route = createFileRoute("/bills/$id")({
   component: BillDetail,
 });
 
-const STANCE_LABELS: Record<string, string> = {
-  for: "賛成",
-  against: "反対",
-  neutral: "中立",
-  conditional_for: "条件付き賛成",
-  conditional_against: "条件付き反対",
-  considering: "検討中",
-  continued_deliberation: "継続審議",
-};
-
 function BillDetail() {
   const { bill, contents, stances } = Route.useLoaderData();
   const normal = contents.find((c) => c.difficultyLevel === "normal");
+  const title = normal?.title ?? bill.name;
 
   return (
-    <article>
-      <p className="bill-meta">{bill.billNumber}</p>
-      <h1>{normal?.title ?? bill.name}</h1>
-      <p className="bill-meta">正式名称: {bill.name}</p>
+    <Container className="flex flex-col gap-8 py-8">
+      {/* 上部カード: タイトル → バッジ → 概要 → 正式名称 → 共有ボタン */}
+      <div className="flex flex-col gap-4 rounded-2xl bg-card p-6 shadow-sm sm:p-8">
+        <Link
+          to="/"
+          className="text-sm text-primary transition-colors hover:text-primary-accent"
+        >
+          ← 議案一覧へ
+        </Link>
+        <div className="flex flex-col gap-3">
+          <h1 className="text-2xl font-bold leading-snug text-mirai-text sm:text-3xl">
+            {title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <ProposalTypeBadge type={bill.proposalType} />
+            <BillStatusBadge status={bill.status} />
+          </div>
+        </div>
+        {normal?.summary && (
+          <p className="text-base leading-relaxed text-mirai-text sm:text-lg">
+            {normal.summary}
+          </p>
+        )}
+        <p className="text-sm text-mirai-text-muted">{bill.name}</p>
+        <ShareButton title={title} />
+      </div>
 
-      {normal ? (
-        <>
-          <h2>概要</h2>
-          <p>{normal.summary}</p>
-          <h2>内容</h2>
-          <p style={{ whiteSpace: "pre-wrap" }}>{normal.content}</p>
-        </>
+      {/* 審議のステータス */}
+      <section className="flex flex-col gap-4">
+        <h2 className="font-bold text-[22px] text-mirai-text">
+          👉 審議のステータス
+        </h2>
+        <StatusProgress status={bill.status} />
+      </section>
+
+      {/* 詳細 */}
+      {normal?.content ? (
+        <section>
+          <Markdown className="text-mirai-text">{normal.content}</Markdown>
+        </section>
       ) : (
-        <p>この議案のわかりやすい解説は準備中です。</p>
+        <p className="text-mirai-text-secondary">
+          この議案のわかりやすい解説は準備中です。
+        </p>
       )}
 
-      {stances.length > 0 && (
-        <>
-          <h2>会派の見解</h2>
-          <table className="stance-table">
-            <thead>
-              <tr>
-                <th>会派</th>
-                <th>見解</th>
-                <th>補足</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stances.map((s) => (
-                <tr key={s.factionName}>
-                  <td>{s.factionName}</td>
-                  <td>{STANCE_LABELS[s.type] ?? s.type}</td>
-                  <td>{s.comment ?? ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      {/* 会派の見解 */}
+      <FactionStances stances={stances} />
 
-      <BillChat billId={bill.id} />
-    </article>
+      {/* 記事フッター: 共有・報告・免責 */}
+      <div className="flex flex-col gap-3 pt-4">
+        <ShareButton
+          title={title}
+          label="記事を共有する"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-mirai-border-muted bg-mirai-gradient px-6 py-4 text-base font-bold text-mirai-text transition-opacity hover:opacity-90"
+        />
+        <a
+          href="https://github.com/masao-kunii/mirai-gikai-ota/issues/new"
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-mirai-text bg-card px-6 py-4 text-base font-bold text-mirai-text transition-colors hover:bg-mirai-surface-grouped"
+        >
+          <OctagonAlert className="h-5 w-5" />
+          問題を報告する
+        </a>
+      </div>
+
+      <div className="flex flex-col gap-8">
+        <section className="flex flex-col gap-2">
+          <h3 className="font-bold text-base text-mirai-text">
+            掲載コンテンツについて
+          </h3>
+          <p className="text-sm leading-relaxed text-mirai-text-secondary">
+            掲載されている議案情報は、大田区議会に提出された議案などの公開情報を基に、AIを活用しながら背景情報を整理したものです。本サイトはチームみらいが運営する公式サービスではなく、有志個人
+            (masao-kunii) による非公式プロジェクトです。
+          </p>
+        </section>
+        <section className="flex flex-col gap-2">
+          <h3 className="font-bold text-base text-mirai-text">免責事項</h3>
+          <p className="text-sm leading-relaxed text-mirai-text-secondary">
+            本サイトで公開する情報は、可能な限り正確かつ最新の情報を反映するよう努めていますが、その正確性・完全性・即時性について保証するものではありません。また、AIチャットは不正確または誤解を招く回答を生成する可能性があります。正確な情報は、公式文書や一次資料をご確認ください。
+          </p>
+        </section>
+      </div>
+    </Container>
   );
 }

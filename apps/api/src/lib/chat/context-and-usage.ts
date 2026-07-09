@@ -5,7 +5,7 @@ import {
   sanitizeUsage,
 } from "@mirai-gikai/shared/ai/calculate-cost";
 import type { LanguageModelUsage } from "@mirai-gikai/shared/ai/sdk";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 const { bills, billContents, chatUsageEvents } = schema;
 
@@ -64,6 +64,47 @@ export async function fetchBillChatContext(
       knowledgeSource: bill.useKnowledgeSourceInChat
         ? (bill.knowledgeSource ?? "")
         : "",
+    };
+  });
+}
+
+/**
+ * トップ（議案未選択）チャットのプロンプト変数を組み立てる。
+ * 公開議案の一覧（タイトルと概要の抜粋）を billSummary として渡す。
+ * 非公開情報は含めない（published のみ・knowledge_source は読まない）。
+ */
+export async function fetchTopChatContext(
+  db: DbClient
+): Promise<{ billSummary: string }> {
+  return withAppAdmin(db, async (tx) => {
+    const rows = await tx
+      .select({
+        name: bills.name,
+        title: billContents.title,
+        summary: billContents.summary,
+      })
+      .from(bills)
+      .leftJoin(
+        billContents,
+        and(
+          eq(billContents.billId, bills.id),
+          eq(billContents.difficultyLevel, "normal")
+        )
+      )
+      .where(eq(bills.publishStatus, "published"))
+      .orderBy(desc(bills.publishedAt))
+      .limit(60);
+
+    const billSummary = rows
+      .map((r) => {
+        const title = r.title || r.name;
+        const summary = r.summary ? `: ${r.summary.slice(0, 80)}` : "";
+        return `- ${title}${summary}`;
+      })
+      .join("\n");
+
+    return {
+      billSummary: billSummary || "（現在公開中の議案はありません）",
     };
   });
 }
