@@ -6,6 +6,7 @@
   "scripts": {
     "seed": "tsx main/run.ts",
     "import:teirei": "tsx main/import-teirei-cloud.ts",
+    "publish:session": "tsx main/publish-session.ts",
     "check:ai-cost": "tsx main/check-ai-cost.ts",
     "typecheck": "tsc --noEmit"
   },
