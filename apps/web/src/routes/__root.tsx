@@ -9,6 +9,8 @@ import type { ReactNode } from "react";
 import { SiteChat } from "../components/site-chat";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
+import { DifficultyProvider } from "../lib/difficulty";
+import { RubyfulInitializer } from "../lib/rubyful";
 import stylesUrl from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -46,30 +48,34 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <div className="flex min-h-dvh flex-col">
-        <SiteHeader />
-        {/* 2カラムの持続シェル: 左=Outlet（一覧/詳細が差し替わる）、
+      <DifficultyProvider>
+        {/* ふりがな ON のときのみ Rubyful V2 を読み込む */}
+        <RubyfulInitializer />
+        <div className="flex min-h-dvh flex-col">
+          <SiteHeader />
+          {/* 2カラムの持続シェル: 左=Outlet（一覧/詳細が差し替わる）、
             右=常設 AI チャット。遷移で再マウントされずガチャつかない。 */}
-        {/* 画面両端のマージン ~1cm（lg:px-10=40px）、メインとチャットの間 ~5mm
+          {/* 画面両端のマージン ~1cm（lg:px-10=40px）、メインとチャットの間 ~5mm
             （gap-5=20px）。固定チャットと余白列(aside)の幅を 440px で揃え、
             チャットの右余白(lg:right-10=40px)を px と一致させて整列させる。 */}
-        <div className="flex w-full flex-1 flex-col gap-5 px-3 py-3 lg:flex-row lg:items-start lg:px-10">
-          <main className="min-w-0 lg:flex-1">
-            {/* Hero〜一覧〜フッターまでを1つの角丸カードにまとめる */}
-            <div className="overflow-hidden rounded-3xl bg-background shadow-sm">
-              <Outlet />
-              <SiteFooter />
-            </div>
-          </main>
-          <aside className="hidden shrink-0 lg:block lg:w-[440px]">
-            <div className="lg:fixed lg:top-[20vh] lg:right-10 lg:h-[72vh] lg:w-[440px]">
-              <SiteChat variant="sidebar" />
-            </div>
-          </aside>
+          <div className="flex w-full flex-1 flex-col gap-5 px-3 py-3 lg:flex-row lg:items-start lg:px-10">
+            <main className="min-w-0 lg:flex-1">
+              {/* Hero〜一覧〜フッターまでを1つの角丸カードにまとめる */}
+              <div className="overflow-hidden rounded-3xl bg-background shadow-sm">
+                <Outlet />
+                <SiteFooter />
+              </div>
+            </main>
+            <aside className="hidden shrink-0 lg:block lg:w-[440px]">
+              <div className="lg:fixed lg:top-[20vh] lg:right-10 lg:h-[72vh] lg:w-[440px]">
+                <SiteChat variant="sidebar" />
+              </div>
+            </aside>
+          </div>
+          {/* モバイル: 右下フローティング（コンポーネント内で lg:hidden） */}
+          <SiteChat variant="floating" />
         </div>
-        {/* モバイル: 右下フローティング（コンポーネント内で lg:hidden） */}
-        <SiteChat variant="floating" />
-      </div>
+      </DifficultyProvider>
     </RootDocument>
   );
 }

@@ -7,6 +7,7 @@ import { Markdown } from "../components/markdown";
 import { ShareButton } from "../components/share-button";
 import { StatusProgress } from "../components/status-progress";
 import { billsApi } from "../lib/api";
+import { useDifficulty } from "../lib/difficulty";
 
 export const Route = createFileRoute("/bills/$id")({
   loader: async ({ params }) => {
@@ -42,8 +43,12 @@ export const Route = createFileRoute("/bills/$id")({
 
 function BillDetail() {
   const { bill, contents, stances } = Route.useLoaderData();
-  const normal = contents.find((c) => c.difficultyLevel === "normal");
-  const title = normal?.title ?? bill.name;
+  const { level } = useDifficulty();
+  // ヘッダーの難易度トグルに応じた本文。無ければ normal にフォールバック。
+  const content =
+    contents.find((c) => c.difficultyLevel === level) ??
+    contents.find((c) => c.difficultyLevel === "normal");
+  const title = content?.title ?? bill.name;
 
   return (
     <Container className="flex flex-col gap-8 py-8">
@@ -64,9 +69,9 @@ function BillDetail() {
             <BillStatusBadge status={bill.status} />
           </div>
         </div>
-        {normal?.summary && (
+        {content?.summary && (
           <p className="text-base leading-relaxed text-mirai-text sm:text-lg">
-            {normal.summary}
+            {content.summary}
           </p>
         )}
         <p className="text-sm text-mirai-text-muted">{bill.name}</p>
@@ -82,9 +87,9 @@ function BillDetail() {
       </section>
 
       {/* 詳細 */}
-      {normal?.content ? (
+      {content?.content ? (
         <section>
-          <Markdown className="text-mirai-text">{normal.content}</Markdown>
+          <Markdown className="text-mirai-text">{content.content}</Markdown>
         </section>
       ) : (
         <p className="text-mirai-text-secondary">
