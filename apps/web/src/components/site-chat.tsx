@@ -2,7 +2,8 @@ import { useChat } from "@ai-sdk/react";
 import { useParams } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
 import { Send, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { subscribeSelection } from "../lib/chat-bus";
 import { type DifficultyLevel, useDifficulty } from "../lib/difficulty";
 import { Markdown } from "./markdown";
 
@@ -77,6 +78,21 @@ function ChatPane({
     e.preventDefault();
     send(input);
   };
+
+  // 議案本文の選択 →「AIに質問」から質問を注入する（現行 openWithText 相当）。
+  // sidebar/floating の両方が常設マウントされるため、表示中の一方だけが反応して
+  // 二重送信を避ける（lg 以上=sidebar、未満=floating）。
+  const sendRef = useRef(send);
+  sendRef.current = send;
+  useEffect(() => {
+    return subscribeSelection((text) => {
+      const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+      // 表示中の一方だけ反応させる（sidebar=lg以上 / floating=lg未満）
+      if (variant === "sidebar" ? !isDesktop : isDesktop) return;
+      if (variant === "floating") setOpen(true);
+      sendRef.current(`「${text}」について教えてください。`);
+    });
+  }, [variant]);
 
   const panelBody = (
     <>

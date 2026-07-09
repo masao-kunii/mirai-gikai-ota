@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { type BillListItem, formatDateDots } from "../lib/bill-display";
 import { BillStatusBadge, ProposalTypeBadge } from "./bill-badges";
+import { ReviewCompleteBadge } from "./review-status";
 
 /** 水平レイアウトのコンパクトな議案カード（現行 CompactBillCard 相当・薄い枠線） */
 export function CompactBillCard({ bill }: { bill: BillListItem }) {
@@ -16,6 +17,7 @@ export function CompactBillCard({ bill }: { bill: BillListItem }) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-relaxed text-mirai-text">
           {bill.name}
+          {bill.isReviewCompleted && <ReviewCompleteBadge size={14} />}
         </h3>
         <div className="flex flex-wrap items-center gap-2">
           <ProposalTypeBadge type={bill.proposalType} />

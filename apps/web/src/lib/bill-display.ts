@@ -13,6 +13,7 @@ export type BillListItem = {
   submittedDate: string | null;
   thumbnailUrl: string | null;
   isFeatured: boolean;
+  isReviewCompleted: boolean;
   councilSessionId: string | null;
 };
 
@@ -24,6 +25,14 @@ export type CouncilSessionItem = {
   startDate: string | null;
   endDate: string | null;
   isActive: boolean;
+};
+
+/** 注目タグ（GET /api/tags）の1件 */
+export type TagItem = {
+  id: string;
+  label: string;
+  description: string | null;
+  featuredPriority: number | null;
 };
 
 export const PROPOSAL_TYPE_LABELS: Record<string, string> = {
@@ -153,4 +162,33 @@ export function formatDateDots(
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}.${m}.${day}`;
+}
+
+/**
+ * 会期の見出し・説明文（現行セッションページと同義）。
+ * 例: 「2026年 令和8年第1回定例会の提出議案 12件」
+ *     「2026.2月〜3月に実施された令和8年第1回定例会」（会期終了時）
+ *     「2026.2月〜開催中の令和8年第1回定例会」（開催中）
+ */
+export function formatSessionHeading(
+  session: CouncilSessionItem,
+  billCount: number
+): { title: string; description: string } {
+  const start = session.startDate ? new Date(session.startDate) : null;
+  const end = session.endDate ? new Date(session.endDate) : null;
+  const startValid = start && !Number.isNaN(start.getTime()) ? start : null;
+  const endValid = end && !Number.isNaN(end.getTime()) ? end : null;
+
+  const year = startValid ? startValid.getFullYear() : "";
+  const title = `${year ? `${year}年 ` : ""}${session.name}の提出議案 ${billCount}件`;
+
+  let description = session.name;
+  if (startValid) {
+    const startPart = `${startValid.getFullYear()}.${startValid.getMonth() + 1}月`;
+    const tail = endValid
+      ? `〜${endValid.getMonth() + 1}月に実施された`
+      : "〜開催中の";
+    description = `${startPart}${tail}${session.name}`;
+  }
+  return { title, description };
 }

@@ -1,6 +1,10 @@
 // ランタイムコードの import は禁止（サーバコードがバンドルに混入する）。
 // api パッケージからは型のみを import する（TARGET_ARCHITECTURE §6）。
-import type { BillsRouteType, CouncilSessionsRouteType } from "api";
+import type {
+  BillsRouteType,
+  CouncilSessionsRouteType,
+  TagsRouteType,
+} from "api";
 import { hc } from "hono/client";
 
 /**
@@ -52,3 +56,4 @@ export const councilSessionsApi = hc<CouncilSessionsRouteType>(
   `${API_BASE}/api/council-sessions`,
   clientOptions
 );
+export const tagsApi = hc<TagsRouteType>(`${API_BASE}/api/tags`, clientOptions);

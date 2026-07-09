@@ -5,8 +5,14 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { publicQuery } from "../lib/db";
 
-const { bills, billContents, councilSessions, factions, factionStances } =
-  schema;
+const {
+  bills,
+  billContents,
+  billsTags,
+  councilSessions,
+  factions,
+  factionStances,
+} = schema;
 
 /**
  * 公開用の議案カラム。
@@ -26,6 +32,7 @@ const publicBillColumns = {
   submittedDate: bills.submittedDate,
   thumbnailUrl: bills.thumbnailUrl,
   isFeatured: bills.isFeatured,
+  isReviewCompleted: bills.isReviewCompleted,
   councilSessionId: bills.councilSessionId,
   committeeId: bills.committeeId,
 };
@@ -35,13 +42,24 @@ export const billsRoute = new Hono()
     "/",
     zValidator(
       "query",
-      z.object({ sessionSlug: z.string().min(1).max(200).optional() })
+      z.object({
+        sessionSlug: z.string().min(1).max(200).optional(),
+        // 既定 published。coming_soon（公開予告）は公開境界で読み取り可。
+        status: z.enum(["published", "coming_soon"]).optional(),
+        // "true" のとき注目議案のみ
+        isFeatured: z.enum(["true"]).optional(),
+        // 指定タグの議案のみ
+        tagId: z.uuid().optional(),
+      })
     ),
     async (c) => {
-      const { sessionSlug } = c.req.valid("query");
+      const { sessionSlug, status, isFeatured, tagId } = c.req.valid("query");
       const rows = await publicQuery(async (tx) => {
-        // RLS でも draft は不可視だが、アプリ層でも published を明示する（多重防御）
-        const conditions = [eq(bills.publishStatus, "published")];
+        // RLS でも draft は不可視だが、アプリ層でも明示する（多重防御）
+        const conditions = [eq(bills.publishStatus, status ?? "published")];
+        if (isFeatured === "true") {
+          conditions.push(eq(bills.isFeatured, true));
+        }
         if (sessionSlug) {
           const [session] = await tx
             .select({ id: councilSessions.id })
@@ -49,6 +67,14 @@ export const billsRoute = new Hono()
             .where(eq(councilSessions.slug, sessionSlug));
           if (!session) return [];
           conditions.push(eq(bills.councilSessionId, session.id));
+        }
+        if (tagId) {
+          return tx
+            .select(publicBillColumns)
+            .from(bills)
+            .innerJoin(billsTags, eq(billsTags.billId, bills.id))
+            .where(and(eq(billsTags.tagId, tagId), ...conditions))
+            .orderBy(desc(bills.publishedAt));
         }
         return tx
           .select(publicBillColumns)

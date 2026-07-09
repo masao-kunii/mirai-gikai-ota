@@ -1,11 +1,17 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { OctagonAlert } from "lucide-react";
+import { useRef } from "react";
 import { BillStatusBadge, ProposalTypeBadge } from "../components/bill-badges";
 import { Container } from "../components/container";
 import { FactionStances } from "../components/faction-stances";
 import { Markdown } from "../components/markdown";
+import {
+  ReviewCompleteBadge,
+  ReviewInProgressBanner,
+} from "../components/review-status";
 import { ShareButton } from "../components/share-button";
 import { StatusProgress } from "../components/status-progress";
+import { TextSelectionTooltip } from "../components/text-selection-tooltip";
 import { billsApi } from "../lib/api";
 import { useDifficulty } from "../lib/difficulty";
 
@@ -49,9 +55,12 @@ function BillDetail() {
     contents.find((c) => c.difficultyLevel === level) ??
     contents.find((c) => c.difficultyLevel === "normal");
   const title = content?.title ?? bill.name;
+  // 本文選択 →「AIに質問」ツールチップの対象範囲
+  const articleRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Container className="flex flex-col gap-8 py-8">
+    <Container ref={articleRef} className="flex flex-col gap-8 py-8">
+      <TextSelectionTooltip containerRef={articleRef} />
       {/* 上部カード: タイトル → バッジ → 概要 → 正式名称 → 共有ボタン */}
       <div className="flex flex-col gap-4 rounded-2xl bg-card p-6 shadow-sm sm:p-8">
         <Link
@@ -63,6 +72,7 @@ function BillDetail() {
         <div className="flex flex-col gap-3">
           <h1 className="text-2xl font-bold leading-snug text-mirai-text sm:text-3xl">
             {title}
+            {bill.isReviewCompleted && <ReviewCompleteBadge />}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             <ProposalTypeBadge type={bill.proposalType} />
@@ -75,6 +85,7 @@ function BillDetail() {
           </p>
         )}
         <p className="text-sm text-mirai-text-muted">{bill.name}</p>
+        {!bill.isReviewCompleted && <ReviewInProgressBanner />}
         <ShareButton title={title} />
       </div>
 
