@@ -53,7 +53,8 @@ async function main() {
   // 会期・議案を全件取得して JS 側で集計（会期数・議案数とも小さい）
   const { data: sessions, error: sessErr } = await supabase
     .from("council_sessions")
-    .select("id, name");
+    .select("id, name, is_active, start_date")
+    .order("start_date", { ascending: false });
   if (sessErr) throw new Error(`会期取得に失敗: ${sessErr.message}`);
 
   const { data: allBills, error: billErr } = await supabase
@@ -83,7 +84,7 @@ async function main() {
     const c = bySession.get(s.id) ?? emptyCounts();
     const total = c.draft + c.published + c.coming_soon;
     console.log(
-      `  ${s.name} (${s.id.slice(0, 8)}): 計${total} [draft ${c.draft} / published ${c.published} / coming_soon ${c.coming_soon}]`
+      `  ${s.name} (${s.id.slice(0, 8)}) active=${s.is_active} start=${s.start_date ?? "-"}: 計${total} [draft ${c.draft} / published ${c.published} / coming_soon ${c.coming_soon}]`
     );
   }
 
