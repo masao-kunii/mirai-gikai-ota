@@ -113,8 +113,11 @@ export function createChatRoute(deps?: ChatRouteDeps) {
       }
 
       // 公開チャットは gemini-3.1-flash-lite（web 版と同一の選定理由:
-      // 2.5-flash より新しく安価。Developer API キー経由）
-      const model = deps?.model ?? AI_MODELS.gemini3_1_flash_lite;
+      // 2.5-flash より新しく安価。Developer API キー経由）。
+      // CHAT_MODEL で上書き可能: Developer API キーが無く Vertex(ADC) で動かす
+      // ローカル等では、Vertex 提供モデル（例 gemini-2.5-flash-lite）を指定する。
+      const model =
+        deps?.model ?? process.env.CHAT_MODEL ?? AI_MODELS.gemini3_1_flash_lite;
       const modelName =
         typeof model === "string" ? model : (model.modelId ?? "unknown");
 
