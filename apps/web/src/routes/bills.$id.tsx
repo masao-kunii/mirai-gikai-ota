@@ -76,7 +76,10 @@ function BillDetail() {
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             <ProposalTypeBadge type={bill.proposalType} />
-            <BillStatusBadge status={bill.status} />
+            <BillStatusBadge
+              status={bill.status}
+              proposalType={bill.proposalType}
+            />
           </div>
         </div>
         {content?.summary && (
@@ -89,12 +92,20 @@ function BillDetail() {
         <ShareButton title={title} />
       </div>
 
-      {/* 審議のステータス */}
+      {/* 審議のステータス（報告は採決フローが無いため進捗バーを出さない） */}
       <section className="flex flex-col gap-4">
         <h2 className="font-bold text-[22px] text-mirai-text">
           👉 審議のステータス
         </h2>
-        <StatusProgress status={bill.status} />
+        {bill.proposalType === "report" ? (
+          <div className="rounded-2xl border border-mirai-border-light bg-card px-4 py-6 text-center sm:px-8">
+            <p className="text-sm font-medium text-mirai-text">
+              本会議で報告済み
+            </p>
+          </div>
+        ) : (
+          <StatusProgress status={bill.status} />
+        )}
       </section>
 
       {/* 詳細 */}

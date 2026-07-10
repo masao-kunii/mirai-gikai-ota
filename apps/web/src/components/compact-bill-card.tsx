@@ -21,7 +21,10 @@ export function CompactBillCard({ bill }: { bill: BillListItem }) {
         </h3>
         <div className="flex flex-wrap items-center gap-2">
           <ProposalTypeBadge type={bill.proposalType} />
-          <BillStatusBadge status={bill.status} />
+          <BillStatusBadge
+            status={bill.status}
+            proposalType={bill.proposalType}
+          />
           {date && (
             <span className="text-xs text-mirai-text-muted">
               {date} {statusLabel}

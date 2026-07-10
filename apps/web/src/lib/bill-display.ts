@@ -81,8 +81,13 @@ export const PROPOSAL_TYPE_ORDER = [
   "other",
 ] as const;
 
-/** カード用の簡略ステータスラベル（現行 getCardStatusLabel と同義） */
-export function billStatusLabel(status: string): string {
+/**
+ * カード用の簡略ステータスラベル。
+ * 報告は「本会議で報告して終わり」で status が submitted のまま変わらないため、
+ * 提案タイプが報告なら審議系ラベルではなく「報告済」を返す。
+ */
+export function billStatusLabel(status: string, proposalType?: string): string {
+  if (proposalType === "report") return "報告済";
   switch (status) {
     case "submitted":
     case "in_committee":
@@ -101,7 +106,14 @@ export function billStatusLabel(status: string): string {
   }
 }
 
-export function billStatusBadgeClass(status: string): string {
+export function billStatusBadgeClass(
+  status: string,
+  proposalType?: string
+): string {
+  // 報告済は賛否ではない中立の完了状態として控えめに見せる
+  if (proposalType === "report") {
+    return "bg-mirai-surface-muted text-mirai-text-secondary border-mirai-border";
+  }
   switch (status) {
     case "submitted":
     case "in_committee":

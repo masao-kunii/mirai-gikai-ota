@@ -18,15 +18,22 @@ export function ProposalTypeBadge({ type }: { type: string }) {
   );
 }
 
-/** 審議ステータスのバッジ（議会審議中 / 可決 など） */
-export function BillStatusBadge({ status }: { status: string }) {
+/** 審議ステータスのバッジ（議会審議中 / 可決 / 報告済 など） */
+export function BillStatusBadge({
+  status,
+  proposalType,
+}: {
+  status: string;
+  proposalType?: string;
+}) {
   return (
     <span
       className={`inline-flex items-center justify-center rounded-md border px-2.5 py-0.5 text-[11px] font-bold ${billStatusBadgeClass(
-        status
+        status,
+        proposalType
       )}`}
     >
-      {billStatusLabel(status)}
+      {billStatusLabel(status, proposalType)}
     </span>
   );
 }
