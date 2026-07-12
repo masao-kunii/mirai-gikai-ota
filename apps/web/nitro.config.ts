@@ -18,6 +18,9 @@ export default defineNitroConfig({
   },
   // ブラウザからの /api/** を api Worker へ Service Binding 経由で中継し、
   // web と同一オリジンに保つ（匿名クッキー mg_anon が一貫する。ADR 0002 §2）。
-  // 実体は server/api-proxy.ts。
-  handlers: [{ route: "/api/**", handler: "./server/api-proxy.ts" }],
+  // 実体は server/api-proxy.ts。/sitemap.xml は公開議案/会期を動的列挙する。
+  handlers: [
+    { route: "/api/**", handler: "./server/api-proxy.ts" },
+    { route: "/sitemap.xml", handler: "./server/sitemap.ts" },
+  ],
 });
