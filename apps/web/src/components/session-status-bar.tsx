@@ -15,13 +15,14 @@ export function SessionStatusBar({
   sessions: CouncilSessionItem[];
 }) {
   const today = jstToday();
+  // 会期の日程（開始〜終了）だけで「会期中」を判定する。is_active フラグには依存しない
+  // （終了日を過ぎたら自動的に「閉会中」に切り替わり、次回会期があれば表示する）。
   const current = sessions.find(
     (s) =>
-      s.isActive ||
-      (s.startDate != null &&
-        s.endDate != null &&
-        s.startDate <= today &&
-        today <= s.endDate)
+      s.startDate != null &&
+      s.endDate != null &&
+      s.startDate <= today &&
+      today <= s.endDate
   );
   const upcoming = current
     ? undefined
