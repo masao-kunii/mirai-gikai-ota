@@ -130,6 +130,51 @@ export function billStatusBadgeClass(
   }
 }
 
+// --- 住民意見（インタビュー）の集約表示 ---
+
+/** 議案に寄せられた住民意見の集約（GET /api/bills/:id/opinions-summary） */
+export type OpinionsSummary = {
+  total: number;
+  stances: Record<string, number>;
+  roles: Record<string, number>;
+  reports: {
+    id: string;
+    summary: string | null;
+    stance: string | null;
+    role: string | null;
+    roleTitle: string | null;
+  }[];
+};
+
+/** これ未満は集約を表示しない（少数だと個人が特定されうるため） */
+export const MIN_PUBLIC_OPINIONS = 10;
+
+/** 回答者の立場（interview_report.role） */
+export const ROLE_LABELS: Record<string, string> = {
+  subject_expert: "有識者・専門家",
+  work_related: "仕事で関わる立場",
+  daily_life_affected: "生活で影響を受ける立場",
+  general_citizen: "一般の区民",
+};
+
+export const ROLE_ORDER = [
+  "subject_expert",
+  "work_related",
+  "daily_life_affected",
+  "general_citizen",
+] as const;
+
+/** スタンス分布バーの色（賛成=緑系 / 反対=赤系 / 中立=灰）。 */
+export const STANCE_BAR_CLASS: Record<string, string> = {
+  for: "bg-emerald-400",
+  conditional_for: "bg-emerald-300",
+  neutral: "bg-slate-300",
+  considering: "bg-amber-300",
+  continued_deliberation: "bg-amber-400",
+  conditional_against: "bg-rose-300",
+  against: "bg-rose-400",
+};
+
 // --- 会派見解（現行 faction-stances-section と一致） ---
 
 export const STANCE_LABELS: Record<string, string> = {

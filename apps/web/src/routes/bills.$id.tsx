@@ -5,6 +5,7 @@ import { BillStatusBadge, ProposalTypeBadge } from "../components/bill-badges";
 import { Container } from "../components/container";
 import { FactionStances } from "../components/faction-stances";
 import { Markdown } from "../components/markdown";
+import { OpinionsSummarySection } from "../components/opinions-summary";
 import {
   ReviewCompleteBadge,
   ReviewInProgressBanner,
@@ -13,20 +14,25 @@ import { ShareButton } from "../components/share-button";
 import { StatusProgress } from "../components/status-progress";
 import { TextSelectionTooltip } from "../components/text-selection-tooltip";
 import { billsApi } from "../lib/api";
+import { MIN_PUBLIC_OPINIONS } from "../lib/bill-display";
 import { useDifficulty } from "../lib/difficulty";
 
 export const Route = createFileRoute("/bills/$id")({
   loader: async ({ params }) => {
-    const res = await billsApi[":id"].$get({
-      param: { id: params.id },
-    });
+    // 議案本体と、住民意見の集約を並行取得（集約は失敗しても本体は表示する）
+    const [res, opinionsRes] = await Promise.all([
+      billsApi[":id"].$get({ param: { id: params.id } }),
+      billsApi[":id"]["opinions-summary"].$get({ param: { id: params.id } }),
+    ]);
     if (res.status === 404) {
       throw notFound();
     }
     if (!res.ok) {
       throw new Error("API の取得に失敗しました");
     }
-    return res.json();
+    const data = await res.json();
+    const opinions = opinionsRes.ok ? await opinionsRes.json() : null;
+    return { ...data, opinions };
   },
   head: ({ loaderData }) => {
     const title = loaderData
@@ -48,7 +54,7 @@ export const Route = createFileRoute("/bills/$id")({
 });
 
 function BillDetail() {
-  const { bill, contents, stances } = Route.useLoaderData();
+  const { bill, contents, stances, opinions } = Route.useLoaderData();
   const { level } = useDifficulty();
   // ヘッダーの難易度トグルに応じた本文。無ければ normal にフォールバック。
   const content =
@@ -121,6 +127,11 @@ function BillDetail() {
 
       {/* 会派の見解 */}
       <FactionStances stances={stances} />
+
+      {/* 住民の意見（公開インタビューの集約）。少数だと非表示。 */}
+      {opinions && opinions.total >= MIN_PUBLIC_OPINIONS && (
+        <OpinionsSummarySection summary={opinions} />
+      )}
 
       {/* 記事フッター: 共有・報告・免責 */}
       <div className="flex flex-col gap-3 pt-4">
