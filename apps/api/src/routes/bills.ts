@@ -12,6 +12,9 @@ const {
   councilSessions,
   factions,
   factionStances,
+  interviewReport,
+  interviewSessions,
+  interviewConfigs,
 } = schema;
 
 /**
@@ -125,6 +128,66 @@ export const billsRoute = new Hono()
         return c.json({ error: "not_found" as const }, 404);
       }
       return c.json(result);
+    }
+  )
+  .get(
+    // 議案に寄せられた住民意見（公開インタビューレポート）の集約。
+    // 公開境界: interview_report は is_public_by_admin AND is_public_by_user のみ
+    // public_reader に見える（RLS）。ここでもアプリ層で明示する（多重防御）。
+    "/:id/opinions-summary",
+    zValidator("param", z.object({ id: z.uuid() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const rows = await publicQuery((tx) =>
+        tx
+          .select({
+            id: interviewReport.id,
+            summary: interviewReport.summary,
+            stance: interviewReport.stance,
+            role: interviewReport.role,
+            roleTitle: interviewReport.roleTitle,
+            richness: interviewReport.totalContentRichness,
+            createdAt: interviewReport.createdAt,
+          })
+          .from(interviewReport)
+          .innerJoin(
+            interviewSessions,
+            eq(interviewSessions.id, interviewReport.interviewSessionId)
+          )
+          .innerJoin(
+            interviewConfigs,
+            eq(interviewConfigs.id, interviewSessions.interviewConfigId)
+          )
+          .where(
+            and(
+              eq(interviewConfigs.billId, id),
+              eq(interviewReport.isPublicByAdmin, true),
+              eq(interviewReport.isPublicByUser, true)
+            )
+          )
+      );
+
+      // スタンス・役割の分布を集計
+      const stances: Record<string, number> = {};
+      const roles: Record<string, number> = {};
+      for (const r of rows) {
+        if (r.stance) stances[r.stance] = (stances[r.stance] ?? 0) + 1;
+        if (r.role) roles[r.role] = (roles[r.role] ?? 0) + 1;
+      }
+
+      // 代表意見（充実度の高い順に数件）
+      const reports = [...rows]
+        .sort((a, b) => (b.richness ?? 0) - (a.richness ?? 0))
+        .slice(0, 6)
+        .map((r) => ({
+          id: r.id,
+          summary: r.summary,
+          stance: r.stance,
+          role: r.role,
+          roleTitle: r.roleTitle,
+        }));
+
+      return c.json({ total: rows.length, stances, roles, reports });
     }
   );
 

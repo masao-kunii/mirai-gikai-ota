@@ -14,7 +14,16 @@ const DB_URL =
   process.env.SUPABASE_DB_URL ??
   "postgresql://postgres:postgres@127.0.0.1:54432/postgres";
 const db = createDbClient(DB_URL);
-const { bills, billContents, councilSessions, tags, billsTags } = schema;
+const {
+  bills,
+  billContents,
+  councilSessions,
+  tags,
+  billsTags,
+  interviewConfigs,
+  interviewSessions,
+  interviewReport,
+} = schema;
 
 const stamp = Date.now();
 const sessionSlug = `api-test-session-${stamp}`;
@@ -29,8 +38,10 @@ let publishedId: string;
 let draftId: string;
 let featuredId: string;
 let featuredTagId: string;
+let interviewConfigId: string;
 const billIds: string[] = [];
 const tagIds: string[] = [];
+const interviewSessionIds: string[] = [];
 
 beforeAll(async () => {
   await withAppAdmin(db, async (tx) => {
@@ -130,11 +141,79 @@ beforeAll(async () => {
     await tx
       .insert(billsTags)
       .values({ billId: featuredId, tagId: featuredTagId });
+
+    // 住民意見（公開インタビュー）の集約検証用。published 議案に config を作り、
+    // 公開レポート2件（賛成/反対・役割違い）＋非公開1件を作る。
+    const [cfg] = await tx
+      .insert(interviewConfigs)
+      .values({
+        billId: publishedId,
+        status: "public",
+        name: "意見募集テスト",
+      })
+      .returning({ id: interviewConfigs.id });
+    if (!cfg) throw new Error("interview_config のシードに失敗");
+    interviewConfigId = cfg.id;
+
+    const now = new Date().toISOString();
+    const insertedSessions = await tx
+      .insert(interviewSessions)
+      .values([
+        { interviewConfigId, userId: publishedId, startedAt: now },
+        { interviewConfigId, userId: draftId, startedAt: now },
+        { interviewConfigId, userId: sessionId, startedAt: now },
+      ])
+      .returning({ id: interviewSessions.id });
+    interviewSessionIds.push(...insertedSessions.map((s) => s.id));
+
+    await tx.insert(interviewReport).values([
+      {
+        interviewSessionId: insertedSessions[0]?.id ?? "",
+        isPublicByAdmin: true,
+        isPublicByUser: true,
+        stance: "for",
+        role: "general_citizen",
+        summary: "賛成の意見",
+      },
+      {
+        interviewSessionId: insertedSessions[1]?.id ?? "",
+        isPublicByAdmin: true,
+        isPublicByUser: true,
+        stance: "against",
+        role: "subject_expert",
+        summary: "反対の意見",
+      },
+      {
+        // 非公開（admin 側 false）。集約に含まれてはならない。
+        interviewSessionId: insertedSessions[2]?.id ?? "",
+        isPublicByAdmin: false,
+        isPublicByUser: true,
+        stance: "neutral",
+        role: "work_related",
+        summary: "非公開の意見",
+      },
+    ]);
   });
 });
 
 afterAll(async () => {
   await withAppAdmin(db, async (tx) => {
+    // interview 系は bills より先に削除（report → session → config の順）。
+    if (interviewSessionIds.length > 0) {
+      await tx
+        .delete(interviewReport)
+        .where(
+          inArray(interviewReport.interviewSessionId, interviewSessionIds)
+        );
+      await tx
+        .delete(interviewSessions)
+        .where(inArray(interviewSessions.id, interviewSessionIds));
+    }
+    if (interviewConfigId) {
+      await tx
+        .delete(interviewConfigs)
+        .where(eq(interviewConfigs.id, interviewConfigId));
+    }
     // bills 削除で bills_tags は cascade。tags は明示削除。
     if (billIds.length > 0) {
       await tx.delete(bills).where(inArray(bills.id, billIds));
@@ -238,6 +317,41 @@ describe("GET /api/tags", () => {
     expect(labels).not.toContain(plainTagLabel);
     const featured = body.tags.find((t) => t.label === featuredTagLabel);
     expect(featured?.featuredPriority).toBe(1);
+  });
+});
+
+describe("GET /api/bills/:id/opinions-summary", () => {
+  it("公開レポートのみ集計し、スタンス/役割分布と代表意見を返す", async () => {
+    const res = await app.request(`/api/bills/${publishedId}/opinions-summary`);
+    expect(res.status).toBe(200);
+    const body = await json<{
+      total: number;
+      stances: Record<string, number>;
+      roles: Record<string, number>;
+      reports: { summary: string | null }[];
+    }>(res);
+    // 公開2件のみ（非公開の1件は RLS で除外）
+    expect(body.total).toBe(2);
+    expect(body.stances.for).toBe(1);
+    expect(body.stances.against).toBe(1);
+    expect(body.stances.neutral).toBeUndefined();
+    expect(body.roles.general_citizen).toBe(1);
+    expect(body.roles.subject_expert).toBe(1);
+    expect(body.reports).toHaveLength(2);
+    const summaries = body.reports.map((r) => r.summary);
+    expect(summaries).not.toContain("非公開の意見");
+  });
+
+  it("意見の無い議案は total 0", async () => {
+    const res = await app.request(`/api/bills/${featuredId}/opinions-summary`);
+    expect(res.status).toBe(200);
+    const body = await json<{ total: number }>(res);
+    expect(body.total).toBe(0);
+  });
+
+  it("uuid でない id は 400", async () => {
+    const res = await app.request("/api/bills/not-a-uuid/opinions-summary");
+    expect(res.status).toBe(400);
   });
 });
 

@@ -1,0 +1,149 @@
+import {
+  type OpinionsSummary,
+  ROLE_LABELS,
+  ROLE_ORDER,
+  STANCE_BADGE_CLASS,
+  STANCE_BAR_CLASS,
+  STANCE_LABELS,
+  STANCE_ORDER,
+} from "../lib/bill-display";
+
+/** ラベル＋バー＋件数の1行 */
+function DistBar({
+  label,
+  count,
+  total,
+  colorClass,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  colorClass: string;
+}) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-32 shrink-0 text-sm text-mirai-text">{label}</span>
+      <div className="h-3 flex-1 overflow-hidden rounded-full bg-mirai-surface-grouped">
+        <div
+          className={`h-full rounded-full ${colorClass}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="w-16 shrink-0 text-right text-sm text-mirai-text-secondary">
+        {count}件
+      </span>
+    </div>
+  );
+}
+
+/**
+ * 議案に寄せられた住民意見（公開インタビューレポート）の集約。
+ * 立場の分布・回答者の分布・代表的な意見を見せる。
+ */
+export function OpinionsSummarySection({
+  summary,
+}: {
+  summary: OpinionsSummary;
+}) {
+  const { total, stances, roles, reports } = summary;
+
+  const stanceRows = Object.keys(STANCE_ORDER)
+    .sort((a, b) => (STANCE_ORDER[a] ?? 0) - (STANCE_ORDER[b] ?? 0))
+    .filter((s) => (stances[s] ?? 0) > 0)
+    .map((s) => ({
+      key: s,
+      label: STANCE_LABELS[s] ?? s,
+      count: stances[s] ?? 0,
+    }));
+
+  const roleRows = ROLE_ORDER.filter((r) => (roles[r] ?? 0) > 0).map((r) => ({
+    key: r,
+    label: ROLE_LABELS[r] ?? r,
+    count: roles[r] ?? 0,
+  }));
+
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className="font-bold text-[22px] text-mirai-text">
+        🗣️ この議案に寄せられた住民の意見
+      </h2>
+      <div className="flex flex-col gap-6 rounded-2xl border border-mirai-border-light bg-card p-6">
+        <p className="text-sm leading-relaxed text-mirai-text-secondary">
+          AIインタビューで集めた意見のうち、公開に同意いただいた
+          <span className="font-bold text-mirai-text">{total}件</span>
+          を集計しています。
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <h3 className="font-bold text-sm text-mirai-text">立場の分布</h3>
+          {stanceRows.map((row) => (
+            <DistBar
+              key={row.key}
+              label={row.label}
+              count={row.count}
+              total={total}
+              colorClass={STANCE_BAR_CLASS[row.key] ?? "bg-mirai-progress-fill"}
+            />
+          ))}
+        </div>
+
+        {roleRows.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h3 className="font-bold text-sm text-mirai-text">回答者の立場</h3>
+            {roleRows.map((row) => (
+              <DistBar
+                key={row.key}
+                label={row.label}
+                count={row.count}
+                total={total}
+                colorClass="bg-mirai-info-blue"
+              />
+            ))}
+          </div>
+        )}
+
+        {reports.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h3 className="font-bold text-sm text-mirai-text">代表的な意見</h3>
+            <div className="flex flex-col gap-3">
+              {reports.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex flex-col gap-2 rounded-xl border border-mirai-border-muted bg-mirai-surface-grouped p-4"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {r.stance && (
+                      <span
+                        className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold ${
+                          STANCE_BADGE_CLASS[r.stance] ?? ""
+                        }`}
+                      >
+                        {STANCE_LABELS[r.stance] ?? r.stance}
+                      </span>
+                    )}
+                    {r.role && (
+                      <span className="text-xs text-mirai-text-muted">
+                        {r.roleTitle || ROLE_LABELS[r.role] || r.role}
+                      </span>
+                    )}
+                  </div>
+                  {r.summary && (
+                    <p className="text-sm leading-relaxed text-mirai-text">
+                      {r.summary}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs leading-relaxed text-mirai-text-muted">
+          ※
+          この集計は住民の任意の回答に基づくもので、区民全体の意見を代表するものではありません。
+        </p>
+      </div>
+    </section>
+  );
+}
