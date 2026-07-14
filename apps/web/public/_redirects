@@ -1,0 +1,14 @@
+# 旧 Next.js サイトにあって新スタックに無いページの 301 リダイレクト。
+# Cloudflare の静的アセット層で処理される（Worker を消費しない）。
+# 意見募集/意見一覧 → 議案詳細（住民意見の集約セクションに置き換え済み）
+/bills/:id/interview                     /bills/:id  301
+/bills/:id/interview/chat                /bills/:id  301
+/bills/:id/interview/disclosure          /bills/:id  301
+/bills/:id/opinions                      /bills/:id  301
+# admin のプレビュー（公開されない想定）→ 議案詳細
+/preview/bills/:id                       /bills/:id  301
+/preview/bills/:id/interview             /bills/:id  301
+/preview/bills/:id/interview/chat        /bills/:id  301
+/preview/bills/:id/interview/disclosure  /bills/:id  301
+# 個別の意見レポートページ（新スタックに個別ページは無い）→ トップ
+/report/*                                /           301

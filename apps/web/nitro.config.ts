@@ -21,6 +21,10 @@ export default defineNitroConfig({
         directory: "../public",
         run_worker_first: ["/sitemap.xml"],
       },
+      // 本番公開ドメイン。aix.tokyo は Cloudflare ゾーンで ota.aix.tokyo は
+      // プロキシ配下のため、このルートで旧 Cloud Run を迂回して新 Worker が配信する。
+      // ロールバックはこのルート削除で旧に戻る。
+      routes: [{ pattern: "ota.aix.tokyo/*", zone_name: "aix.tokyo" }],
     },
   },
   // ブラウザからの /api/** を api Worker へ Service Binding 経由で中継し、
