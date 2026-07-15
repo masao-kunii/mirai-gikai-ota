@@ -12,6 +12,19 @@ export type KuseiThemeDetail = {
   overview: string;
   /** 主な施策・取り組み */
   policies: { title: string; body: string }[];
+  /**
+   * 最近の具体的な取り組み（区が実際に実施している事業）。
+   * 抽象的な「主な取り組み」に対して、住民が意見しやすい具体的な事業を並べる。
+   * 本番では区のプレス/事業ページから接続する想定。
+   */
+  recentActions?: {
+    title: string;
+    body: string;
+    /** 開始時期など（例: 令和7年4月〜、実施中） */
+    date?: string;
+    /** 区の案内ページ */
+    url?: string;
+  }[];
   /** 数字（区の数字・オープンデータから接続予定。プロトタイプは参考値） */
   numbers?: { label: string; value: string; note?: string }[];
   /** 出典（区の計画ページ） */
@@ -58,6 +71,26 @@ export const KUSEI_THEMES: KuseiTheme[] = [
         {
           title: "子どもを守る",
           body: "児童虐待の防止や、相談・見守り体制の強化に取り組みます。",
+        },
+      ],
+      recentActions: [
+        {
+          title: "学校給食費の無償化",
+          date: "令和7年度〜",
+          body: "区立小中学校に通う子どもの給食費を、区が負担して無償化しています。物価上昇分も含めて支援しています。",
+          url: "https://www.city.ota.tokyo.jp/kyouiku/gakukyou/kyusyoku.files/07musyouka1.pdf",
+        },
+        {
+          title: "妊婦のための支援給付",
+          date: "令和7年4月〜",
+          body: "妊娠期からの切れ目ない支援として、妊娠時（1回目5万円）と出産後の2回に分けて給付金を支給します。",
+          url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/shussan/ninpunotamenosienkyuhu.html",
+        },
+        {
+          title: "産後ケア事業",
+          date: "実施中",
+          body: "産後の体調回復や授乳・育児の相談を支援します。訪問型・宿泊型・グループケア型から選べます。",
+          url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/shussan/sango-care.html",
         },
       ],
       numbers: [
