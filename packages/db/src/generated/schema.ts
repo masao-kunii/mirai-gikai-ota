@@ -135,6 +135,68 @@ export const interviewMessages = pgTable("interview_messages", {
 	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"] }),
 ]);
 
+export const themes = pgTable("themes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	slug: text().notNull(),
+	emoji: text(),
+	name: text().notNull(),
+	lead: text(),
+	sortOrder: integer("sort_order").default(0).notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_themes_sort_order").using("btree", table.sortOrder.asc().nullsLast().op("int4_ops")),
+	unique("themes_slug_key").on(table.slug),
+	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("public_read", { as: "permissive", for: "select", to: ["public_reader"] }),
+]);
+
+export const themeContents = pgTable("theme_contents", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	themeId: uuid("theme_id").notNull(),
+	overview: text(),
+	policies: jsonb().default([]).notNull(),
+	numbers: jsonb().default([]).notNull(),
+	plans: jsonb().default([]).notNull(),
+	billTagLabel: text("bill_tag_label"),
+	aiSummary: text("ai_summary"),
+	aiSummarySourceUrl: text("ai_summary_source_url"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.themeId],
+			foreignColumns: [themes.id],
+			name: "theme_contents_theme_id_fkey"
+		}).onDelete("cascade"),
+	unique("theme_contents_theme_id_key").on(table.themeId),
+	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("public_read", { as: "permissive", for: "select", to: ["public_reader"] }),
+]);
+
+export const themeInitiatives = pgTable("theme_initiatives", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	themeId: uuid("theme_id").notNull(),
+	title: text().notNull(),
+	body: text(),
+	dateLabel: text("date_label"),
+	url: text(),
+	sortOrder: integer("sort_order").default(0).notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_theme_initiatives_theme_id").using("btree", table.themeId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.themeId],
+			foreignColumns: [themes.id],
+			name: "theme_initiatives_theme_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("public_read", { as: "permissive", for: "select", to: ["public_reader"] }),
+]);
+
 export const chats = pgTable("chats", {
 	id: uuid().default(sql`uuid_generate_v4()`).primaryKey().notNull(),
 	billId: uuid("bill_id").notNull(),

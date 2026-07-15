@@ -4,6 +4,7 @@ import type {
   BillsRouteType,
   CouncilSessionsRouteType,
   TagsRouteType,
+  ThemesRouteType,
 } from "api";
 import { hc } from "hono/client";
 
@@ -57,3 +58,7 @@ export const councilSessionsApi = hc<CouncilSessionsRouteType>(
   clientOptions
 );
 export const tagsApi = hc<TagsRouteType>(`${API_BASE}/api/tags`, clientOptions);
+export const themesApi = hc<ThemesRouteType>(
+  `${API_BASE}/api/themes`,
+  clientOptions
+);

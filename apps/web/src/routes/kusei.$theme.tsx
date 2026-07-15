@@ -4,16 +4,26 @@ import { CompactBillCard } from "../components/compact-bill-card";
 import { Container } from "../components/container";
 import { Markdown } from "../components/markdown";
 import { OpinionEntryButton } from "../components/opinion-entry-button";
-import { billsApi, tagsApi } from "../lib/api";
+import { billsApi, tagsApi, themesApi } from "../lib/api";
 import type { BillListItem } from "../lib/bill-display";
-import { findKuseiTheme } from "../lib/kusei-themes";
+import { type KuseiTheme, mapThemeDetail } from "../lib/kusei-themes";
 
 export const Route = createFileRoute("/kusei/$theme")({
   loader: async ({ params }) => {
-    const theme = findKuseiTheme(params.theme);
-    if (!theme) {
+    const res = await themesApi[":slug"].$get({
+      param: { slug: params.theme },
+    });
+    if (res.status === 404) {
       throw notFound();
     }
+    if (!res.ok) {
+      throw new Error("API の取得に失敗しました");
+    }
+    const data = await res.json();
+    const theme: KuseiTheme = {
+      ...data.theme,
+      detail: mapThemeDetail(data.content, data.initiatives),
+    };
     // 関連議案: テーマの billTagLabel → 注目タグ id → その議案（既存 api を再利用）
     let bills: BillListItem[] = [];
     const tagLabel = theme.detail?.billTagLabel;

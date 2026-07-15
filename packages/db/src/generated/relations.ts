@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { interviewSessions, interviewReport, interviewConfigs, interviewMessages, bills, chats, previewTokens, billContents, interviewQuestions, reportReactions, topicAnalysisVersions, topicAnalysisTopics, topicAnalysisClassifications, interviewRatingFeedbacks, councilSessions, councilSessionMinutes, committees, factionStances, factions, billsTags, tags } from "./schema";
+import { interviewSessions, interviewReport, interviewConfigs, interviewMessages, bills, chats, previewTokens, billContents, interviewQuestions, reportReactions, topicAnalysisVersions, topicAnalysisTopics, topicAnalysisClassifications, interviewRatingFeedbacks, councilSessions, councilSessionMinutes, committees, factionStances, factions, billsTags, tags, themes, themeContents, themeInitiatives } from "./schema";
 
 export const interviewReportRelations = relations(interviewReport, ({one, many}) => ({
 	interviewSession: one(interviewSessions, {
@@ -172,4 +172,23 @@ export const billsTagsRelations = relations(billsTags, ({one}) => ({
 
 export const tagsRelations = relations(tags, ({many}) => ({
 	billsTags: many(billsTags),
+}));
+
+export const themeContentsRelations = relations(themeContents, ({one}) => ({
+	theme: one(themes, {
+		fields: [themeContents.themeId],
+		references: [themes.id]
+	}),
+}));
+
+export const themesRelations = relations(themes, ({many}) => ({
+	themeContents: many(themeContents),
+	themeInitiatives: many(themeInitiatives),
+}));
+
+export const themeInitiativesRelations = relations(themeInitiatives, ({one}) => ({
+	theme: one(themes, {
+		fields: [themeInitiatives.themeId],
+		references: [themes.id]
+	}),
 }));

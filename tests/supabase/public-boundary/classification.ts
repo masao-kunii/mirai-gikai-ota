@@ -131,6 +131,21 @@ export const TABLE_BOUNDARIES: Record<string, TableBoundary> = {
     residentWrite: false,
     note: "タグマスタ",
   },
+  theme_contents: {
+    publicRead: "all",
+    residentWrite: false,
+    note: "区政テーマの本文（区の方針・施策・数字・計画リンク）",
+  },
+  theme_initiatives: {
+    publicRead: "conditional",
+    residentWrite: false,
+    note: "区政テーマの取り組み。is_active なもののみ公開",
+  },
+  themes: {
+    publicRead: "conditional",
+    residentWrite: false,
+    note: "区政テーマのマスタ。is_active なテーマのみ公開",
+  },
   topic_analysis_classifications: {
     publicRead: "none",
     residentWrite: false,

@@ -25,6 +25,11 @@ import {
 } from "./data";
 import { createBillContents } from "./bill-contents-data";
 import {
+  themes,
+  createThemeContents,
+  createThemeInitiatives,
+} from "./themes-data";
+import {
   createShippingBillInterviewConfig,
   createShippingBillQuestions,
   createShippingBillSessions,
@@ -56,6 +61,47 @@ async function seedDatabase() {
     }
 
     console.log(`✅ Inserted ${insertedTags.length} tags`);
+
+    // Insert 区政テーマ（themes / theme_contents / theme_initiatives）
+    console.log("🏙️  Inserting themes...");
+    const { data: insertedThemes, error: themesError } = await supabase
+      .from("themes")
+      .insert(themes)
+      .select("id, slug");
+
+    if (themesError) {
+      throw new Error(`Failed to insert themes: ${themesError.message}`);
+    }
+    if (!insertedThemes) {
+      throw new Error("No themes were inserted");
+    }
+    console.log(`✅ Inserted ${insertedThemes.length} themes`);
+
+    const themeContents = createThemeContents(insertedThemes);
+    if (themeContents.length > 0) {
+      const { error: themeContentsError } = await supabase
+        .from("theme_contents")
+        .insert(themeContents);
+      if (themeContentsError) {
+        throw new Error(
+          `Failed to insert theme contents: ${themeContentsError.message}`
+        );
+      }
+      console.log(`✅ Inserted ${themeContents.length} theme contents`);
+    }
+
+    const themeInitiatives = createThemeInitiatives(insertedThemes);
+    if (themeInitiatives.length > 0) {
+      const { error: themeInitiativesError } = await supabase
+        .from("theme_initiatives")
+        .insert(themeInitiatives);
+      if (themeInitiativesError) {
+        throw new Error(
+          `Failed to insert theme initiatives: ${themeInitiativesError.message}`
+        );
+      }
+      console.log(`✅ Inserted ${themeInitiatives.length} theme initiatives`);
+    }
 
     // Insert council sessions
     console.log("🏛️  Inserting council sessions...");
@@ -591,6 +637,7 @@ async function seedDatabase() {
     console.log(`  Committees: ${insertedCommittees.length}`);
     console.log(`  Factions: ${insertedFactions.length}`);
     console.log(`  Tags: ${insertedTags.length}`);
+    console.log(`  Themes: ${insertedThemes.length}`);
     console.log(`  Bills: ${insertedBills.length}`);
     console.log(`  Bill Contents: ${insertedContents.length}`);
     console.log(`  Faction Stances: ${insertedStancesCount}`);
