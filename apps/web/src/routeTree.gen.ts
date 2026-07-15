@@ -13,6 +13,8 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KuseiIndexRouteImport } from './routes/kusei.index'
+import { Route as KuseiThemeRouteImport } from './routes/kusei.$theme'
 import { Route as BillsIdRouteImport } from './routes/bills.$id'
 import { Route as SessionsSlugBillsRouteImport } from './routes/sessions.$slug.bills'
 
@@ -36,6 +38,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KuseiIndexRoute = KuseiIndexRouteImport.update({
+  id: '/kusei/',
+  path: '/kusei/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KuseiThemeRoute = KuseiThemeRouteImport.update({
+  id: '/kusei/$theme',
+  path: '/kusei/$theme',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BillsIdRoute = BillsIdRouteImport.update({
   id: '/bills/$id',
   path: '/bills/$id',
@@ -53,6 +65,8 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/kusei/$theme': typeof KuseiThemeRoute
+  '/kusei/': typeof KuseiIndexRoute
   '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +75,8 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/kusei/$theme': typeof KuseiThemeRoute
+  '/kusei': typeof KuseiIndexRoute
   '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRoutesById {
@@ -70,6 +86,8 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/bills/$id': typeof BillsIdRoute
+  '/kusei/$theme': typeof KuseiThemeRoute
+  '/kusei/': typeof KuseiIndexRoute
   '/sessions/$slug/bills': typeof SessionsSlugBillsRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +98,8 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/bills/$id'
+    | '/kusei/$theme'
+    | '/kusei/'
     | '/sessions/$slug/bills'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +108,8 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/bills/$id'
+    | '/kusei/$theme'
+    | '/kusei'
     | '/sessions/$slug/bills'
   id:
     | '__root__'
@@ -96,6 +118,8 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/bills/$id'
+    | '/kusei/$theme'
+    | '/kusei/'
     | '/sessions/$slug/bills'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +129,8 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   BillsIdRoute: typeof BillsIdRoute
+  KuseiThemeRoute: typeof KuseiThemeRoute
+  KuseiIndexRoute: typeof KuseiIndexRoute
   SessionsSlugBillsRoute: typeof SessionsSlugBillsRoute
 }
 
@@ -138,6 +164,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kusei/': {
+      id: '/kusei/'
+      path: '/kusei'
+      fullPath: '/kusei/'
+      preLoaderRoute: typeof KuseiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kusei/$theme': {
+      id: '/kusei/$theme'
+      path: '/kusei/$theme'
+      fullPath: '/kusei/$theme'
+      preLoaderRoute: typeof KuseiThemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bills/$id': {
       id: '/bills/$id'
       path: '/bills/$id'
@@ -161,6 +201,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   BillsIdRoute: BillsIdRoute,
+  KuseiThemeRoute: KuseiThemeRoute,
+  KuseiIndexRoute: KuseiIndexRoute,
   SessionsSlugBillsRoute: SessionsSlugBillsRoute,
 }
 export const routeTree = rootRouteImport
