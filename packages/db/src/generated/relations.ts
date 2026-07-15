@@ -26,6 +26,14 @@ export const interviewConfigsRelations = relations(interviewConfigs, ({one, many
 		fields: [interviewConfigs.billId],
 		references: [bills.id]
 	}),
+	theme: one(themes, {
+		fields: [interviewConfigs.themeId],
+		references: [themes.id]
+	}),
+	themeInitiative: one(themeInitiatives, {
+		fields: [interviewConfigs.themeInitiativeId],
+		references: [themeInitiatives.id]
+	}),
 	interviewQuestions: many(interviewQuestions),
 }));
 
@@ -184,11 +192,13 @@ export const themeContentsRelations = relations(themeContents, ({one}) => ({
 export const themesRelations = relations(themes, ({many}) => ({
 	themeContents: many(themeContents),
 	themeInitiatives: many(themeInitiatives),
+	interviewConfigs: many(interviewConfigs),
 }));
 
-export const themeInitiativesRelations = relations(themeInitiatives, ({one}) => ({
+export const themeInitiativesRelations = relations(themeInitiatives, ({one, many}) => ({
 	theme: one(themes, {
 		fields: [themeInitiatives.themeId],
 		references: [themes.id]
 	}),
+	interviewConfigs: many(interviewConfigs),
 }));

@@ -11,6 +11,10 @@
       "types": "./src/ai/models.ts",
       "default": "./src/ai/models.ts"
     },
+    "./interview-aggregation/summarize-reports": {
+      "types": "./src/interview-aggregation/summarize-reports.ts",
+      "default": "./src/interview-aggregation/summarize-reports.ts"
+    },
     "./ai/get-model": {
       "types": "./src/ai/get-model.ts",
       "default": "./src/ai/get-model.ts"

@@ -299,7 +299,7 @@ export const expertRegistrations = pgTable("expert_registrations", {
 
 export const interviewConfigs = pgTable("interview_configs", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	billId: uuid("bill_id").notNull(),
+	billId: uuid("bill_id"),
 	status: interviewConfigStatusEnum().default('closed').notNull(),
 	themes: text().array(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -308,19 +308,40 @@ export const interviewConfigs = pgTable("interview_configs", {
 	mode: interviewModeEnum().default('loop').notNull(),
 	chatModel: text("chat_model"),
 	estimatedDuration: integer("estimated_duration"),
+	themeId: uuid("theme_id"),
+	themeInitiativeId: uuid("theme_initiative_id"),
 }, (table) => [
 	index("idx_interview_configs_bill_id").using("btree", table.billId.asc().nullsLast().op("uuid_ops")),
 	uniqueIndex("idx_interview_configs_bill_public").using("btree", table.billId.asc().nullsLast().op("uuid_ops")).where(sql`(status = 'public'::interview_config_status_enum)`),
 	index("idx_interview_configs_status").using("btree", table.status.asc().nullsLast().op("enum_ops")),
+	index("idx_interview_configs_theme_id").using("btree", table.themeId.asc().nullsLast().op("uuid_ops")),
+	index("idx_interview_configs_theme_initiative_id").using("btree", table.themeInitiativeId.asc().nullsLast().op("uuid_ops")),
+	uniqueIndex("idx_interview_configs_theme_initiative_public").using("btree", table.themeInitiativeId.asc().nullsLast().op("uuid_ops")).where(sql`(status = 'public'::interview_config_status_enum)`),
+	uniqueIndex("idx_interview_configs_theme_public").using("btree", table.themeId.asc().nullsLast().op("uuid_ops")).where(sql`(status = 'public'::interview_config_status_enum)`),
 	foreignKey({
 			columns: [table.billId],
 			foreignColumns: [bills.id],
 			name: "interview_configs_bill_id_fkey"
 		}).onDelete("cascade"),
-	pgPolicy("public_read", { as: "permissive", for: "select", to: ["public_reader"], using: sql`(EXISTS ( SELECT 1
+	foreignKey({
+			columns: [table.themeId],
+			foreignColumns: [themes.id],
+			name: "interview_configs_theme_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.themeInitiativeId],
+			foreignColumns: [themeInitiatives.id],
+			name: "interview_configs_theme_initiative_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("public_read", { as: "permissive", for: "select", to: ["public_reader"], using: sql`(((bill_id IS NOT NULL) AND (EXISTS ( SELECT 1
    FROM bills b
-  WHERE ((b.id = interview_configs.bill_id) AND (b.publish_status = 'published'::bill_publish_status))))` }),
+  WHERE ((b.id = interview_configs.bill_id) AND (b.publish_status = 'published'::bill_publish_status))))) OR ((theme_id IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM themes t
+  WHERE ((t.id = interview_configs.theme_id) AND t.is_active)))) OR ((theme_initiative_id IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM theme_initiatives i
+  WHERE ((i.id = interview_configs.theme_initiative_id) AND i.is_active)))))` }),
 	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"] }),
+	check("chk_interview_target_exactly_one", sql`num_nonnulls(bill_id, theme_id, theme_initiative_id) = 1`),
 ]);
 
 export const interviewQuestions = pgTable("interview_questions", {
