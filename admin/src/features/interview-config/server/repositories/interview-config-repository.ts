@@ -4,6 +4,8 @@ import { createAdminClient } from "@mirai-gikai/supabase";
 import type { InterviewConfig, InterviewQuestion } from "../../shared/types";
 
 export type InterviewConfigWithBill = InterviewConfig & {
+  // bills!inner 結合で取得するため bill_id は必ず非 null
+  bill_id: string;
   bill: { id: string; name: string };
 };
 
@@ -73,8 +75,11 @@ export async function findInterviewConfigBillId(
   if (error) {
     throw new Error(`Failed to fetch interview config: ${error.message}`);
   }
+  if (data.bill_id === null) {
+    throw new Error(`Interview config ${configId} is not a bill interview`);
+  }
 
-  return data;
+  return { bill_id: data.bill_id };
 }
 
 export async function findInterviewQuestionsByConfigId(

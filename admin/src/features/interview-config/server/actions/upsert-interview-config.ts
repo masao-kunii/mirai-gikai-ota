@@ -151,6 +151,14 @@ export async function duplicateInterviewConfig(
 
     const targetBillId = options?.targetBillId ?? originalConfig.bill_id;
 
+    // admin の複製は議案インタビューのみ対象（bill_id を持つ設定）
+    if (!targetBillId) {
+      return {
+        success: false,
+        error: "複製できるのは議案のインタビュー設定のみです",
+      };
+    }
+
     // 新しい設定を作成（ステータスは非公開で複製）
     let newConfig: { id: string };
     try {
