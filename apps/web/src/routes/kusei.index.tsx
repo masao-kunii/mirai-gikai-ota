@@ -1,8 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Container } from "../components/container";
-import { KUSEI_THEMES } from "../lib/kusei-themes";
+import { themesApi } from "../lib/api";
 
 export const Route = createFileRoute("/kusei/")({
+  loader: async () => {
+    const res = await themesApi.index.$get();
+    if (!res.ok) {
+      throw new Error("API の取得に失敗しました");
+    }
+    return await res.json();
+  },
   head: () => ({
     meta: [
       { title: "区政をテーマで知る | みらい議会 大田区" },
@@ -17,6 +24,7 @@ export const Route = createFileRoute("/kusei/")({
 });
 
 function KuseiIndex() {
+  const { themes } = Route.useLoaderData();
   return (
     <Container className="flex flex-col gap-8 py-10">
       <div className="flex flex-col gap-2">
@@ -30,7 +38,7 @@ function KuseiIndex() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {KUSEI_THEMES.map((theme) => (
+        {themes.map((theme) => (
           <Link
             key={theme.slug}
             to="/kusei/$theme"
@@ -41,7 +49,7 @@ function KuseiIndex() {
             <div className="flex flex-col gap-1">
               <h2 className="font-bold text-base text-mirai-text">
                 {theme.name}
-                {!theme.detail && (
+                {!theme.hasContent && (
                   <span className="ml-2 rounded-full bg-mirai-surface-muted px-2 py-0.5 text-[10px] font-medium text-mirai-text-muted">
                     準備中
                   </span>

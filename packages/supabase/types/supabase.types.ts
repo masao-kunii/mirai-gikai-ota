@@ -891,6 +891,139 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_contents: {
+        Row: {
+          ai_summary: string | null
+          ai_summary_source_url: string | null
+          bill_tag_label: string | null
+          created_at: string
+          id: string
+          numbers: Json
+          overview: string | null
+          plans: Json
+          policies: Json
+          theme_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          ai_summary_source_url?: string | null
+          bill_tag_label?: string | null
+          created_at?: string
+          id?: string
+          numbers?: Json
+          overview?: string | null
+          plans?: Json
+          policies?: Json
+          theme_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string | null
+          ai_summary_source_url?: string | null
+          bill_tag_label?: string | null
+          created_at?: string
+          id?: string
+          numbers?: Json
+          overview?: string | null
+          plans?: Json
+          policies?: Json
+          theme_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_contents_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: true
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theme_initiatives: {
+        Row: {
+          body: string | null
+          created_at: string
+          date_label: string | null
+          id: string
+          is_active: boolean
+          sort_order: number
+          theme_id: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          date_label?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          theme_id: string
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          date_label?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          theme_id?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_initiatives_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      themes: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          lead: string | null
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          lead?: string | null
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          lead?: string | null
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topic_analysis_classifications: {
         Row: {
           id: string
