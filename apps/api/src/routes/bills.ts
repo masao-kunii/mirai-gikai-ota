@@ -23,7 +23,8 @@ const {
  * knowledge_source（AI 用内部資料）は公開境界でカラム除外されているため
  * 含めない（含めると public_reader では permission denied になる）。
  */
-const publicBillColumns = {
+// テーマの関連議案（themes ルート）でも同じ列を返すため export する。
+export const publicBillColumns = {
   id: bills.id,
   slug: bills.slug,
   name: bills.name,

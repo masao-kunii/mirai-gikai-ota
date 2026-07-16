@@ -1,11 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
+import { useRef } from "react";
 import { CompactBillCard } from "../components/compact-bill-card";
 import { Container } from "../components/container";
 import { Markdown } from "../components/markdown";
 import { OpinionEntryButton } from "../components/opinion-entry-button";
-import { billsApi, tagsApi, themesApi } from "../lib/api";
-import type { BillListItem } from "../lib/bill-display";
+import { TextSelectionTooltip } from "../components/text-selection-tooltip";
+import { themesApi } from "../lib/api";
 import { type KuseiTheme, mapThemeDetail } from "../lib/kusei-themes";
 
 export const Route = createFileRoute("/kusei/$theme")({
@@ -24,26 +25,8 @@ export const Route = createFileRoute("/kusei/$theme")({
       ...data.theme,
       detail: mapThemeDetail(data.content, data.initiatives),
     };
-    // 関連議案: テーマの billTagLabel → 注目タグ id → その議案（既存 api を再利用）
-    let bills: BillListItem[] = [];
-    const tagLabel = theme.detail?.billTagLabel;
-    if (tagLabel) {
-      const tagsRes = await tagsApi.index.$get();
-      if (tagsRes.ok) {
-        const tag = (await tagsRes.json()).tags.find(
-          (t) => t.label === tagLabel
-        );
-        if (tag) {
-          const billsRes = await billsApi.index.$get({
-            query: { tagId: tag.id },
-          });
-          if (billsRes.ok) {
-            bills = (await billsRes.json()).bills;
-          }
-        }
-      }
-    }
-    return { theme, bills };
+    // 関連議案は API がテーマの bill_tag_label からサーバ側で解決して返す。
+    return { theme, bills: data.relatedBills };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -60,9 +43,12 @@ export const Route = createFileRoute("/kusei/$theme")({
 function KuseiThemeDetail() {
   const { theme, bills } = Route.useLoaderData();
   const d = theme.detail;
+  // ページ内のテキスト選択で「AIに質問」ツールチップを出す（議案詳細と同じ）。
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Container className="flex flex-col gap-8 py-8">
+    <Container ref={containerRef} className="flex flex-col gap-8 py-8">
+      <TextSelectionTooltip containerRef={containerRef} />
       <Link
         to="/kusei"
         className="text-sm text-primary transition-colors hover:text-primary-accent"
@@ -227,22 +213,35 @@ function KuseiThemeDetail() {
             </div>
           </section>
 
-          {/* 出典 */}
-          <section className="flex flex-col gap-2 border-mirai-border-light border-t pt-4">
-            <h3 className="font-bold text-sm text-mirai-text">
-              出典（大田区の計画）
-            </h3>
-            <ul className="flex flex-col gap-1">
+          {/* 関連する区の公式ページ（情報・サービス・計画。このページの出典でもある） */}
+          <section className="flex flex-col gap-3 border-mirai-border-light border-t pt-6">
+            <h2 className="font-bold text-[22px] text-mirai-text">
+              🔗 関連する区の公式ページ
+            </h2>
+            <p className="text-sm leading-relaxed text-mirai-text-secondary">
+              このページは大田区の公式サイトをもとにまとめています。くわしくは
+              各ページをご覧ください。
+            </p>
+            <ul className="flex flex-col gap-2">
               {d.plans.map((plan) => (
-                <li key={plan.url}>
+                <li
+                  key={plan.url}
+                  className="rounded-xl border border-mirai-border-muted bg-card p-3"
+                >
                   <a
                     href={plan.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm text-primary underline-offset-2 hover:underline"
+                    className="inline-flex items-center gap-1 font-bold text-primary text-sm underline-offset-2 hover:underline"
                   >
                     {plan.name}
+                    <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
+                  {plan.description && (
+                    <p className="mt-0.5 text-mirai-text-secondary text-xs leading-relaxed">
+                      {plan.description}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
