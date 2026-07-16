@@ -1,10 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
 import { summarizeReports } from "@mirai-gikai/shared/interview-aggregation/summarize-reports";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { publicQuery } from "../lib/db";
+import { publicBillColumns } from "./bills";
 
 const {
   themes,
@@ -13,6 +14,9 @@ const {
   interviewReport,
   interviewSessions,
   interviewConfigs,
+  bills,
+  billsTags,
+  tags,
 } = schema;
 
 export const themesRoute = new Hono()
@@ -78,8 +82,30 @@ export const themesRoute = new Hono()
           .where(eq(themeInitiatives.themeId, theme.id))
           .orderBy(asc(themeInitiatives.sortOrder));
 
+        // 関連議案: テーマの bill_tag_label と同じ注目タグを持つ published 議案。
+        // featured かどうかに関わらずラベルで解決する（tags API の featured 制約を受けない）。
+        const relatedBills = content?.billTagLabel
+          ? await tx
+              .select(publicBillColumns)
+              .from(bills)
+              .innerJoin(billsTags, eq(billsTags.billId, bills.id))
+              .innerJoin(tags, eq(tags.id, billsTags.tagId))
+              .where(
+                and(
+                  eq(tags.label, content.billTagLabel),
+                  eq(bills.publishStatus, "published")
+                )
+              )
+              .orderBy(desc(bills.publishedAt))
+          : [];
+
         const { id: _id, ...themePublic } = theme;
-        return { theme: themePublic, content: content ?? null, initiatives };
+        return {
+          theme: themePublic,
+          content: content ?? null,
+          initiatives,
+          relatedBills,
+        };
       });
 
       if (!result) {

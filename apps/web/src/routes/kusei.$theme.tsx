@@ -1,11 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
+import { useRef } from "react";
 import { CompactBillCard } from "../components/compact-bill-card";
 import { Container } from "../components/container";
 import { Markdown } from "../components/markdown";
 import { OpinionEntryButton } from "../components/opinion-entry-button";
-import { billsApi, tagsApi, themesApi } from "../lib/api";
-import type { BillListItem } from "../lib/bill-display";
+import { TextSelectionTooltip } from "../components/text-selection-tooltip";
+import { themesApi } from "../lib/api";
 import { type KuseiTheme, mapThemeDetail } from "../lib/kusei-themes";
 
 export const Route = createFileRoute("/kusei/$theme")({
@@ -24,26 +25,8 @@ export const Route = createFileRoute("/kusei/$theme")({
       ...data.theme,
       detail: mapThemeDetail(data.content, data.initiatives),
     };
-    // 関連議案: テーマの billTagLabel → 注目タグ id → その議案（既存 api を再利用）
-    let bills: BillListItem[] = [];
-    const tagLabel = theme.detail?.billTagLabel;
-    if (tagLabel) {
-      const tagsRes = await tagsApi.index.$get();
-      if (tagsRes.ok) {
-        const tag = (await tagsRes.json()).tags.find(
-          (t) => t.label === tagLabel
-        );
-        if (tag) {
-          const billsRes = await billsApi.index.$get({
-            query: { tagId: tag.id },
-          });
-          if (billsRes.ok) {
-            bills = (await billsRes.json()).bills;
-          }
-        }
-      }
-    }
-    return { theme, bills };
+    // 関連議案は API がテーマの bill_tag_label からサーバ側で解決して返す。
+    return { theme, bills: data.relatedBills };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -60,9 +43,12 @@ export const Route = createFileRoute("/kusei/$theme")({
 function KuseiThemeDetail() {
   const { theme, bills } = Route.useLoaderData();
   const d = theme.detail;
+  // ページ内のテキスト選択で「AIに質問」ツールチップを出す（議案詳細と同じ）。
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Container className="flex flex-col gap-8 py-8">
+    <Container ref={containerRef} className="flex flex-col gap-8 py-8">
+      <TextSelectionTooltip containerRef={containerRef} />
       <Link
         to="/kusei"
         className="text-sm text-primary transition-colors hover:text-primary-accent"
