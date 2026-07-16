@@ -102,6 +102,8 @@ export async function getReportDetailForSimulation(
   ]);
 
   if (!interviewConfig) return null;
+  // シミュレーションは議案インタビューのみ対象（bill_id を持つ設定）
+  if (!interviewConfig.bill_id) return null;
 
   const billData = await fetchBillWithContents(interviewConfig.bill_id);
 

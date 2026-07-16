@@ -507,7 +507,7 @@ export type Database = {
       }
       interview_configs: {
         Row: {
-          bill_id: string
+          bill_id: string | null
           chat_model: string | null
           created_at: string
           estimated_duration: number | null
@@ -515,11 +515,13 @@ export type Database = {
           mode: Database["public"]["Enums"]["interview_mode_enum"]
           name: string
           status: Database["public"]["Enums"]["interview_config_status_enum"]
+          theme_id: string | null
+          theme_initiative_id: string | null
           themes: string[] | null
           updated_at: string
         }
         Insert: {
-          bill_id: string
+          bill_id?: string | null
           chat_model?: string | null
           created_at?: string
           estimated_duration?: number | null
@@ -527,11 +529,13 @@ export type Database = {
           mode?: Database["public"]["Enums"]["interview_mode_enum"]
           name: string
           status?: Database["public"]["Enums"]["interview_config_status_enum"]
+          theme_id?: string | null
+          theme_initiative_id?: string | null
           themes?: string[] | null
           updated_at?: string
         }
         Update: {
-          bill_id?: string
+          bill_id?: string | null
           chat_model?: string | null
           created_at?: string
           estimated_duration?: number | null
@@ -539,6 +543,8 @@ export type Database = {
           mode?: Database["public"]["Enums"]["interview_mode_enum"]
           name?: string
           status?: Database["public"]["Enums"]["interview_config_status_enum"]
+          theme_id?: string | null
+          theme_initiative_id?: string | null
           themes?: string[] | null
           updated_at?: string
         }
@@ -548,6 +554,20 @@ export type Database = {
             columns: ["bill_id"]
             isOneToOne: false
             referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_configs_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_configs_theme_initiative_id_fkey"
+            columns: ["theme_initiative_id"]
+            isOneToOne: false
+            referencedRelation: "theme_initiatives"
             referencedColumns: ["id"]
           },
         ]

@@ -517,5 +517,7 @@ export async function findBillIdsWithPublicInterview(
     return new Set();
   }
 
-  return new Set(data.map((row) => row.bill_id));
+  return new Set(
+    data.map((row) => row.bill_id).filter((id): id is string => id !== null)
+  );
 }

@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
+import { summarizeReports } from "@mirai-gikai/shared/interview-aggregation/summarize-reports";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -147,7 +148,6 @@ export const billsRoute = new Hono()
             role: interviewReport.role,
             roleTitle: interviewReport.roleTitle,
             richness: interviewReport.totalContentRichness,
-            createdAt: interviewReport.createdAt,
           })
           .from(interviewReport)
           .innerJoin(
@@ -167,27 +167,7 @@ export const billsRoute = new Hono()
           )
       );
 
-      // スタンス・役割の分布を集計
-      const stances: Record<string, number> = {};
-      const roles: Record<string, number> = {};
-      for (const r of rows) {
-        if (r.stance) stances[r.stance] = (stances[r.stance] ?? 0) + 1;
-        if (r.role) roles[r.role] = (roles[r.role] ?? 0) + 1;
-      }
-
-      // 代表意見（充実度の高い順に数件）
-      const reports = [...rows]
-        .sort((a, b) => (b.richness ?? 0) - (a.richness ?? 0))
-        .slice(0, 6)
-        .map((r) => ({
-          id: r.id,
-          summary: r.summary,
-          stance: r.stance,
-          role: r.role,
-          roleTitle: r.roleTitle,
-        }));
-
-      return c.json({ total: rows.length, stances, roles, reports });
+      return c.json(summarizeReports(rows));
     }
   );
 

@@ -1,11 +1,19 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
-import { asc, eq } from "drizzle-orm";
+import { summarizeReports } from "@mirai-gikai/shared/interview-aggregation/summarize-reports";
+import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { publicQuery } from "../lib/db";
 
-const { themes, themeContents, themeInitiatives } = schema;
+const {
+  themes,
+  themeContents,
+  themeInitiatives,
+  interviewReport,
+  interviewSessions,
+  interviewConfigs,
+} = schema;
 
 export const themesRoute = new Hono()
   // 区政テーマ一覧（is_active のみ・表示順）。hasContent で本文の有無を返す。
@@ -78,6 +86,46 @@ export const themesRoute = new Hono()
         return c.json({ error: "not_found" as const }, 404);
       }
       return c.json(result);
+    }
+  )
+  // テーマに寄せられた住民意見（公開インタビューレポート）の集約。
+  // 公開境界: interview_report は is_public_by_admin AND is_public_by_user のみ
+  // public_reader に見える（RLS）。ここでもアプリ層で明示する（多重防御）。
+  .get(
+    "/:slug/opinions-summary",
+    zValidator("param", z.object({ slug: z.string().min(1).max(100) })),
+    async (c) => {
+      const { slug } = c.req.valid("param");
+      const rows = await publicQuery((tx) =>
+        tx
+          .select({
+            id: interviewReport.id,
+            summary: interviewReport.summary,
+            stance: interviewReport.stance,
+            role: interviewReport.role,
+            roleTitle: interviewReport.roleTitle,
+            richness: interviewReport.totalContentRichness,
+          })
+          .from(interviewReport)
+          .innerJoin(
+            interviewSessions,
+            eq(interviewSessions.id, interviewReport.interviewSessionId)
+          )
+          .innerJoin(
+            interviewConfigs,
+            eq(interviewConfigs.id, interviewSessions.interviewConfigId)
+          )
+          .innerJoin(themes, eq(themes.id, interviewConfigs.themeId))
+          .where(
+            and(
+              eq(themes.slug, slug),
+              eq(interviewReport.isPublicByAdmin, true),
+              eq(interviewReport.isPublicByUser, true)
+            )
+          )
+      );
+
+      return c.json(summarizeReports(rows));
     }
   );
 
