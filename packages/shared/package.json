@@ -15,6 +15,14 @@
       "types": "./src/interview-aggregation/summarize-reports.ts",
       "default": "./src/interview-aggregation/summarize-reports.ts"
     },
+    "./interview-schemas/schemas": {
+      "types": "./src/interview-schemas/schemas.ts",
+      "default": "./src/interview-schemas/schemas.ts"
+    },
+    "./interview-schemas/report-extraction": {
+      "types": "./src/interview-schemas/report-extraction.ts",
+      "default": "./src/interview-schemas/report-extraction.ts"
+    },
     "./ai/get-model": {
       "types": "./src/ai/get-model.ts",
       "default": "./src/ai/get-model.ts"
