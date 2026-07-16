@@ -148,7 +148,7 @@ const themeInitiativesWithSlug: ThemeInitiativeSeed[] = [
     title: "学校給食費の無償化",
     date_label: "令和7年度〜",
     body: "区立小中学校に通う子どもの給食費を、区が負担して無償化しています。物価上昇分も含めて支援しています。",
-    url: "https://www.city.ota.tokyo.jp/kyouiku/gakukyou/kyusyoku.files/07musyouka1.pdf",
+    url: "https://www.city.ota.tokyo.jp/kyouiku/gakukyou/kyusyoku.html",
     sort_order: 0,
   },
   {
