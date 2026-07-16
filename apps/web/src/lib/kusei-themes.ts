@@ -21,8 +21,8 @@ export type KuseiThemeDetail = {
   }[];
   /** 数字（区の数字・オープンデータから接続予定） */
   numbers?: { label: string; value: string; note?: string }[];
-  /** 出典（区の計画ページ） */
-  plans: { name: string; url: string }[];
+  /** 関連する区の公式ページ（情報・サービス・注目ページ・計画）。1行説明つき。 */
+  plans: { name: string; url: string; description?: string }[];
   /** 関連議案の紐付けに使う注目タグの label（既存タグに接続） */
   billTagLabel?: string;
 };

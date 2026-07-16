@@ -68,7 +68,8 @@ type ThemeContentSeed = {
   overview: string;
   policies: { title: string; body: string }[];
   numbers: { label: string; value: string; note?: string }[];
-  plans: { name: string; url: string }[];
+  // 関連する区の公式ページ（情報・サービス・注目ページ・計画）。1行説明つき。
+  plans: { name: string; url: string; description?: string }[];
   bill_tag_label: string;
 };
 
@@ -76,29 +77,31 @@ type ThemeContentSeed = {
 const themeContentsWithSlug: ThemeContentSeed[] = [
   {
     theme_slug: "kosodate",
-    overview: `大田区は「子どもがのびのび育ち、子育て家庭が安心して暮らせるまち」を目指しています。保育や学童保育を増やして働きながら子育てできる環境をつくること、経済的に厳しい家庭の子どもを支える「子どもの生活応援」、若者の相談・自立の支援、身近な居場所である児童館の充実などに取り組んでいます。
+    overview: `大田区には約74万人が暮らし、たくさんの子どもたちが育っています。区は「子どもがのびのび育ち、子育て家庭が安心して暮らせるまち」を目標に、妊娠・出産から乳幼児期、学齢期、そして若者世代まで**切れ目のない支援**を進めています。
 
-区はいくつかの計画（子ども・子育て支援事業計画、子ども・若者計画、子どもの生活応援プランなど）にもとづき、乳幼児期から若者世代まで**切れ目のない支援**を目指しています。`,
+たとえば、働きながら子育てできるよう保育園や学童保育を増やすこと、経済的に厳しい家庭の子どもを支える「子どもの生活応援」、妊娠・出産期の相談や産後ケア、身近な居場所である児童館の充実、そして子どもを虐待から守る見守り体制づくりなどに取り組んでいます。あわせて、学校給食費の無償化や医療費の助成など、家庭の負担を軽くする支援も広げています。
+
+これらの取り組みは、「子ども・子育て支援事業計画（かがやきプラン）」や「子ども・若者計画」「子どもの生活応援プラン」といった区の計画にもとづいて進められています。くわしくは、下の「関連する区の公式ページ」からご覧いただけます。`,
     policies: [
       {
         title: "保育・学童の整備（待機児童対策）",
-        body: "保育園や学童保育を増やし、働きながら安心して子育てできる環境をつくります。",
+        body: "保育園や学童保育の定員を増やし、働きながら安心して子育てできる環境を整えます。多様な保育サービスで、家庭の状況に合った預け先を選べるようにします。",
       },
       {
         title: "子どもの生活応援（貧困対策）",
-        body: "経済的に厳しい家庭の子どもへ、学習・食・居場所などの支援を届けます。",
+        body: "経済的に厳しい家庭の子どもへ、学習・食・居場所などの支援を届けます。児童手当や子ども医療費助成、就学援助といった経済的な支えもあわせて行います。",
+      },
+      {
+        title: "妊娠・出産期の支援",
+        body: "妊娠期からの相談や、産後の体調回復・育児をささえる産後ケア、家事・育児のヘルパー派遣など、出産前後の不安に寄り添う支援を用意しています。",
       },
       {
         title: "若者の支援",
-        body: "悩みの相談や自立に向けたサポート。ひきこもり等にも寄り添います。",
+        body: "悩みの相談や自立に向けたサポートを行います。ひきこもりなど、生きづらさを抱える若者にも寄り添います。",
       },
       {
-        title: "児童館の充実",
-        body: "子どもが安心して過ごせる身近な居場所づくりと、機能の見直し・構想づくりを進めます。",
-      },
-      {
-        title: "子どもを守る",
-        body: "児童虐待の防止や、相談・見守り体制の強化に取り組みます。",
+        title: "児童館の充実と子どもを守る取り組み",
+        body: "子どもが安心して過ごせる身近な居場所づくりを進めるとともに、児童虐待の防止や、相談・見守り体制の強化に取り組みます。",
       },
     ],
     numbers: [
@@ -112,20 +115,54 @@ const themeContentsWithSlug: ThemeContentSeed[] = [
     ],
     plans: [
       {
+        name: "「安心」「わくわく」大田区の子育てのページ",
+        url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/topics/kosodateprbrochure.html",
+        description: "区の子育て支援の全体像がわかる入口ページ。",
+      },
+      {
+        name: "妊娠・出産・子育て（区の総合案内）",
+        url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/index.html",
+        description: "妊娠から子育てまでの手続き・サービスの総合案内。",
+      },
+      {
+        name: "子育て・こどもに関する支援",
+        url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/shien/index.html",
+        description: "産後ケアや家事・育児援助など、支援制度の一覧。",
+      },
+      {
+        name: "児童に関する手当",
+        url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/teate/jidouteate/index.html",
+        description: "児童手当・子ども医療費助成などの経済的支援。",
+      },
+      {
+        name: "子ども家庭支援センター",
+        url: "https://www.city.ota.tokyo.jp/seikatsu/kodomo/shien/kodomo_katei_shien_c/index.html",
+        description: "子育ての相談・交流ができる身近な窓口。",
+      },
+      {
+        name: "就学援助",
+        url: "https://www.city.ota.tokyo.jp/kyouiku/gakukyou/syugaku_enjo/index.html",
+        description: "学用品費など、就学にかかる費用の援助。",
+      },
+      {
         name: "子ども・子育て支援事業計画（かがやきプラン）",
         url: "https://www.city.ota.tokyo.jp/kuseijoho/ota_plan/kobetsu_plan/kodomo/kagayakiplan/index.html",
+        description: "区の子育て支援の基本となる計画。",
       },
       {
         name: "大田区子ども・若者計画",
         url: "https://www.city.ota.tokyo.jp/kuseijoho/ota_plan/kobetsu_plan/kodomo/kodomowakamonoplan.html",
+        description: "若者の自立・社会参加をささえる計画。",
       },
       {
         name: "おおた子どもの生活応援プラン",
         url: "https://www.city.ota.tokyo.jp/kuseijoho/ota_plan/kobetsu_plan/kodomo/kodomo_seikatsu_plan/index.html",
+        description: "子どもの貧困対策を進める計画。",
       },
       {
         name: "大田区児童館構想",
         url: "https://www.city.ota.tokyo.jp/kuseijoho/ota_plan/kobetsu_plan/kodomo/jidoukankoso.html",
+        description: "児童館のあり方・機能を見直す構想。",
       },
     ],
     bill_tag_label: "子育て・教育",

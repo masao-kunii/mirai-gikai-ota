@@ -227,22 +227,35 @@ function KuseiThemeDetail() {
             </div>
           </section>
 
-          {/* 出典 */}
-          <section className="flex flex-col gap-2 border-mirai-border-light border-t pt-4">
-            <h3 className="font-bold text-sm text-mirai-text">
-              出典（大田区の計画）
-            </h3>
-            <ul className="flex flex-col gap-1">
+          {/* 関連する区の公式ページ（情報・サービス・計画。このページの出典でもある） */}
+          <section className="flex flex-col gap-3 border-mirai-border-light border-t pt-6">
+            <h2 className="font-bold text-[22px] text-mirai-text">
+              🔗 関連する区の公式ページ
+            </h2>
+            <p className="text-sm leading-relaxed text-mirai-text-secondary">
+              このページは大田区の公式サイトをもとにまとめています。くわしくは
+              各ページをご覧ください。
+            </p>
+            <ul className="flex flex-col gap-2">
               {d.plans.map((plan) => (
-                <li key={plan.url}>
+                <li
+                  key={plan.url}
+                  className="rounded-xl border border-mirai-border-muted bg-card p-3"
+                >
                   <a
                     href={plan.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm text-primary underline-offset-2 hover:underline"
+                    className="inline-flex items-center gap-1 font-bold text-primary text-sm underline-offset-2 hover:underline"
                   >
                     {plan.name}
+                    <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
+                  {plan.description && (
+                    <p className="mt-0.5 text-mirai-text-secondary text-xs leading-relaxed">
+                      {plan.description}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
