@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { billsRoute } from "./routes/bills";
 import { createChatRoute } from "./routes/chat";
 import { councilSessionsRoute } from "./routes/council-sessions";
+import { interviewsRoute } from "./routes/interviews";
 import { tagsRoute } from "./routes/tags";
 import { themesRoute } from "./routes/themes";
 
@@ -19,4 +20,5 @@ export const app = new Hono()
   .route("/chat", createChatRoute())
   .route("/council-sessions", councilSessionsRoute)
   .route("/tags", tagsRoute)
-  .route("/themes", themesRoute);
+  .route("/themes", themesRoute)
+  .route("/interviews", interviewsRoute);
