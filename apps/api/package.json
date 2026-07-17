@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "eval": "tsx src/eval/run.ts",
     "typecheck": "tsc --noEmit",
     "test:integration": "vitest run --config vitest.integration.config.mts",
     "test:integration:coverage": "vitest run --config vitest.integration.config.mts",
