@@ -23,6 +23,10 @@
       "types": "./src/interview-schemas/report-extraction.ts",
       "default": "./src/interview-schemas/report-extraction.ts"
     },
+    "./interview-prompts/subject-prompts": {
+      "types": "./src/interview-prompts/subject-prompts.ts",
+      "default": "./src/interview-prompts/subject-prompts.ts"
+    },
     "./ai/get-model": {
       "types": "./src/ai/get-model.ts",
       "default": "./src/ai/get-model.ts"
