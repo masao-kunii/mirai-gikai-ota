@@ -5,15 +5,21 @@ import { CompactBillCard } from "../components/compact-bill-card";
 import { Container } from "../components/container";
 import { Markdown } from "../components/markdown";
 import { OpinionEntryButton } from "../components/opinion-entry-button";
+import { OpinionsSummarySection } from "../components/opinions-summary";
 import { TextSelectionTooltip } from "../components/text-selection-tooltip";
 import { themesApi } from "../lib/api";
+import { MIN_PUBLIC_OPINIONS } from "../lib/bill-display";
 import { type KuseiTheme, mapThemeDetail } from "../lib/kusei-themes";
 
 export const Route = createFileRoute("/kusei/$theme")({
   loader: async ({ params }) => {
-    const res = await themesApi[":slug"].$get({
-      param: { slug: params.theme },
-    });
+    // テーマ本体と、住民意見の集約を並行取得（集約は失敗しても本体は表示する）。
+    const [res, opinionsRes] = await Promise.all([
+      themesApi[":slug"].$get({ param: { slug: params.theme } }),
+      themesApi[":slug"]["opinions-summary"].$get({
+        param: { slug: params.theme },
+      }),
+    ]);
     if (res.status === 404) {
       throw notFound();
     }
@@ -25,8 +31,9 @@ export const Route = createFileRoute("/kusei/$theme")({
       ...data.theme,
       detail: mapThemeDetail(data.content, data.initiatives),
     };
+    const opinions = opinionsRes.ok ? await opinionsRes.json() : null;
     // 関連議案は API がテーマの bill_tag_label からサーバ側で解決して返す。
-    return { theme, bills: data.relatedBills };
+    return { theme, slug: params.theme, bills: data.relatedBills, opinions };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -41,8 +48,9 @@ export const Route = createFileRoute("/kusei/$theme")({
 });
 
 function KuseiThemeDetail() {
-  const { theme, bills } = Route.useLoaderData();
+  const { theme, slug, bills, opinions } = Route.useLoaderData();
   const d = theme.detail;
+  const hasOpinions = !!opinions && opinions.total >= MIN_PUBLIC_OPINIONS;
   // ページ内のテキスト選択で「AIに質問」ツールチップを出す（議案詳細と同じ）。
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +105,11 @@ function KuseiThemeDetail() {
                   <p className="text-sm leading-relaxed text-mirai-text-secondary">
                     {p.body}
                   </p>
-                  <OpinionEntryButton subject={p.title} />
+                  <OpinionEntryButton
+                    subject={p.title}
+                    target={{ type: "theme", slug }}
+                    themeSlug={slug}
+                  />
                 </div>
               ))}
             </div>
@@ -129,7 +141,11 @@ function KuseiThemeDetail() {
                       {a.body}
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
-                      <OpinionEntryButton subject={a.title} />
+                      <OpinionEntryButton
+                        subject={a.title}
+                        target={{ type: "initiative", initiativeId: a.id }}
+                        themeSlug={slug}
+                      />
                       {a.url && (
                         <a
                           href={a.url}
@@ -195,23 +211,49 @@ function KuseiThemeDetail() {
             )}
           </section>
 
-          {/* 住民の声（Phase A/B の集約がここに入る予定。テーマ全体にも意見できる） */}
-          <section className="flex flex-col gap-3">
-            <h2 className="font-bold text-[22px] text-mirai-text">
-              🗣️ このテーマへの住民の声
-            </h2>
-            <div className="flex flex-col items-start gap-4 rounded-2xl border border-mirai-border-light bg-mirai-surface-grouped p-6">
-              <p className="text-sm leading-relaxed text-mirai-text-secondary">
-                準備中：このテーマについて集めた住民の意見（インタビューの集約）を
-                ここに表示する予定です。まずはあなたの声から聞かせてください。
-              </p>
-              <OpinionEntryButton
-                subject={theme.name}
-                label={`${theme.name}について意見する`}
-                variant="solid"
+          {/* 住民の声（公開インタビューの集約。テーマ全体にも意見できる） */}
+          {hasOpinions && opinions ? (
+            <section className="flex flex-col gap-3">
+              <OpinionsSummarySection
+                summary={opinions}
+                heading="🗣️ このテーマへの住民の声"
+                showStance={false}
               />
-            </div>
-          </section>
+              <div className="flex flex-col items-start gap-3 rounded-2xl border border-mirai-border-light bg-mirai-surface-grouped p-6">
+                <p className="text-sm leading-relaxed text-mirai-text-secondary">
+                  あなたの声も聞かせてください。AI が対話形式でお話をうかがい、
+                  匿名で集計に加えます。
+                </p>
+                <OpinionEntryButton
+                  subject={theme.name}
+                  target={{ type: "theme", slug }}
+                  themeSlug={slug}
+                  label={`${theme.name}について意見する`}
+                  variant="solid"
+                />
+              </div>
+            </section>
+          ) : (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-bold text-[22px] text-mirai-text">
+                🗣️ このテーマへの住民の声
+              </h2>
+              <div className="flex flex-col items-start gap-4 rounded-2xl border border-mirai-border-light bg-mirai-surface-grouped p-6">
+                <p className="text-sm leading-relaxed text-mirai-text-secondary">
+                  意見募集中：このテーマについて、AI が対話形式であなたのお話を
+                  うかがいます。一定数の声が集まると、匿名の集計をここに表示します。
+                  まずはあなたの声から聞かせてください。
+                </p>
+                <OpinionEntryButton
+                  subject={theme.name}
+                  target={{ type: "theme", slug }}
+                  themeSlug={slug}
+                  label={`${theme.name}について意見する`}
+                  variant="solid"
+                />
+              </div>
+            </section>
+          )}
 
           {/* 関連する区の公式ページ（情報・サービス・計画。このページの出典でもある） */}
           <section className="flex flex-col gap-3 border-mirai-border-light border-t pt-6">

@@ -1,7 +1,6 @@
 import {
   type OpinionsSummary,
   ROLE_LABELS,
-  ROLE_ORDER,
   STANCE_BADGE_CLASS,
   STANCE_BAR_CLASS,
   STANCE_LABELS,
@@ -38,13 +37,21 @@ function DistBar({
 }
 
 /**
- * 議案に寄せられた住民意見（公開インタビューレポート）の集約。
- * 立場の分布・回答者の分布・代表的な意見を見せる。
+ * 対象（議案／区政テーマ・取り組み）に寄せられた住民意見（公開インタビュー
+ * レポート）の集約。立場の分布・回答者の分布・代表的な意見を見せる。
+ *
+ * 賛否（賛成/反対）は議案の賛否判断向けの軸なので、テーマ/取り組みでは
+ * showStance=false にして賛否の分布・バッジを表示しない（住民は賛否でなく
+ * 「必要・要望」を語るため、誤って「反対」等に見えるのを避ける）。
  */
 export function OpinionsSummarySection({
   summary,
+  heading = "🗣️ この議案に寄せられた住民の意見",
+  showStance = true,
 }: {
   summary: OpinionsSummary;
+  heading?: string;
+  showStance?: boolean;
 }) {
   const { total, stances, roles, reports } = summary;
 
@@ -57,17 +64,16 @@ export function OpinionsSummarySection({
       count: stances[s] ?? 0,
     }));
 
-  const roleRows = ROLE_ORDER.filter((r) => (roles[r] ?? 0) > 0).map((r) => ({
-    key: r,
-    label: ROLE_LABELS[r] ?? r,
-    count: roles[r] ?? 0,
-  }));
+  // 立場は議案（enum）とテーマ（回答者が選んだラベル）の両方があり得るため、
+  // roles に現れたキーをそのまま件数の多い順に見せる（既知の enum はラベル化）。
+  const roleRows = Object.entries(roles)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => ({ key, label: ROLE_LABELS[key] ?? key, count }));
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-bold text-[22px] text-mirai-text">
-        🗣️ この議案に寄せられた住民の意見
-      </h2>
+      <h2 className="font-bold text-[22px] text-mirai-text">{heading}</h2>
       <div className="flex flex-col gap-6 rounded-2xl border border-mirai-border-light bg-card p-6">
         <p className="text-sm leading-relaxed text-mirai-text-secondary">
           AIインタビューで集めた意見のうち、公開に同意いただいた
@@ -75,18 +81,22 @@ export function OpinionsSummarySection({
           を集計しています。
         </p>
 
-        <div className="flex flex-col gap-3">
-          <h3 className="font-bold text-sm text-mirai-text">立場の分布</h3>
-          {stanceRows.map((row) => (
-            <DistBar
-              key={row.key}
-              label={row.label}
-              count={row.count}
-              total={total}
-              colorClass={STANCE_BAR_CLASS[row.key] ?? "bg-mirai-progress-fill"}
-            />
-          ))}
-        </div>
+        {showStance && stanceRows.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h3 className="font-bold text-sm text-mirai-text">立場の分布</h3>
+            {stanceRows.map((row) => (
+              <DistBar
+                key={row.key}
+                label={row.label}
+                count={row.count}
+                total={total}
+                colorClass={
+                  STANCE_BAR_CLASS[row.key] ?? "bg-mirai-progress-fill"
+                }
+              />
+            ))}
+          </div>
+        )}
 
         {roleRows.length > 0 && (
           <div className="flex flex-col gap-3">
@@ -113,7 +123,7 @@ export function OpinionsSummarySection({
                   className="flex flex-col gap-2 rounded-xl border border-mirai-border-muted bg-mirai-surface-grouped p-4"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    {r.stance && (
+                    {showStance && r.stance && (
                       <span
                         className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold ${
                           STANCE_BADGE_CLASS[r.stance] ?? ""
