@@ -73,6 +73,7 @@ export const themesRoute = new Hono()
 
         const initiatives = await tx
           .select({
+            id: themeInitiatives.id,
             title: themeInitiatives.title,
             body: themeInitiatives.body,
             dateLabel: themeInitiatives.dateLabel,

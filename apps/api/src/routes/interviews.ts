@@ -24,7 +24,6 @@ import {
   getOrCreateSession,
   getSessionMessages,
   type InterviewTarget,
-  isSessionOwned,
   resolveSubject,
   saveInterviewMessage,
 } from "../lib/interviews/context";
@@ -185,31 +184,35 @@ export const interviewsRoute = new Hono()
       return withAnonCookie(c.json({ error: "internal" as const }, 500));
     }
   })
-  // 完了（レポート抽出→moderation→auto-publish）。本人のセッションのみ。
-  .post(
-    "/complete",
-    zValidator("json", z.object({ sessionId: z.uuid() })),
-    async (c) => {
-      const { anonId, setCookie } = await resolveAnonId(c.req.raw);
-      const { sessionId } = c.req.valid("json");
-      const withAnonCookie = (res: Response): Response => {
-        if (setCookie) res.headers.append("set-cookie", setCookie);
-        return res;
-      };
+  // 完了（レポート抽出→moderation→auto-publish）。対象から本人の進行中
+  // セッションを解決するため、クライアントは対象だけ渡せばよい。
+  .post("/complete", zValidator("json", targetSchema), async (c) => {
+    const { anonId, setCookie } = await resolveAnonId(c.req.raw);
+    const body = c.req.valid("json");
+    const withAnonCookie = (res: Response): Response => {
+      if (setCookie) res.headers.append("set-cookie", setCookie);
+      return res;
+    };
 
-      if (!(await isSessionOwned(sessionId, anonId))) {
-        return withAnonCookie(c.json({ error: "forbidden" as const }, 403));
-      }
-
-      const result = await completeInterview(
-        sessionId,
-        resolveInterviewModel()
-      );
-      if (!result.ok) {
-        return withAnonCookie(c.json({ error: result.reason }, 400));
-      }
-      return withAnonCookie(c.json({ ok: true, published: result.published }));
+    const target = toTarget(body);
+    if (!target) {
+      return withAnonCookie(c.json({ error: "bad_target" as const }, 400));
     }
-  );
+    const resolved = await resolveSubject(target);
+    if (!resolved) {
+      return withAnonCookie(c.json({ error: "not_found" as const }, 404));
+    }
+    const configId = await ensureConfig({
+      themeId: resolved.themeId,
+      themeInitiativeId: resolved.themeInitiativeId,
+    });
+    const sessionId = await getOrCreateSession(configId, anonId);
+
+    const result = await completeInterview(sessionId, resolveInterviewModel());
+    if (!result.ok) {
+      return withAnonCookie(c.json({ error: result.reason }, 400));
+    }
+    return withAnonCookie(c.json({ ok: true, published: result.published }));
+  });
 
 export type InterviewsRouteType = typeof interviewsRoute;

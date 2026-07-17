@@ -12,6 +12,8 @@ export type KuseiThemeDetail = {
   policies: { title: string; body: string }[];
   /** 最近の具体的な取り組み（住民が意見しやすい具体の事業） */
   recentActions?: {
+    /** theme_initiatives.id（この取り組みへのインタビュー対象キー） */
+    id: string;
     title: string;
     body: string;
     /** 開始時期など（例: 令和7年4月〜、実施中） */
@@ -46,6 +48,7 @@ type ThemeContentResponse = {
 
 /** /api/themes/:slug の initiatives 部分。 */
 type ThemeInitiativeResponse = {
+  id: string;
   title: string;
   body: string | null;
   dateLabel: string | null;
@@ -67,6 +70,7 @@ export function mapThemeDetail(
     overview: content.overview ?? "",
     policies: (content.policies as KuseiThemeDetail["policies"] | null) ?? [],
     recentActions: initiatives.map((i) => ({
+      id: i.id,
       title: i.title,
       body: i.body ?? "",
       date: i.dateLabel ?? undefined,
