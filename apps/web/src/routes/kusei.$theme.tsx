@@ -212,7 +212,11 @@ function KuseiThemeDetail() {
           {/* 住民の声（公開インタビューの集約。テーマ全体にも意見できる） */}
           {hasOpinions && opinions ? (
             <section className="flex flex-col gap-3">
-              <OpinionsSummarySection summary={opinions} />
+              <OpinionsSummarySection
+                summary={opinions}
+                heading="🗣️ このテーマへの住民の声"
+                showStance={false}
+              />
               <div className="flex flex-col items-start gap-3 rounded-2xl border border-mirai-border-light bg-mirai-surface-grouped p-6">
                 <p className="text-sm leading-relaxed text-mirai-text-secondary">
                   あなたの声も聞かせてください。AI が対話形式でお話をうかがい、

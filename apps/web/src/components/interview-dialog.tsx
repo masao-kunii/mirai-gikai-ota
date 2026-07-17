@@ -2,7 +2,6 @@ import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { Loader2, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { STANCE_BADGE_CLASS, STANCE_LABELS } from "../lib/bill-display";
 import {
   type InterviewReportView,
   type InterviewTargetInput,
@@ -388,28 +387,16 @@ function ChatBubble({
 }
 
 function ReportCard({ report }: { report: InterviewReportView }) {
-  const stance = report.stance ?? null;
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-card p-4">
       <span className="font-bold text-mirai-text-muted text-xs">
         あなたの声（要約案）
       </span>
-      <div className="flex flex-wrap items-center gap-2">
-        {stance && (
-          <span
-            className={`inline-flex items-center rounded-md border px-2 py-0.5 font-bold text-[11px] ${
-              STANCE_BADGE_CLASS[stance] ?? ""
-            }`}
-          >
-            {STANCE_LABELS[stance] ?? stance}
-          </span>
-        )}
-        {report.role_title && (
-          <span className="text-mirai-text-muted text-xs">
-            {report.role_title}
-          </span>
-        )}
-      </div>
+      {report.role_title && (
+        <span className="text-mirai-text-muted text-xs">
+          {report.role_title}
+        </span>
+      )}
       {report.summary && (
         <p className="text-mirai-text text-sm leading-relaxed">
           {report.summary}
