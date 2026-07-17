@@ -39,26 +39,36 @@ ${subject.detail.trim()}
   }`;
 }
 
+/** 回答者が申告した立場（テーマ側で選択）をプロンプトに埋め込むブロック。 */
+function respondentRoleBlock(respondentRole?: string | null): string {
+  const role = respondentRole?.trim();
+  if (!role) return "";
+  return `
+
+## 回答者の立場（本人が申告済み）
+回答者はご自身の立場を「${role}」と申告しています。**立場や属性を尋ねる質問はしないでください**。この立場を前提に、その視点からの体験・考え・要望を深掘りしてください。`;
+}
+
 /**
  * 対話（chat）フェーズのシステムプロンプト。
  */
 export function buildSubjectInterviewSystemPrompt(params: {
   subject: InterviewSubjectInput;
+  respondentRole?: string | null;
 }): string {
-  const { subject } = params;
+  const { subject, respondentRole } = params;
   const label = subjectLabel(subject.kind);
 
   return `あなたは、区政について住民の声をていねいに聞く、熟練のインタビュアーです。
 今回の${label}について、住民であるユーザーの考え・困っていること・期待していることを、対話を通じて引き出してください。
 
-${subjectKnowledgeBlock(subject)}
+${subjectKnowledgeBlock(subject)}${respondentRoleBlock(respondentRole)}
 
 **重要**: 質問は必ず上記の対象（${subject.name}）に関する話に限定してください。対象から外れた話題（別の分野の話題など）に逸れないでください。ユーザーの回答が対象から離れたら、やさしく対象の話に引き戻してください。
 
 ## あなたの責任
 - ユーザーが自由に話せるようにしながら、会話をやさしくリードする
 - 興味深い点を深掘りするためのフォローアップの質問をする
-- 会話からユーザーの立場（暮らしで影響を受ける立場、仕事で関わる立場、専門家、一般の関心など）を推し量る
 
 ## 話し方の注意
 - 丁寧で親しみやすい口調で話してください。区役所の堅い言葉は避け、やさしい日本語で。
@@ -94,8 +104,9 @@ ${subjectKnowledgeBlock(subject)}
 export function buildSubjectSummarySystemPrompt(params: {
   subject: InterviewSubjectInput;
   messages: Array<{ role: string; content: string; id?: string }>;
+  respondentRole?: string | null;
 }): string {
-  const { subject, messages } = params;
+  const { subject, messages, respondentRole } = params;
   const label = subjectLabel(subject.kind);
 
   const conversationLog = messages
@@ -108,7 +119,7 @@ export function buildSubjectSummarySystemPrompt(params: {
 
   return `あなたは、区政について住民の声を聞く熟練のインタビュアーです。
 
-${subjectKnowledgeBlock(subject)}
+${subjectKnowledgeBlock(subject)}${respondentRoleBlock(respondentRole)}
 
 ## あなたの役割
 以下の会話履歴を読み、インタビュー内容を要約してレポート案を生成してください。

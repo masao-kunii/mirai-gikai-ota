@@ -152,7 +152,8 @@ export const themesRoute = new Hono()
           )
       );
 
-      return c.json(summarizeReports(rows));
+      // 区政テーマは立場を回答者本人が選ぶため、分布は roleTitle で集計する。
+      return c.json(summarizeReports(rows, { groupRolesByTitle: true }));
     }
   );
 

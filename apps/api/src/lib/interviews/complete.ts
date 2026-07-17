@@ -19,7 +19,11 @@ export type CompleteResult =
  */
 export async function completeInterview(
   sessionId: string,
-  model: string
+  model: string,
+  options?: {
+    /** 回答者が申告した立場（テーマ側で選択）。あれば roleTitle を上書きする。 */
+    respondentRole?: string | null;
+  }
 ): Promise<CompleteResult> {
   const db = getDb();
 
@@ -75,12 +79,15 @@ export async function completeInterview(
     totalContentRichness: report.content_richness.total,
   });
 
+  // 回答者が立場を選んでいれば、その申告ラベルを表示用 roleTitle にする
+  // （テーマ/取り組みの集約はこの roleTitle で立場を分布集計する）。
+  const respondentRole = options?.respondentRole?.trim();
   const values = {
     summary: report.summary,
     stance: report.stance,
     role: report.role,
     roleDescription: report.role_description,
-    roleTitle: report.role_title,
+    roleTitle: respondentRole || report.role_title,
     opinions: enrichedOpinions,
     contentRichness: report.content_richness,
     moderationScore: moderation.score,

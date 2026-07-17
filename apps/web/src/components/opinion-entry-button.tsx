@@ -13,11 +13,14 @@ import { InterviewDialog } from "./interview-dialog";
 export function OpinionEntryButton({
   subject,
   target,
+  themeSlug,
   label = "意見する",
   variant = "outline",
 }: {
   subject: string;
   target: InterviewTargetInput;
+  /** 立場の選択肢を出し分けるためのテーマ slug。 */
+  themeSlug?: string;
   label?: string;
   variant?: "outline" | "solid";
 }) {
@@ -40,6 +43,7 @@ export function OpinionEntryButton({
         <InterviewDialog
           subject={subject}
           target={target}
+          themeSlug={themeSlug}
           onClose={() => setOpen(false)}
         />
       )}

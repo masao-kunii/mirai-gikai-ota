@@ -67,6 +67,8 @@ const messagesBodySchema = targetSchema.extend({
   message: z.string().max(4000).optional(),
   // クライアントが直前の next_stage から決めるフェーズ。
   stage: z.enum(["chat", "summary"]).default("chat"),
+  // 回答者が最初に選んだ立場ラベル（テーマ側で選択）。
+  roleLabel: z.string().max(30).optional(),
 });
 
 export const interviewsRoute = new Hono()
@@ -125,8 +127,12 @@ export const interviewsRoute = new Hono()
         ? buildSubjectSummarySystemPrompt({
             subject: resolved.subject,
             messages: promptMessages,
+            respondentRole: body.roleLabel,
           })
-        : buildSubjectInterviewSystemPrompt({ subject: resolved.subject });
+        : buildSubjectInterviewSystemPrompt({
+            subject: resolved.subject,
+            respondentRole: body.roleLabel,
+          });
       const schema = isSummary
         ? interviewChatWithReportSchema
         : interviewChatTextSchema;
@@ -186,33 +192,46 @@ export const interviewsRoute = new Hono()
   })
   // 完了（レポート抽出→moderation→auto-publish）。対象から本人の進行中
   // セッションを解決するため、クライアントは対象だけ渡せばよい。
-  .post("/complete", zValidator("json", targetSchema), async (c) => {
-    const { anonId, setCookie } = await resolveAnonId(c.req.raw);
-    const body = c.req.valid("json");
-    const withAnonCookie = (res: Response): Response => {
-      if (setCookie) res.headers.append("set-cookie", setCookie);
-      return res;
-    };
+  .post(
+    "/complete",
+    zValidator(
+      "json",
+      targetSchema.extend({ roleLabel: z.string().max(30).optional() })
+    ),
+    async (c) => {
+      const { anonId, setCookie } = await resolveAnonId(c.req.raw);
+      const body = c.req.valid("json");
+      const withAnonCookie = (res: Response): Response => {
+        if (setCookie) res.headers.append("set-cookie", setCookie);
+        return res;
+      };
 
-    const target = toTarget(body);
-    if (!target) {
-      return withAnonCookie(c.json({ error: "bad_target" as const }, 400));
-    }
-    const resolved = await resolveSubject(target);
-    if (!resolved) {
-      return withAnonCookie(c.json({ error: "not_found" as const }, 404));
-    }
-    const configId = await ensureConfig({
-      themeId: resolved.themeId,
-      themeInitiativeId: resolved.themeInitiativeId,
-    });
-    const sessionId = await getOrCreateSession(configId, anonId);
+      const target = toTarget(body);
+      if (!target) {
+        return withAnonCookie(c.json({ error: "bad_target" as const }, 400));
+      }
+      const resolved = await resolveSubject(target);
+      if (!resolved) {
+        return withAnonCookie(c.json({ error: "not_found" as const }, 404));
+      }
+      const configId = await ensureConfig({
+        themeId: resolved.themeId,
+        themeInitiativeId: resolved.themeInitiativeId,
+      });
+      const sessionId = await getOrCreateSession(configId, anonId);
 
-    const result = await completeInterview(sessionId, resolveInterviewModel());
-    if (!result.ok) {
-      return withAnonCookie(c.json({ error: result.reason }, 400));
+      const result = await completeInterview(
+        sessionId,
+        resolveInterviewModel(),
+        {
+          respondentRole: body.roleLabel,
+        }
+      );
+      if (!result.ok) {
+        return withAnonCookie(c.json({ error: result.reason }, 400));
+      }
+      return withAnonCookie(c.json({ ok: true, published: result.published }));
     }
-    return withAnonCookie(c.json({ ok: true, published: result.published }));
-  });
+  );
 
 export type InterviewsRouteType = typeof interviewsRoute;

@@ -2,6 +2,7 @@ import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { Loader2, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { getRoleOptions } from "../lib/interview-roles";
 import {
   type InterviewReportView,
   type InterviewTargetInput,
@@ -9,7 +10,7 @@ import {
   interviewTargetBody,
 } from "../lib/interview-schema";
 
-type Phase = "consent" | "chat" | "review" | "done";
+type Phase = "consent" | "role" | "chat" | "review" | "done";
 type Turn = { role: "assistant" | "user"; text: string };
 
 /**
@@ -23,14 +24,18 @@ type Turn = { role: "assistant" | "user"; text: string };
 export function InterviewDialog({
   subject,
   target,
+  themeSlug,
   onClose,
 }: {
   subject: string;
   target: InterviewTargetInput;
+  /** 立場の選択肢を出し分けるためのテーマ slug（取り組みも親テーマの slug）。 */
+  themeSlug?: string;
   onClose: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>("consent");
   const [agreed, setAgreed] = useState(false);
+  const [roleLabel, setRoleLabel] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [report, setReport] = useState<InterviewReportView | null>(null);
   const [published, setPublished] = useState<boolean | null>(null);
@@ -41,6 +46,9 @@ export function InterviewDialog({
   const scrollRef = useRef<HTMLDivElement>(null);
   // onFinish から常に最新の submit を呼べるよう ref に保持する。
   const submitRef = useRef<(body: unknown) => void>(() => {});
+  // onFinish / complete から最新の選択済み立場を参照するための ref。
+  const roleLabelRef = useRef("");
+  roleLabelRef.current = roleLabel;
 
   const { submit, object, isLoading, error } = useObject({
     api: "/api/interviews/messages",
@@ -60,6 +68,7 @@ export function InterviewDialog({
           submitRef.current({
             ...interviewTargetBody(target),
             stage: "summary",
+            roleLabel: roleLabelRef.current,
           });
         }, 0);
       }
@@ -83,9 +92,12 @@ export function InterviewDialog({
     if (el) el.scrollTop = el.scrollHeight;
   }, [turns, object?.text, phase, isLoading]);
 
-  const start = () => {
+  // 立場を選んで対話を開始する。
+  const start = (role: string) => {
+    roleLabelRef.current = role;
+    setRoleLabel(role);
     setPhase("chat");
-    submit({ ...interviewTargetBody(target), stage: "chat" });
+    submit({ ...interviewTargetBody(target), stage: "chat", roleLabel: role });
   };
 
   const sendAnswer = () => {
@@ -93,12 +105,21 @@ export function InterviewDialog({
     if (!msg || isLoading) return;
     setTurns((prev) => [...prev, { role: "user", text: msg }]);
     setInput("");
-    submit({ ...interviewTargetBody(target), message: msg, stage: "chat" });
+    submit({
+      ...interviewTargetBody(target),
+      message: msg,
+      stage: "chat",
+      roleLabel: roleLabelRef.current,
+    });
   };
 
   const requestSummary = () => {
     if (isLoading) return;
-    submit({ ...interviewTargetBody(target), stage: "summary" });
+    submit({
+      ...interviewTargetBody(target),
+      stage: "summary",
+      roleLabel: roleLabelRef.current,
+    });
   };
 
   const continueChat = () => {
@@ -114,7 +135,10 @@ export function InterviewDialog({
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify(interviewTargetBody(target)),
+        body: JSON.stringify({
+          ...interviewTargetBody(target),
+          roleLabel: roleLabelRef.current,
+        }),
       });
       if (!res.ok) {
         setCompleteError(
@@ -167,7 +191,18 @@ export function InterviewDialog({
         </div>
 
         {phase === "consent" ? (
-          <ConsentBody agreed={agreed} setAgreed={setAgreed} onStart={start} />
+          <ConsentBody
+            agreed={agreed}
+            setAgreed={setAgreed}
+            onNext={() => setPhase("role")}
+          />
+        ) : phase === "role" ? (
+          <RoleSelectBody
+            options={getRoleOptions(themeSlug)}
+            selected={roleLabel}
+            onSelect={setRoleLabel}
+            onStart={() => roleLabel && start(roleLabel)}
+          />
         ) : phase === "done" ? (
           <DoneBody published={published} onClose={onClose} />
         ) : (
@@ -197,7 +232,9 @@ export function InterviewDialog({
                 </p>
               )}
 
-              {phase === "review" && report && <ReportCard report={report} />}
+              {phase === "review" && report && (
+                <ReportCard report={report} roleLabel={roleLabel} />
+              )}
             </div>
 
             {/* フッター（入力 or レビュー操作） */}
@@ -282,11 +319,11 @@ export function InterviewDialog({
 function ConsentBody({
   agreed,
   setAgreed,
-  onStart,
+  onNext,
 }: {
   agreed: boolean;
   setAgreed: (v: boolean) => void;
-  onStart: () => void;
+  onNext: () => void;
 }) {
   return (
     <div className="flex flex-col gap-4 px-5 py-5">
@@ -318,10 +355,65 @@ function ConsentBody({
       <button
         type="button"
         disabled={!agreed}
+        onClick={onNext}
+        className="rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground text-sm transition-colors hover:bg-primary-accent disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        同意して次へ
+      </button>
+    </div>
+  );
+}
+
+function RoleSelectBody({
+  options,
+  selected,
+  onSelect,
+  onStart,
+}: {
+  options: string[];
+  selected: string;
+  onSelect: (v: string) => void;
+  onStart: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4 px-5 py-5">
+      <div className="flex flex-col gap-1">
+        <p className="font-bold text-mirai-text text-sm">
+          あなたのお立場を選んでください
+        </p>
+        <p className="text-mirai-text-secondary text-xs leading-relaxed">
+          お立場に合わせてお話をうかがいます。集計では立場ごとの声として
+          匿名で扱います。
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {options.map((opt) => (
+          <label
+            key={opt}
+            className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-4 py-3 text-sm transition-colors ${
+              selected === opt
+                ? "border-primary bg-mirai-surface-grouped text-mirai-text"
+                : "border-mirai-border-muted text-mirai-text hover:bg-mirai-surface-grouped"
+            }`}
+          >
+            <input
+              type="radio"
+              name="interview-role"
+              checked={selected === opt}
+              onChange={() => onSelect(opt)}
+              className="h-4 w-4 shrink-0 accent-primary"
+            />
+            <span>{opt}</span>
+          </label>
+        ))}
+      </div>
+      <button
+        type="button"
+        disabled={!selected}
         onClick={onStart}
         className="rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground text-sm transition-colors hover:bg-primary-accent disabled:cursor-not-allowed disabled:opacity-40"
       >
-        同意してインタビューを始める
+        選択してインタビューを始める
       </button>
     </div>
   );
@@ -386,17 +478,21 @@ function ChatBubble({
   );
 }
 
-function ReportCard({ report }: { report: InterviewReportView }) {
+function ReportCard({
+  report,
+  roleLabel,
+}: {
+  report: InterviewReportView;
+  roleLabel: string;
+}) {
+  // 立場は本人が選んだラベルを表示する（保存・集計もこの値になる）。
+  const role = roleLabel || report.role_title;
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-card p-4">
       <span className="font-bold text-mirai-text-muted text-xs">
         あなたの声（要約案）
       </span>
-      {report.role_title && (
-        <span className="text-mirai-text-muted text-xs">
-          {report.role_title}
-        </span>
-      )}
+      {role && <span className="text-mirai-text-muted text-xs">{role}</span>}
       {report.summary && (
         <p className="text-mirai-text text-sm leading-relaxed">
           {report.summary}

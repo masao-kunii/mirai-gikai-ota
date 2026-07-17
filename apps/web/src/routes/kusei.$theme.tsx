@@ -108,6 +108,7 @@ function KuseiThemeDetail() {
                   <OpinionEntryButton
                     subject={p.title}
                     target={{ type: "theme", slug }}
+                    themeSlug={slug}
                   />
                 </div>
               ))}
@@ -143,6 +144,7 @@ function KuseiThemeDetail() {
                       <OpinionEntryButton
                         subject={a.title}
                         target={{ type: "initiative", initiativeId: a.id }}
+                        themeSlug={slug}
                       />
                       {a.url && (
                         <a
@@ -225,6 +227,7 @@ function KuseiThemeDetail() {
                 <OpinionEntryButton
                   subject={theme.name}
                   target={{ type: "theme", slug }}
+                  themeSlug={slug}
                   label={`${theme.name}について意見する`}
                   variant="solid"
                 />
@@ -244,6 +247,7 @@ function KuseiThemeDetail() {
                 <OpinionEntryButton
                   subject={theme.name}
                   target={{ type: "theme", slug }}
+                  themeSlug={slug}
                   label={`${theme.name}について意見する`}
                   variant="solid"
                 />

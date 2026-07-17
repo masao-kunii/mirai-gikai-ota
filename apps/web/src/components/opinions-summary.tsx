@@ -1,7 +1,6 @@
 import {
   type OpinionsSummary,
   ROLE_LABELS,
-  ROLE_ORDER,
   STANCE_BADGE_CLASS,
   STANCE_BAR_CLASS,
   STANCE_LABELS,
@@ -65,11 +64,12 @@ export function OpinionsSummarySection({
       count: stances[s] ?? 0,
     }));
 
-  const roleRows = ROLE_ORDER.filter((r) => (roles[r] ?? 0) > 0).map((r) => ({
-    key: r,
-    label: ROLE_LABELS[r] ?? r,
-    count: roles[r] ?? 0,
-  }));
+  // 立場は議案（enum）とテーマ（回答者が選んだラベル）の両方があり得るため、
+  // roles に現れたキーをそのまま件数の多い順に見せる（既知の enum はラベル化）。
+  const roleRows = Object.entries(roles)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => ({ key, label: ROLE_LABELS[key] ?? key, count }));
 
   return (
     <section className="flex flex-col gap-4">

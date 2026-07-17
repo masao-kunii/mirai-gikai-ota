@@ -65,4 +65,18 @@ describe("summarizeReports", () => {
     ]);
     expect(result.reports.map((r) => r.summary)).toEqual(["5", "null"]);
   });
+
+  it("groupRolesByTitle=true は立場を roleTitle で集計する（テーマ用）", () => {
+    const result = summarizeReports(
+      [
+        row({ role: "general_citizen", roleTitle: "子育て中" }),
+        row({ role: "subject_expert", roleTitle: "子育て中" }),
+        row({ role: "general_citizen", roleTitle: "子育てに関わる専門家" }),
+        row({ role: "general_citizen", roleTitle: null }),
+      ],
+      { groupRolesByTitle: true }
+    );
+    // role(enum) ではなく roleTitle でまとまる。null は無視。
+    expect(result.roles).toEqual({ 子育て中: 2, 子育てに関わる専門家: 1 });
+  });
 });
