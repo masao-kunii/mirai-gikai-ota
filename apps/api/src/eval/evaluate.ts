@@ -5,31 +5,29 @@ import type { EvalPersona } from "./personas";
 import type { SimResult } from "./run-interview";
 
 export const interviewEvaluationSchema = z
+  // スコアは 1〜5 の想定だが、判定LLMがまれに範囲外を返すため schema では
+  // 制約せず（落とさない）、利用側で 1〜5 に clamp する。
   .object({
     question_quality: z
       .number()
-      .min(1)
-      .max(5)
       .describe(
-        "質問の質。1メッセージ1論点・「なぜ」の詰問回避・共感しつつ自然に深掘りできていたか（5=非常に良い）"
+        "質問の質（1〜5）。1メッセージ1論点・「なぜ」の詰問回避・共感しつつ自然に深掘りできていたか（5=非常に良い）"
       ),
     coverage: z
       .number()
-      .min(1)
-      .max(5)
-      .describe("この回答者が本当に伝えたかった主要論点をどれだけ引き出せたか"),
+      .describe(
+        "回答者が本当に伝えたかった主要論点をどれだけ引き出せたか（1〜5）"
+      ),
     report_faithfulness: z
       .number()
-      .min(1)
-      .max(5)
       .describe(
-        "生成レポートが対話内容に忠実か（対話にないことを書いていないか、要約が的確か）"
+        "生成レポートが対話内容に忠実か（対話にないことを書いていないか、要約が的確か）（1〜5）"
       ),
     interviewee_satisfaction: z
       .number()
-      .min(1)
-      .max(5)
-      .describe("回答者の立場で、自分の考えを十分に伝えられたと感じるか"),
+      .describe(
+        "回答者の立場で、自分の考えを十分に伝えられたと感じるか（1〜5）"
+      ),
     covered_points: z
       .array(z.string())
       .describe("インタビューで引き出せた、回答者の主要論点"),
@@ -99,5 +97,12 @@ ${sim.report ? JSON.stringify(sim.report, null, 2) : "（レポート未生成�
     prompt,
     schema: interviewEvaluationSchema,
   });
-  return object;
+  const clamp = (n: number) => Math.max(1, Math.min(5, Math.round(n)));
+  return {
+    ...object,
+    question_quality: clamp(object.question_quality),
+    coverage: clamp(object.coverage),
+    report_faithfulness: clamp(object.report_faithfulness),
+    interviewee_satisfaction: clamp(object.interviewee_satisfaction),
+  };
 }
