@@ -146,7 +146,11 @@ export type OpinionsSummary = {
   }[];
 };
 
-/** これ未満は集約を表示しない（少数だと個人が特定されうるため） */
+/**
+ * これ未満は集約を表示しない。少数だと(1)個人が特定されうる、(2)ノイジー
+ * マイノリティが「住民の声」として先に出てバイアスになる、ため。
+ * shared の MIN_PUBLIC_REPORTS_FOR_DISPLAY と同値に保つこと。
+ */
 export const MIN_PUBLIC_OPINIONS = 10;
 
 /** 回答者の立場（interview_report.role） */

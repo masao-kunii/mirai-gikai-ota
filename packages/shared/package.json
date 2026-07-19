@@ -51,6 +51,10 @@
       "types": "./src/moderation/moderation.ts",
       "default": "./src/moderation/moderation.ts"
     },
+    "./moderation/faithfulness": {
+      "types": "./src/moderation/faithfulness.ts",
+      "default": "./src/moderation/faithfulness.ts"
+    },
     "./content-richness/build-prompt": {
       "types": "./src/content-richness/build-content-richness-prompt.ts",
       "default": "./src/content-richness/build-content-richness-prompt.ts"

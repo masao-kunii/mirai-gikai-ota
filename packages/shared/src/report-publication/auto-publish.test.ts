@@ -3,6 +3,7 @@ import {
   AUTO_PUBLISH_MAX_MODERATION_SCORE,
   AUTO_PUBLISH_MIN_CONTENT_RICHNESS,
   MIN_PUBLIC_REPORTS_FOR_DISPLAY,
+  decideReportReview,
   isPublicReportVisible,
   isReportAutoPublishEligible,
   shouldDisplayPublicReports,
@@ -54,6 +55,44 @@ describe("isReportAutoPublishEligible", () => {
       ).toBe(false);
     }
   );
+});
+
+describe("decideReportReview", () => {
+  const clean = {
+    isPublicByUser: true,
+    moderationScore: AUTO_PUBLISH_MAX_MODERATION_SCORE,
+    moderationCategories: [] as string[],
+    faithful: true,
+    totalContentRichness: AUTO_PUBLISH_MIN_CONTENT_RICHNESS,
+  };
+
+  it("すべてクリアなら自動公開（auto_approved・公開）", () => {
+    expect(decideReportReview(clean)).toEqual({
+      reviewStatus: "auto_approved",
+      isPublicByAdmin: true,
+    });
+  });
+
+  it.each([
+    { label: "モデレーション未評価", override: { moderationScore: null } },
+    {
+      label: "スコア超過",
+      override: { moderationScore: AUTO_PUBLISH_MAX_MODERATION_SCORE + 1 },
+    },
+    {
+      label: "カテゴリ該当あり",
+      override: { moderationCategories: ["personal_info"] },
+    },
+    { label: "忠実性 false", override: { faithful: false } },
+    { label: "忠実性 未確認(null)", override: { faithful: null } },
+    { label: "充実度未達", override: { totalContentRichness: 0 } },
+    { label: "同意なし", override: { isPublicByUser: false } },
+  ])("$label なら承認待ち（pending・非公開）", ({ override }) => {
+    expect(decideReportReview({ ...clean, ...override })).toEqual({
+      reviewStatus: "pending",
+      isPublicByAdmin: false,
+    });
+  });
 });
 
 describe("shouldDisplayPublicReports", () => {
