@@ -5,14 +5,17 @@
   "type": "module",
   "scripts": {
     "seed": "tsx main/run.ts",
+    "seed:demo-opinions": "tsx main/demo-opinions.ts",
     "import:teirei": "tsx main/import-teirei-cloud.ts",
     "publish:session": "tsx main/publish-session.ts",
     "check:ai-cost": "tsx main/check-ai-cost.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mirai-gikai/db": "workspace:*",
     "@mirai-gikai/supabase": "workspace:*",
-    "@supabase/supabase-js": "^2.57.0"
+    "@supabase/supabase-js": "^2.57.0",
+    "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",
