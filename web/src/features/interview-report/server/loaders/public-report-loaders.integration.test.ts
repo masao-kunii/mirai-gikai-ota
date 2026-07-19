@@ -73,8 +73,10 @@ describe("公開レポート loader 統合テスト", () => {
       "newest"
     );
 
+    // all は公開レポートの総件数（for12 + against5 + null3 = 20）。
+    // 表示ゲート（MIN_PUBLIC_REPORTS_FOR_DISPLAY）とは別物。
     expect(result.stanceCounts).toEqual({
-      all: MIN_PUBLIC_REPORTS_FOR_DISPLAY,
+      all: 20,
       for: 12,
       against: 5,
       neutral: 0,
