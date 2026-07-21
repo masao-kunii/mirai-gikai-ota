@@ -1,0 +1,59 @@
+# Dependabot（依存関係の自動更新）設定
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# 方針:
+# - パッケージは pnpm ワークスペース（ルートの pnpm-lock.yaml 一本）。npm エコシステムを
+#   directory: "/" に1つ置けば、apps/* ・ packages/* ・ admin ・ web の各 package.json を
+#   まとめて更新できる。サブディレクトリ（例: /apps/api）を個別指定すると、そこに
+#   ロックファイルが無く失敗するので指定しない。
+# - GitHub Actions は SHA ピン運用（pinact）。Dependabot は SHA を維持したまま更新するため両立する。
+# - PR の洪水を避けるため minor/patch はグループにまとめる。破壊的変更を含む major は
+#   個別 PR にして必ずレビューする。
+# - 供給網リスク低減のため cooldown（公開直後の版は避ける）を設定する。
+# - デフォルトブランチが ota/develop のため、PR は ota/develop に対して作成される（target-branch 不要）。
+version: 2
+updates:
+  # npm 依存（pnpm ワークスペース全体）
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    labels:
+      - "dependencies"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      # 依存関係の minor/patch を1つの PR にまとめる（major は個別 PR のまま）
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions（.github/workflows/*）
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
