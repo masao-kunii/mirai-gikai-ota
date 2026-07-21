@@ -14,12 +14,12 @@
   "dependencies": {
     "@mirai-gikai/db": "workspace:*",
     "@mirai-gikai/supabase": "workspace:*",
-    "@supabase/supabase-js": "^2.57.0",
-    "drizzle-orm": "^0.44.2"
+    "@supabase/supabase-js": "^2.110.3",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",
-    "tsx": "^4.19.1",
+    "tsx": "^4.23.1",
     "typescript": "^5.0.0"
   }
 }

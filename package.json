@@ -22,8 +22,8 @@
     "postinstall": "npx simple-git-hooks"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.11",
-    "@supabase/supabase-js": "^2.49.4",
+    "@biomejs/biome": "^2.5.3",
+    "@supabase/supabase-js": "^2.110.3",
     "dotenv-cli": "^7.4.2",
     "lint-staged": "^15.5.2",
     "postgres": "^3.4.9",
