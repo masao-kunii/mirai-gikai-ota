@@ -16,6 +16,7 @@ export const routes = {
   councilSessions: () => "/council-sessions" as const,
   experts: () => "/experts" as const,
   interviews: () => "/interviews" as const,
+  reviewQueue: () => "/review-queue" as const,
   aiCollection: () => "/ai-collection" as const,
   billsMerge: () => "/bills/merge" as const,
   committees: () => "/committees" as const,
