@@ -40,6 +40,13 @@ updates:
       - dependency-name: "@supabase/supabase-js"
       - dependency-name: "@hookform/resolvers"
       - dependency-name: "rehype-*"
+      # AI SDK の v-bump（ai / @ai-sdk/*）はまとめて移行するタスクにする。
+      - dependency-name: "ai"
+      - dependency-name: "@ai-sdk/*"
+      # Node のランタイムは 22 系。@types/node の major は追わない（minor/patch は許可）。
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
     groups:
       # patch のみを1つの PR にまとめる。minor / major は個別 PR にしてレビューする。
       npm-patch:
