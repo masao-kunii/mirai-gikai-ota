@@ -117,7 +117,7 @@
     }
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.82",
+    "@ai-sdk/google": "^4.0.8",
     "@ai-sdk/google-vertex": "^4.0.124",
     "ai": "^6.0.3"
   },
