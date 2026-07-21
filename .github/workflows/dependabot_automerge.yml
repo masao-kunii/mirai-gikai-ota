@@ -1,0 +1,56 @@
+name: Dependabot auto-merge
+
+# 安全な依存更新（patch / minor と、その範囲の GitHub Actions 更新）を、
+# CI が通ったら自動でマージする。破壊的変更を含みうる major は対象外＝手動レビューに残す。
+#
+# ⚠ 前提（これらが無いと期待どおりに動かない）:
+#   1. リポジトリ設定 → General → "Allow auto-merge" を ON にする。
+#   2. ota/develop に branch protection を設定し、CI（lint-and-typecheck /
+#      integration-test / e2e-smoke）を "Require status checks to pass" に含める。
+#      これが無いと `--auto` は CI 完了を待たずに即マージしてしまう（自動マージの肝）。
+#   3. squash でマージするので "Allow squash merging" を ON（マージコミット派なら
+#      下の --squash を --merge に変える）。
+#   4. レビュー必須にしている場合は、Settings → Actions → General →
+#      "Allow GitHub Actions to create and approve pull requests" を ON にすると
+#      下の承認ステップが効く（不要なら承認は失敗しても先へ進む）。
+#
+# 反映は本ファイルが ota/develop（デフォルト＝PRのbase）にマージされて以降。
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot-auto-merge:
+    runs-on: ubuntu-latest
+    # Dependabot が作った PR のみ対象
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # patch / minor のみ自動化（グループPRは group 内の最大変更で判定される）。
+      # major（version-update:semver-major）はここに来ないので手動レビューに残る。
+      - name: Approve (レビュー必須リポジトリ向け・任意)
+        if: >-
+          ${{ steps.meta.outputs.update-type == 'version-update:semver-patch'
+          || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        continue-on-error: true
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge
+        if: >-
+          ${{ steps.meta.outputs.update-type == 'version-update:semver-patch'
+          || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
