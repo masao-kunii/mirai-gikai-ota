@@ -15,6 +15,7 @@ const navigationLinks = [
   { href: routes.tags(), label: "タグ管理" },
   { href: routes.interviews(), label: "インタビュー" },
   { href: routes.reviewQueue(), label: "承認キュー" },
+  { href: routes.reportFlags(), label: "通報" },
   { href: routes.experts(), label: "有識者" },
   { href: "/ai-collection", label: "AI情報収集" },
   { href: routes.admins(), label: "管理者" },

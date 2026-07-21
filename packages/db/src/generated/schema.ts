@@ -78,6 +78,26 @@ END`),
 	check("chk_moderation_score_range", sql`(moderation_score IS NULL) OR ((moderation_score >= 0) AND (moderation_score <= 100))`),
 ]);
 
+export const interviewReportFlags = pgTable("interview_report_flags", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	interviewReportId: uuid("interview_report_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	reason: text().notNull(),
+	detail: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_interview_report_flags_report_id").using("btree", table.interviewReportId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.interviewReportId],
+			foreignColumns: [interviewReport.id],
+			name: "interview_report_flags_interview_report_id_fkey"
+		}).onDelete("cascade"),
+	unique("interview_report_flags_interview_report_id_user_id_key").on(table.interviewReportId, table.userId),
+	pgPolicy("app_admin_all", { as: "permissive", for: "all", to: ["app_admin"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("resident_own", { as: "permissive", for: "all", to: ["resident_writer"] }),
+	check("interview_report_flags_reason_check", sql`reason = ANY (ARRAY['personal_info'::text, 'inappropriate'::text, 'inaccurate'::text, 'spam'::text, 'other'::text])`),
+]);
+
 export const committees = pgTable("committees", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	name: text().notNull(),

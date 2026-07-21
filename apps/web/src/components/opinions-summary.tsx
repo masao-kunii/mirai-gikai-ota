@@ -6,6 +6,7 @@ import {
   STANCE_LABELS,
   STANCE_ORDER,
 } from "../lib/bill-display";
+import { ReportOpinionButton } from "./report-opinion-button";
 
 /** ラベル＋バー＋件数の1行 */
 function DistBar({
@@ -137,6 +138,9 @@ export function OpinionsSummarySection({
                         {r.roleTitle || ROLE_LABELS[r.role] || r.role}
                       </span>
                     )}
+                    <span className="ml-auto">
+                      <ReportOpinionButton reportId={r.id} />
+                    </span>
                   </div>
                   {r.summary && (
                     <p className="text-sm leading-relaxed text-mirai-text">

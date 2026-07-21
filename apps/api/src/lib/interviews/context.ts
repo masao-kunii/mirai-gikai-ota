@@ -10,7 +10,57 @@ const {
   interviewConfigs,
   interviewSessions,
   interviewMessages,
+  interviewReport,
+  interviewReportFlags,
 } = schema;
+
+/** 通報理由（DB の check 制約と同期）。 */
+export type ReportFlagReason =
+  | "personal_info"
+  | "inappropriate"
+  | "inaccurate"
+  | "spam"
+  | "other";
+
+/** 対象レポートが公開中か（public_reader で見えるか）。存在しない/非公開は false。 */
+export async function isReportPublic(reportId: string): Promise<boolean> {
+  const rows = await publicQuery((tx) =>
+    tx
+      .select({ id: interviewReport.id })
+      .from(interviewReport)
+      .where(eq(interviewReport.id, reportId))
+      .limit(1)
+  );
+  return rows.length > 0;
+}
+
+/**
+ * 公開意見への通報を保存する（本人＝anon のみ・RLS）。
+ * 同一ユーザー×同一レポートは1回だけ（unique）。重複は無視して成功扱い。
+ */
+export async function saveReportFlag(
+  reportId: string,
+  anonId: string,
+  reason: ReportFlagReason,
+  detail: string | null
+): Promise<void> {
+  await withResident(getDb(), anonId, (tx) =>
+    tx
+      .insert(interviewReportFlags)
+      .values({
+        interviewReportId: reportId,
+        userId: anonId,
+        reason,
+        detail,
+      })
+      .onConflictDoNothing({
+        target: [
+          interviewReportFlags.interviewReportId,
+          interviewReportFlags.userId,
+        ],
+      })
+  );
+}
 
 /** インタビュー対象の指定（テーマ slug or 取り組み id）。 */
 export type InterviewTarget =

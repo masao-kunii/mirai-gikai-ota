@@ -24,8 +24,10 @@ import {
   getOrCreateSession,
   getSessionMessages,
   type InterviewTarget,
+  isReportPublic,
   resolveSubject,
   saveInterviewMessage,
+  saveReportFlag,
 } from "../lib/interviews/context";
 import { resolveInterviewModel } from "../lib/interviews/model";
 
@@ -231,6 +233,50 @@ export const interviewsRoute = new Hono()
         return withAnonCookie(c.json({ error: result.reason }, 400));
       }
       return withAnonCookie(c.json({ ok: true, published: result.published }));
+    }
+  )
+  // 通報（公開意見に対する住民からの報告）。公開中のレポートのみ。
+  .post(
+    "/report",
+    zValidator(
+      "json",
+      z.object({
+        reportId: z.uuid(),
+        reason: z.enum([
+          "personal_info",
+          "inappropriate",
+          "inaccurate",
+          "spam",
+          "other",
+        ]),
+        detail: z.string().max(500).optional(),
+      })
+    ),
+    async (c) => {
+      const { anonId, setCookie } = await resolveAnonId(c.req.raw);
+      const body = c.req.valid("json");
+      const withAnonCookie = (res: Response): Response => {
+        if (setCookie) res.headers.append("set-cookie", setCookie);
+        return res;
+      };
+
+      // 公開中のレポートのみ通報可（非公開の存在は秘匿）。
+      if (!(await isReportPublic(body.reportId))) {
+        return withAnonCookie(c.json({ error: "not_found" as const }, 404));
+      }
+
+      try {
+        await saveReportFlag(
+          body.reportId,
+          anonId,
+          body.reason,
+          body.detail ?? null
+        );
+        return withAnonCookie(c.json({ ok: true as const }));
+      } catch (error) {
+        console.error("Report flag error:", error);
+        return withAnonCookie(c.json({ error: "internal" as const }, 500));
+      }
     }
   );
 
