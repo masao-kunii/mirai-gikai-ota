@@ -7,8 +7,9 @@
 #   まとめて更新できる。サブディレクトリ（例: /apps/api）を個別指定すると、そこに
 #   ロックファイルが無く失敗するので指定しない。
 # - GitHub Actions は SHA ピン運用（pinact）。Dependabot は SHA を維持したまま更新するため両立する。
-# - PR の洪水を避けるため minor/patch はグループにまとめる。破壊的変更を含む major は
-#   個別 PR にして必ずレビューする。
+# - 洪水を避けつつ安全側に倒すため、**patch のみ**をグループにまとめる。minor と major は
+#   個別 PR にしてレビューする（過去に「minor」表記でも破壊的変更を含む更新が複数あったため）。
+# - 移行が別タスク級・破壊的変更が確認済みの重量級依存は当面 ignore し、個別に計画実施する。
 # - 供給網リスク低減のため cooldown（公開直後の版は避ける）を設定する。
 # - デフォルトブランチが ota/develop のため、PR は ota/develop に対して作成される（target-branch 不要）。
 version: 2
@@ -32,12 +33,18 @@ updates:
       semver-major-days: 14
       semver-minor-days: 7
       semver-patch-days: 3
+    ignore:
+      # 破壊的変更が確認済み／移行が別タスク級のもの。個別に計画して更新する。
+      # （2026-07 の一括更新でビルド/型/lint が壊れたため当面除外）
+      - dependency-name: "@biomejs/biome"
+      - dependency-name: "@supabase/supabase-js"
+      - dependency-name: "@hookform/resolvers"
+      - dependency-name: "rehype-*"
     groups:
-      # 依存関係の minor/patch を1つの PR にまとめる（major は個別 PR のまま）
-      npm-minor-patch:
+      # patch のみを1つの PR にまとめる。minor / major は個別 PR にしてレビューする。
+      npm-patch:
         applies-to: version-updates
         update-types:
-          - "minor"
           - "patch"
 
   # GitHub Actions（.github/workflows/*）
