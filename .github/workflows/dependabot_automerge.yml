@@ -1,7 +1,8 @@
 name: Dependabot auto-merge
 
-# 安全な依存更新（patch / minor と、その範囲の GitHub Actions 更新）を、
-# CI が通ったら自動でマージする。破壊的変更を含みうる major は対象外＝手動レビューに残す。
+# 最も安全な依存更新（patch のみ）を、CI が通ったら自動でマージする。
+# minor / major は手動レビューに残す（「minor」表記でも破壊的変更を含む更新が
+# 実際にあったため、自動は patch に限定する）。
 #
 # ⚠ 前提（これらが無いと期待どおりに動かない）:
 #   1. リポジトリ設定 → General → "Allow auto-merge" を ON にする。
@@ -35,11 +36,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # patch / minor のみ自動化（グループPRは group 内の最大変更で判定される）。
-      # major（version-update:semver-major）はここに来ないので手動レビューに残る。
+      # patch のみ自動化。minor / major は手動レビューに残す
+      # （「minor」表記でも破壊的変更を含む更新が実際にあったため）。
       - name: Approve (レビュー必須リポジトリ向け・任意)
-        if: >-
-          ${{ steps.meta.outputs.update-type == 'version-update:semver-patch'
-          || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' }}
         continue-on-error: true
         run: gh pr review --approve "$PR_URL"
         env:
@@ -47,9 +47,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Enable auto-merge
-        if: >-
-          ${{ steps.meta.outputs.update-type == 'version-update:semver-patch'
-          || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' }}
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
