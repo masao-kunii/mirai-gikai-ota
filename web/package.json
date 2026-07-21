@@ -17,7 +17,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@ai-sdk/google-vertex": "^4.0.124",
+    "@ai-sdk/google-vertex": "^5.0.11",
     "@ai-sdk/react": "^3.0.3",
     "@mirai-gikai/shared": "workspace:*",
     "@mirai-gikai/supabase": "workspace:*",
