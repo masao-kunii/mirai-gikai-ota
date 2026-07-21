@@ -12,6 +12,7 @@ export const interviewReportRoleEnum = pgEnum("interview_report_role_enum", ['su
 export const interviewRoleEnum = pgEnum("interview_role_enum", ['assistant', 'user'])
 export const moderationStatusEnum = pgEnum("moderation_status_enum", ['ok', 'warning', 'ng'])
 export const proposalTypeEnum = pgEnum("proposal_type_enum", ['mayor_bill', 'committee_bill', 'report', 'petition', 'member_bill', 'other'])
+export const reportReviewStatusEnum = pgEnum("report_review_status_enum", ['auto_approved', 'pending', 'approved', 'rejected'])
 export const stanceTypeEnum = pgEnum("stance_type_enum", ['for', 'against', 'neutral', 'conditional_for', 'conditional_against', 'considering', 'continued_deliberation'])
 
 
@@ -57,9 +58,14 @@ CASE
     ELSE 'ok'::moderation_status_enum
 END`),
 	moderationReasoning: text("moderation_reasoning"),
+	reviewStatus: reportReviewStatusEnum("review_status").default('pending').notNull(),
+	moderationCategories: jsonb("moderation_categories"),
+	faithfulnessOk: boolean("faithfulness_ok"),
+	faithfulnessReasoning: text("faithfulness_reasoning"),
 }, (table) => [
 	index("idx_interview_report_is_public_by_admin").using("btree", table.isPublicByAdmin.asc().nullsLast().op("bool_ops")),
 	index("idx_interview_report_moderation_status").using("btree", table.moderationStatus.asc().nullsLast().op("enum_ops")),
+	index("idx_interview_report_review_status").using("btree", table.reviewStatus.asc().nullsLast().op("enum_ops")),
 	index("idx_interview_report_total_content_richness").using("btree", table.totalContentRichness.desc().nullsLast().op("int4_ops")),
 	foreignKey({
 			columns: [table.interviewSessionId],

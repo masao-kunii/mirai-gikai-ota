@@ -14,7 +14,11 @@ export async function evaluateModerationScore(params: {
   roleDescription: string | null;
   messages: Array<{ role: string; content: string }>;
   model: string;
-}): Promise<{ score: number | null; reasoning: string | null }> {
+}): Promise<{
+  score: number | null;
+  reasoning: string | null;
+  flaggedCategories: string[] | null;
+}> {
   try {
     const prompt = buildModerationPrompt({
       summary: params.summary,
@@ -35,9 +39,14 @@ export async function evaluateModerationScore(params: {
         )
       ),
     ]);
-    return { score: result.object.score, reasoning: result.object.reasoning };
+    return {
+      score: result.object.score,
+      reasoning: result.object.reasoning,
+      flaggedCategories: result.object.flagged_categories,
+    };
   } catch (error) {
     console.error("Moderation evaluation failed:", error);
-    return { score: null, reasoning: null };
+    // 失敗は null（＝未確認）。承認判定側で pending に倒す。
+    return { score: null, reasoning: null, flaggedCategories: null };
   }
 }

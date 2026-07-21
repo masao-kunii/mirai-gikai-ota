@@ -678,16 +678,20 @@ export type Database = {
         Row: {
           content_richness: Json | null
           created_at: string
+          faithfulness_ok: boolean | null
+          faithfulness_reasoning: string | null
           id: string
           interview_session_id: string
           is_public_by_admin: boolean
           is_public_by_user: boolean
+          moderation_categories: Json | null
           moderation_reasoning: string | null
           moderation_score: number | null
           moderation_status:
             | Database["public"]["Enums"]["moderation_status_enum"]
             | null
           opinions: Json | null
+          review_status: Database["public"]["Enums"]["report_review_status_enum"]
           role: Database["public"]["Enums"]["interview_report_role_enum"] | null
           role_description: string | null
           role_title: string | null
@@ -699,16 +703,20 @@ export type Database = {
         Insert: {
           content_richness?: Json | null
           created_at?: string
+          faithfulness_ok?: boolean | null
+          faithfulness_reasoning?: string | null
           id?: string
           interview_session_id: string
           is_public_by_admin?: boolean
           is_public_by_user?: boolean
+          moderation_categories?: Json | null
           moderation_reasoning?: string | null
           moderation_score?: number | null
           moderation_status?:
             | Database["public"]["Enums"]["moderation_status_enum"]
             | null
           opinions?: Json | null
+          review_status?: Database["public"]["Enums"]["report_review_status_enum"]
           role?:
             | Database["public"]["Enums"]["interview_report_role_enum"]
             | null
@@ -722,16 +730,20 @@ export type Database = {
         Update: {
           content_richness?: Json | null
           created_at?: string
+          faithfulness_ok?: boolean | null
+          faithfulness_reasoning?: string | null
           id?: string
           interview_session_id?: string
           is_public_by_admin?: boolean
           is_public_by_user?: boolean
+          moderation_categories?: Json | null
           moderation_reasoning?: string | null
           moderation_score?: number | null
           moderation_status?:
             | Database["public"]["Enums"]["moderation_status_enum"]
             | null
           opinions?: Json | null
+          review_status?: Database["public"]["Enums"]["report_review_status_enum"]
           role?:
             | Database["public"]["Enums"]["interview_report_role_enum"]
             | null
@@ -1400,6 +1412,11 @@ export type Database = {
         | "petition"
         | "member_bill"
         | "other"
+      report_review_status_enum:
+        | "auto_approved"
+        | "pending"
+        | "approved"
+        | "rejected"
       stance_type_enum:
         | "for"
         | "against"
@@ -1575,6 +1592,12 @@ export const Constants = {
         "petition",
         "member_bill",
         "other",
+      ],
+      report_review_status_enum: [
+        "auto_approved",
+        "pending",
+        "approved",
+        "rejected",
       ],
       stance_type_enum: [
         "for",
