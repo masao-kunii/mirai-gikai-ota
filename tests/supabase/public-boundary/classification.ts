@@ -106,6 +106,11 @@ export const TABLE_BOUNDARIES: Record<string, TableBoundary> = {
     residentWrite: false,
     note: "is_public_by_user AND is_public_by_admin のみ公開。作成は管理系接続",
   },
+  interview_report_flags: {
+    publicRead: "none",
+    residentWrite: true,
+    note: "公開意見への通報。住民は自分の通報のみ。閲覧・対応は管理者",
+  },
   interview_sessions: {
     publicRead: "conditional",
     residentWrite: true,

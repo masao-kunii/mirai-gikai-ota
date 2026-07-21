@@ -764,6 +764,41 @@ export type Database = {
           },
         ]
       }
+      interview_report_flags: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          interview_report_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          interview_report_id: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          interview_report_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_report_flags_interview_report_id_fkey"
+            columns: ["interview_report_id"]
+            isOneToOne: false
+            referencedRelation: "interview_report"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_sessions: {
         Row: {
           archived_at: string | null

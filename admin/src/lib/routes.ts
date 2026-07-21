@@ -17,6 +17,7 @@ export const routes = {
   experts: () => "/experts" as const,
   interviews: () => "/interviews" as const,
   reviewQueue: () => "/review-queue" as const,
+  reportFlags: () => "/report-flags" as const,
   aiCollection: () => "/ai-collection" as const,
   billsMerge: () => "/bills/merge" as const,
   committees: () => "/committees" as const,
