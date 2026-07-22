@@ -2,6 +2,7 @@ import {
   createDbClient,
   type DbClient,
   type DbTx,
+  withAppAdmin,
   withPublicReader,
 } from "@mirai-gikai/db";
 
@@ -70,4 +71,17 @@ export function getDb(): DbClient {
  */
 export function publicQuery<T>(fn: (tx: DbTx) => Promise<T>): Promise<T> {
   return withPublicReader(getDb(), fn);
+}
+
+/**
+ * 管理系クエリ（app_admin ロール）。
+ *
+ * 管理 API（routes/admin/*）専用。Cloudflare Access で認証済みの管理者だけが
+ * 到達するルートから呼ぶこと（requireAdminAccess ミドルウェアで境界を担保）。
+ * 公開系ハンドラでの使用は禁止（TARGET_ARCHITECTURE §13）。
+ * app_admin は draft 議案・未公開レポートを含む全行を読み書きできるため、
+ * 認証境界を通っていないルートから絶対に呼ばない。
+ */
+export function adminQuery<T>(fn: (tx: DbTx) => Promise<T>): Promise<T> {
+  return withAppAdmin(getDb(), fn);
 }
