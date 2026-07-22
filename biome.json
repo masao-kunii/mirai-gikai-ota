@@ -54,6 +54,7 @@
       "!.claude/worktrees",
       "!packages/db/src/generated",
       "!apps/web/src/routeTree.gen.ts",
+      "!apps/admin/src/routeTree.gen.ts",
       "!apps/**/dist",
       "!apps/**/.tanstack",
       "!apps/**/.nitro",

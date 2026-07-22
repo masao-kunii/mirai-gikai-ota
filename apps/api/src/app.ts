@@ -1,10 +1,23 @@
 import { Hono } from "hono";
+import { requireAdminAccess } from "./lib/admin-auth";
+import { adminTagsRoute } from "./routes/admin/tags";
 import { billsRoute } from "./routes/bills";
 import { createChatRoute } from "./routes/chat";
 import { councilSessionsRoute } from "./routes/council-sessions";
 import { interviewsRoute } from "./routes/interviews";
 import { tagsRoute } from "./routes/tags";
 import { themesRoute } from "./routes/themes";
+
+/**
+ * 管理 API（apps/admin から呼ぶ）。
+ *
+ * /api/admin/* はまとめて requireAdminAccess（Cloudflare Access）配下に置き、
+ * 認証境界をこの1か所で担保する。ハンドラは app_admin ロール（adminQuery）で
+ * DB に触れる。公開ドメイン（下）とはロール・境界を分離する（§13/§158）。
+ */
+const adminApp = new Hono()
+  .use("*", requireAdminAccess)
+  .route("/tags", adminTagsRoute);
 
 /**
  * 公開 API（apps/api）の組み立て。
@@ -21,4 +34,5 @@ export const app = new Hono()
   .route("/council-sessions", councilSessionsRoute)
   .route("/tags", tagsRoute)
   .route("/themes", themesRoute)
-  .route("/interviews", interviewsRoute);
+  .route("/interviews", interviewsRoute)
+  .route("/admin", adminApp);

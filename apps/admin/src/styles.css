@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/*
+ * 管理フロントは内部ツール。公開サイトのデザイントークンは持ち込まず、
+ * Tailwind 既定の中立的な配色で「読みやすい業務画面」に徹する。
+ */
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family:
+    "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
