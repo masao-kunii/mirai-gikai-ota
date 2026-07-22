@@ -167,7 +167,7 @@ importers:
     dependencies:
       '@hono/zod-validator':
         specifier: ^0.9.0
-        version: 0.9.0(hono@4.12.27)(zod@4.1.12)
+        version: 0.9.0(hono@4.12.28)(zod@4.1.12)
       '@mirai-gikai/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -181,8 +181,8 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       hono:
-        specifier: ^4.12.27
-        version: 4.12.27
+        specifier: ^4.12.28
+        version: 4.12.28
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -192,7 +192,7 @@ importers:
         version: 5.20260705.1
       '@hono/node-server':
         specifier: ^2.0.11
-        version: 2.0.11(hono@4.12.27)
+        version: 2.0.11(hono@4.12.28)
       '@types/node':
         specifier: ^22.5.5
         version: 22.18.8
@@ -227,8 +227,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       hono:
-        specifier: ^4.12.27
-        version: 4.12.27
+        specifier: ^4.12.28
+        version: 4.12.28
       lucide-react:
         specifier: ^1.25.0
         version: 1.25.0(react@19.2.7)
@@ -4526,8 +4526,8 @@ packages:
     resolution: {integrity: sha512-p1JfQMKaceuCbpJKAPKVqyqviZdS0eUxH9v82oWo1kb9xjQ5wA6iP3FNVAPDFlz5/p7d45lO+BpSk1tuSZMF4Q==}
     engines: {node: '>=16.9.0'}
 
-  hono@4.12.27:
-    resolution: {integrity: sha512-1yrb/+w6HWQJrUCLkJ2IF5jNIPvvFkblV5RNOYl6bV+OA6p9GLcMpHFFGTosSvHvcAUibuUukRqhlYI4z32C7Q==}
+  hono@4.12.28:
+    resolution: {integrity: sha512-YwUvVpSF7m1yOblFPrU3Hbo8XhPheBoiyfGuII6z19LnOr6JpDnyyp7LFNrfV56wS8tpvtBFGRISHN02pDdLOA==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.1:
@@ -7122,13 +7122,13 @@ snapshots:
     dependencies:
       hono: 4.12.12
 
-  '@hono/node-server@2.0.11(hono@4.12.27)':
+  '@hono/node-server@2.0.11(hono@4.12.28)':
     dependencies:
-      hono: 4.12.27
+      hono: 4.12.28
 
-  '@hono/zod-validator@0.9.0(hono@4.12.27)(zod@4.1.12)':
+  '@hono/zod-validator@0.9.0(hono@4.12.28)(zod@4.1.12)':
     dependencies:
-      hono: 4.12.27
+      hono: 4.12.28
       zod: 4.1.12
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.81.0(react@19.2.7))':
@@ -10260,7 +10260,7 @@ snapshots:
 
   hono@4.12.12: {}
 
-  hono@4.12.27: {}
+  hono@4.12.28: {}
 
   hookable@6.1.1: {}
 
