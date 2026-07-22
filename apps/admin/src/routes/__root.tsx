@@ -4,7 +4,7 @@ import {
   Link,
   Outlet,
 } from "@tanstack/react-router";
-import { Tags } from "lucide-react";
+import { Building2, Tags, Users } from "lucide-react";
 
 // loader から queryClient を使えるよう context に型を通す。
 export interface RouterContext {
@@ -17,7 +17,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 // 管理ドメインは今後増える（bills / sessions / interviews …）。
 // ここに1行足すだけでナビに載る構成にしておく。
-const NAV_ITEMS = [{ to: "/tags", label: "タグ管理", icon: Tags }] as const;
+const NAV_ITEMS = [
+  { to: "/tags", label: "タグ管理", icon: Tags },
+  { to: "/factions", label: "会派管理", icon: Users },
+  { to: "/committees", label: "委員会管理", icon: Building2 },
+] as const;
 
 function RootLayout() {
   return (

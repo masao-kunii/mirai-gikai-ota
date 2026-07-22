@@ -1,35 +1,37 @@
 import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { inputClass, primaryButtonClass } from "../../lib/ui";
-import { type CreateTagInput, useCreateTag } from "./tags-queries";
+import {
+  type CreateCommitteeInput,
+  useCreateCommittee,
+} from "./committees-queries";
 
 /**
- * タグ新規作成フォーム。label 必須、description と注目順（featuredPriority）は任意。
- * 注目順は空欄なら「非注目（null）」として扱う。
+ * 委員会 新規作成フォーム。委員会名（name）は必須。説明・並び順は任意。
  */
-export function CreateTagForm() {
-  const [label, setLabel] = useState("");
+export function CreateCommitteeForm() {
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("");
-  const createTag = useCreateTag();
+  const [sortOrder, setSortOrder] = useState("");
+  const createCommittee = useCreateCommittee();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const input: CreateTagInput = {
-      label: label.trim(),
-      description: description.trim() || undefined,
-      featuredPriority: priority.trim() === "" ? null : Number(priority),
+    const input: CreateCommitteeInput = {
+      name: name.trim(),
+      description: description.trim() || null,
+      sortOrder: sortOrder.trim() === "" ? 0 : Number(sortOrder),
     };
-    createTag.mutate(input, {
+    createCommittee.mutate(input, {
       onSuccess: () => {
-        setLabel("");
+        setName("");
         setDescription("");
-        setPriority("");
+        setSortOrder("");
       },
     });
   };
 
-  const disabled = label.trim() === "" || createTag.isPending;
+  const disabled = name.trim() === "" || createCommittee.isPending;
 
   return (
     <form
@@ -39,13 +41,13 @@ export function CreateTagForm() {
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="font-medium text-slate-600 text-xs">
-            タグ名 <span className="text-red-500">*</span>
+            委員会名 <span className="text-red-500">*</span>
           </span>
           <input
             className={inputClass}
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="例）子育て・教育"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="例）総務財政委員会"
             maxLength={100}
           />
         </label>
@@ -59,15 +61,15 @@ export function CreateTagForm() {
             maxLength={1000}
           />
         </label>
-        <label className="flex w-28 flex-col gap-1">
-          <span className="font-medium text-slate-600 text-xs">注目順</span>
+        <label className="flex w-24 flex-col gap-1">
+          <span className="font-medium text-slate-600 text-xs">並び順</span>
           <input
             className={inputClass}
             type="number"
             min={0}
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            placeholder="空=非注目"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            placeholder="0"
           />
         </label>
         <button
@@ -79,8 +81,10 @@ export function CreateTagForm() {
           追加
         </button>
       </div>
-      {createTag.isError ? (
-        <p className="mt-2 text-red-600 text-sm">{createTag.error.message}</p>
+      {createCommittee.isError ? (
+        <p className="mt-2 text-red-600 text-sm">
+          {createCommittee.error.message}
+        </p>
       ) : null}
     </form>
   );

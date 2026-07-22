@@ -4,6 +4,7 @@ import { asc, count, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { adminQuery } from "../../lib/db";
+import { isUniqueViolation } from "../../lib/pg-errors";
 
 const { tags, billsTags } = schema;
 
@@ -31,24 +32,6 @@ const updateBodySchema = z.object({
 });
 
 const paramSchema = z.object({ id: z.uuid() });
-
-// Postgres unique_violation（label 重複）を 409 として扱うために判定する。
-// drizzle は DrizzleQueryError でラップし、実 PostgresError（code=23505）は
-// .cause に入るため、本体と cause の両方を確認する。
-function hasPgCode(e: unknown, code: string): boolean {
-  return (
-    typeof e === "object" &&
-    e !== null &&
-    "code" in e &&
-    (e as { code?: unknown }).code === code
-  );
-}
-
-function isUniqueViolation(e: unknown): boolean {
-  if (hasPgCode(e, "23505")) return true;
-  const cause = (e as { cause?: unknown } | null)?.cause;
-  return hasPgCode(cause, "23505");
-}
 
 export const adminTagsRoute = new Hono()
   // 一覧（紐づく議案数つき・label 昇順）

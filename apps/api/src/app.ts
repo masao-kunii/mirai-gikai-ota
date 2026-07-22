@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { requireAdminAccess } from "./lib/admin-auth";
+import { adminCommitteesRoute } from "./routes/admin/committees";
+import { adminFactionsRoute } from "./routes/admin/factions";
 import { adminTagsRoute } from "./routes/admin/tags";
 import { billsRoute } from "./routes/bills";
 import { createChatRoute } from "./routes/chat";
@@ -17,7 +19,9 @@ import { themesRoute } from "./routes/themes";
  */
 const adminApp = new Hono()
   .use("*", requireAdminAccess)
-  .route("/tags", adminTagsRoute);
+  .route("/tags", adminTagsRoute)
+  .route("/factions", adminFactionsRoute)
+  .route("/committees", adminCommitteesRoute);
 
 /**
  * 公開 API（apps/api）の組み立て。
