@@ -78,8 +78,8 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@supabase/ssr':
-        specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.74.0)
+        specifier: ^0.12.3
+        version: 0.12.3(@supabase/supabase-js@2.74.0)
       '@supabase/supabase-js':
         specifier: ^2.57.0
         version: 2.74.0
@@ -360,8 +360,8 @@ importers:
   packages/supabase:
     dependencies:
       '@supabase/ssr':
-        specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.74.0)
+        specifier: ^0.12.3
+        version: 0.12.3(@supabase/supabase-js@2.74.0)
       '@supabase/supabase-js':
         specifier: ^2.57.0
         version: 2.74.0
@@ -430,8 +430,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/react@19.2.17)(react@19.2.7)
       '@supabase/ssr':
-        specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.74.0)
+        specifier: ^0.12.3
+        version: 0.12.3(@supabase/supabase-js@2.74.0)
       '@vercel/speed-insights':
         specifier: ^1.2.0
         version: 1.2.0(next@15.5.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
@@ -3070,10 +3070,10 @@ packages:
   '@supabase/realtime-js@2.74.0':
     resolution: {integrity: sha512-K5VqpA4/7RO1u1nyD5ICFKzWKu58bIDcPxHY0aFA7MyWkFd0pzi/XYXeoSsAifnD9p72gPIpgxVXCQZKJg1ktQ==}
 
-  '@supabase/ssr@0.5.2':
-    resolution: {integrity: sha512-n3plRhr2Bs8Xun1o4S3k1CDv17iH5QY9YcoEvXX3bxV1/5XSasA0mNXYycFmADIdtdE6BG9MRjP5CGIs8qxC8A==}
+  '@supabase/ssr@0.12.3':
+    resolution: {integrity: sha512-qWXJ/dI7CiYDKyTgIPqJ4Qkh8y5edh2LdF/nkN48z47mmEVzAO2OE+YErYeQ/UemVfonn/F4kFz+lhLqoVMdpw==}
     peerDependencies:
-      '@supabase/supabase-js': ^2.43.4
+      '@supabase/supabase-js': ^2.110.5
 
   '@supabase/storage-js@2.74.0':
     resolution: {integrity: sha512-o0cTQdMqHh4ERDLtjUp1/KGPbQoNwKRxUh6f8+KQyjC5DSmiw/r+jgFe/WHh067aW+WU8nA9Ytw9ag7OhzxEkQ==}
@@ -3469,9 +3469,6 @@ packages:
 
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
-
-  '@types/cookie@0.6.0':
-    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
   '@types/d3-array@3.2.2':
     resolution: {integrity: sha512-hOLWVbm7uRza0BYXpIIW5pxfrKe0W+D5lrFiAEYR+pb6w3N2SwSMaJbXdUfSEv+dT4MfHBLtn5js0LAWaO6otw==}
@@ -8972,11 +8969,10 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@supabase/ssr@0.5.2(@supabase/supabase-js@2.74.0)':
+  '@supabase/ssr@0.12.3(@supabase/supabase-js@2.74.0)':
     dependencies:
       '@supabase/supabase-js': 2.74.0
-      '@types/cookie': 0.6.0
-      cookie: 0.7.2
+      cookie: 1.1.1
 
   '@supabase/storage-js@2.74.0':
     dependencies:
@@ -9440,8 +9436,6 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
 
-  '@types/cookie@0.6.0': {}
-
   '@types/d3-array@3.2.2': {}
 
   '@types/d3-axis@3.0.6':
@@ -9667,6 +9661,14 @@ snapshots:
       '@vitest/utils': 3.2.4
       chai: 5.3.3
       tinyrainbow: 2.0.0
+
+  '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@20.19.28)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@vitest/spy': 3.2.4
+      estree-walker: 3.0.3
+      magic-string: 0.30.19
+    optionalDependencies:
+      vite: 7.3.1(@types/node@20.19.28)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.9.0)
 
   '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@22.18.8)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.9.0))':
     dependencies:
@@ -13025,7 +13027,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@22.18.8)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@20.19.28)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)(yaml@2.9.0))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
