@@ -94,3 +94,23 @@ export function useSetBillTags() {
     onSuccess: () => qc.invalidateQueries({ queryKey: BILLS_KEY }),
   });
 }
+
+export type StanceInput = InferRequestType<
+  (typeof billsApi)[":id"]["stances"]["$put"]
+>["json"]["stances"][number];
+
+/** 議案の会派スタンス集合を丸ごと置き換える（会派ごと1件）。 */
+export function useSetBillStances() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; stances: StanceInput[] }) => {
+      const res = await billsApi[":id"].stances.$put({
+        param: { id: vars.id },
+        json: { stances: vars.stances },
+      });
+      if (!res.ok) throw new Error("会派スタンスの更新に失敗しました");
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BILLS_KEY }),
+  });
+}

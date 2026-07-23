@@ -6,7 +6,25 @@ import { z } from "zod";
 import { adminQuery } from "../../lib/db";
 import { isForeignKeyViolation, isUniqueViolation } from "../../lib/pg-errors";
 
-const { bills, councilSessions, committees, billsTags, tags } = schema;
+const {
+  bills,
+  councilSessions,
+  committees,
+  billsTags,
+  tags,
+  factionStances,
+  factions,
+} = schema;
+
+const stanceTypeEnum = z.enum([
+  "for",
+  "against",
+  "neutral",
+  "conditional_for",
+  "conditional_against",
+  "considering",
+  "continued_deliberation",
+]);
 
 /**
  * 管理 議案 CRUD（app_admin ロール）— 薄い初版。
@@ -83,7 +101,7 @@ export const adminBillsRoute = new Hono()
   .get("/", async (c) => {
     // 議案本体とタグ紐付けを1トランザクションで取得し、JS 側で束ねる
     // （タグの leftJoin は行を増やし session/committee の単一結合を崩すため分離）。
-    const { billRows, tagRows } = await adminQuery(async (tx) => {
+    const { billRows, tagRows, stanceRows } = await adminQuery(async (tx) => {
       const billRows = await tx
         .select({
           id: bills.id,
@@ -120,7 +138,19 @@ export const adminBillsRoute = new Hono()
         .innerJoin(tags, eq(tags.id, billsTags.tagId))
         .orderBy(asc(tags.label));
 
-      return { billRows, tagRows };
+      const stanceRows = await tx
+        .select({
+          billId: factionStances.billId,
+          factionId: factionStances.factionId,
+          factionName: factions.displayName,
+          type: factionStances.type,
+          comment: factionStances.comment,
+        })
+        .from(factionStances)
+        .innerJoin(factions, eq(factions.id, factionStances.factionId))
+        .orderBy(asc(factions.sortOrder));
+
+      return { billRows, tagRows, stanceRows };
     });
 
     const tagsByBill = new Map<string, { id: string; label: string }[]>();
@@ -130,9 +160,30 @@ export const adminBillsRoute = new Hono()
       tagsByBill.set(t.billId, list);
     }
 
+    const stancesByBill = new Map<
+      string,
+      {
+        factionId: string;
+        factionName: string;
+        type: string;
+        comment: string | null;
+      }[]
+    >();
+    for (const s of stanceRows) {
+      const list = stancesByBill.get(s.billId) ?? [];
+      list.push({
+        factionId: s.factionId,
+        factionName: s.factionName,
+        type: s.type,
+        comment: s.comment,
+      });
+      stancesByBill.set(s.billId, list);
+    }
+
     const result = billRows.map((b) => ({
       ...b,
       tags: tagsByBill.get(b.id) ?? [],
+      stances: stancesByBill.get(b.id) ?? [],
     }));
     return c.json({ bills: result });
   })
@@ -259,6 +310,64 @@ export const adminBillsRoute = new Hono()
         // 存在しない tagId を渡された場合（FK 違反）。
         if (isForeignKeyViolation(e)) {
           return c.json({ error: "invalid_tag" }, 400);
+        }
+        throw e;
+      }
+    }
+  )
+  // 会派スタンスの置換（会派ごとに1件。渡された集合へ丸ごと入れ替える）
+  .put(
+    "/:id/stances",
+    zValidator("param", paramSchema),
+    zValidator(
+      "json",
+      z.object({
+        stances: z
+          .array(
+            z.object({
+              factionId: z.uuid(),
+              type: stanceTypeEnum,
+              comment: z.string().trim().max(2000).nullable().optional(),
+            })
+          )
+          .max(50),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { stances } = c.req.valid("json");
+      // 会派ごと1件（先勝ちで重複除去。DB の unique と整合させる）。
+      const seen = new Set<string>();
+      const unique = stances.filter((s) => {
+        if (seen.has(s.factionId)) return false;
+        seen.add(s.factionId);
+        return true;
+      });
+      try {
+        const done = await adminQuery(async (tx) => {
+          const [bill] = await tx
+            .select({ id: bills.id })
+            .from(bills)
+            .where(eq(bills.id, id));
+          if (!bill) return false;
+          await tx.delete(factionStances).where(eq(factionStances.billId, id));
+          if (unique.length > 0) {
+            await tx.insert(factionStances).values(
+              unique.map((s) => ({
+                billId: id,
+                factionId: s.factionId,
+                type: s.type,
+                comment: s.comment ?? null,
+              }))
+            );
+          }
+          return true;
+        });
+        if (!done) return c.json({ error: "not_found" }, 404);
+        return c.json({ id });
+      } catch (e) {
+        if (isForeignKeyViolation(e)) {
+          return c.json({ error: "invalid_faction" }, 400);
         }
         throw e;
       }
