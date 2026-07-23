@@ -5,6 +5,7 @@
  * ランタイムコードを import するとサーバコードがクライアントバンドルに
  * 混入するため禁止する（TARGET_ARCHITECTURE §6「型のみの依存」）。
  */
+export type { AdminBillsRouteType } from "./routes/admin/bills";
 export type { AdminCommitteesRouteType } from "./routes/admin/committees";
 export type { AdminCouncilSessionsRouteType } from "./routes/admin/council-sessions";
 export type { AdminFactionsRouteType } from "./routes/admin/factions";
