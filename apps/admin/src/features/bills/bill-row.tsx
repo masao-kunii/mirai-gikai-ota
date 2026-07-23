@@ -5,6 +5,7 @@ import { InlineDeleteConfirm } from "../../components/inline-delete-confirm";
 import { iconButtonClass, inputClass, primaryButtonClass } from "../../lib/ui";
 import { useCommittees } from "../committees/committees-queries";
 import { useCouncilSessions } from "../council-sessions/council-sessions-queries";
+import { useTags } from "../tags/tags-queries";
 import {
   BILL_STATUS_LABELS,
   BILL_STATUS_OPTIONS,
@@ -21,33 +22,43 @@ import {
   type AdminBill,
   type UpdateBillInput,
   useDeleteBill,
+  useSetBillTags,
   useUpdateBill,
 } from "./bills-queries";
 
 const BILL_COLSPAN = 6;
 
-/** 議案1行。表示／展開編集を切り替える。編集では基本スカラー項目をまとめて更新する。 */
+/** 議案1行。表示／展開編集を切り替える。編集では基本スカラー項目とタグをまとめて更新する。 */
 export function BillRow({ bill }: { bill: AdminBill }) {
   const [editing, setEditing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const updateBill = useUpdateBill();
+  const setBillTags = useSetBillTags();
   const deleteBill = useDeleteBill();
+
+  // スカラー更新とタグ置換を順に行う（どちらかが失敗したらエラー表示のまま留まる）。
+  const handleSave = async (input: UpdateBillInput, tagIds: string[]) => {
+    setSaveError(null);
+    try {
+      await updateBill.mutateAsync({ id: bill.id, input });
+      await setBillTags.mutateAsync({ id: bill.id, tagIds });
+      setEditing(false);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "保存に失敗しました");
+    }
+  };
 
   if (editing) {
     return (
       <EditBillRow
         bill={bill}
-        pending={updateBill.isPending}
-        error={updateBill.isError ? updateBill.error.message : null}
+        pending={updateBill.isPending || setBillTags.isPending}
+        error={saveError}
         onCancel={() => {
-          updateBill.reset();
+          setSaveError(null);
           setEditing(false);
         }}
-        onSave={(input) =>
-          updateBill.mutate(
-            { id: bill.id, input },
-            { onSuccess: () => setEditing(false) }
-          )
-        }
+        onSave={handleSave}
       />
     );
   }
@@ -63,6 +74,18 @@ export function BillRow({ bill }: { bill: AdminBill }) {
         </div>
         {bill.billNumber ? (
           <div className="text-slate-400 text-xs">{bill.billNumber}</div>
+        ) : null}
+        {bill.tags.length > 0 ? (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {bill.tags.map((t) => (
+              <span
+                key={t.id}
+                className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 text-xs"
+              >
+                {t.label}
+              </span>
+            ))}
+          </div>
         ) : null}
       </td>
       <td className="px-3 py-2 text-center">
@@ -113,11 +136,12 @@ function EditBillRow({
   bill: AdminBill;
   pending: boolean;
   error: string | null;
-  onSave: (input: UpdateBillInput) => void;
+  onSave: (input: UpdateBillInput, tagIds: string[]) => void;
   onCancel: () => void;
 }) {
   const sessions = useCouncilSessions();
   const committees = useCommittees();
+  const allTags = useTags();
   const [name, setName] = useState(bill.name);
   const [billNumber, setBillNumber] = useState(bill.billNumber);
   const [status, setStatus] = useState<BillStatus>(bill.status as BillStatus);
@@ -140,22 +164,31 @@ function EditBillRow({
   const [isReviewCompleted, setIsReviewCompleted] = useState(
     bill.isReviewCompleted
   );
+  const [tagIds, setTagIds] = useState<string[]>(bill.tags.map((t) => t.id));
+
+  const toggleTag = (id: string) =>
+    setTagIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
 
   const save = () =>
-    onSave({
-      name: name.trim(),
-      billNumber: billNumber.trim(),
-      status,
-      publishStatus,
-      proposalType,
-      councilSessionId: councilSessionId || null,
-      committeeId: committeeId || null,
-      statusNote: statusNote.trim() || null,
-      slug: slug.trim() || null,
-      submittedDate: submittedDate || null,
-      isFeatured,
-      isReviewCompleted,
-    });
+    onSave(
+      {
+        name: name.trim(),
+        billNumber: billNumber.trim(),
+        status,
+        publishStatus,
+        proposalType,
+        councilSessionId: councilSessionId || null,
+        committeeId: committeeId || null,
+        statusNote: statusNote.trim() || null,
+        slug: slug.trim() || null,
+        submittedDate: submittedDate || null,
+        isFeatured,
+        isReviewCompleted,
+      },
+      tagIds
+    );
 
   return (
     <tr className="border-slate-100 border-b bg-slate-50">
@@ -268,6 +301,27 @@ function EditBillRow({
               onChange={(e) => setStatusNote(e.target.value)}
               maxLength={1000}
             />
+          </Field>
+          <Field label="タグ" className="col-span-2 md:col-span-3">
+            <div className="flex flex-wrap gap-2">
+              {(allTags.data ?? []).map((t) => {
+                const on = tagIds.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => toggleTag(t.id)}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      on
+                        ? "border-slate-800 bg-slate-800 text-white"
+                        : "border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
           <label className="flex items-center gap-2 self-end pb-2">
             <input

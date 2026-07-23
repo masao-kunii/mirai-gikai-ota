@@ -1,12 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { adminQuery } from "../../lib/db";
-import { isUniqueViolation } from "../../lib/pg-errors";
+import { isForeignKeyViolation, isUniqueViolation } from "../../lib/pg-errors";
 
-const { bills, councilSessions, committees } = schema;
+const { bills, councilSessions, committees, billsTags, tags } = schema;
 
 /**
  * 管理 議案 CRUD（app_admin ロール）— 薄い初版。
@@ -79,10 +79,12 @@ const updateBodySchema = z.object({
 const paramSchema = z.object({ id: z.uuid() });
 
 export const adminBillsRoute = new Hono()
-  // 一覧（会期名・委員会名つき・作成日降順）
+  // 一覧（会期名・委員会名＋付与タグつき・作成日降順）
   .get("/", async (c) => {
-    const rows = await adminQuery((tx) =>
-      tx
+    // 議案本体とタグ紐付けを1トランザクションで取得し、JS 側で束ねる
+    // （タグの leftJoin は行を増やし session/committee の単一結合を崩すため分離）。
+    const { billRows, tagRows } = await adminQuery(async (tx) => {
+      const billRows = await tx
         .select({
           id: bills.id,
           name: bills.name,
@@ -106,9 +108,33 @@ export const adminBillsRoute = new Hono()
           eq(councilSessions.id, bills.councilSessionId)
         )
         .leftJoin(committees, eq(committees.id, bills.committeeId))
-        .orderBy(desc(bills.createdAt))
-    );
-    return c.json({ bills: rows });
+        .orderBy(desc(bills.createdAt));
+
+      const tagRows = await tx
+        .select({
+          billId: billsTags.billId,
+          id: tags.id,
+          label: tags.label,
+        })
+        .from(billsTags)
+        .innerJoin(tags, eq(tags.id, billsTags.tagId))
+        .orderBy(asc(tags.label));
+
+      return { billRows, tagRows };
+    });
+
+    const tagsByBill = new Map<string, { id: string; label: string }[]>();
+    for (const t of tagRows) {
+      const list = tagsByBill.get(t.billId) ?? [];
+      list.push({ id: t.id, label: t.label });
+      tagsByBill.set(t.billId, list);
+    }
+
+    const result = billRows.map((b) => ({
+      ...b,
+      tags: tagsByBill.get(b.id) ?? [],
+    }));
+    return c.json({ bills: result });
   })
   // 作成
   .post("/", zValidator("json", createBodySchema), async (c) => {
@@ -199,6 +225,41 @@ export const adminBillsRoute = new Hono()
         return c.json({ id: row.id });
       } catch (e) {
         if (isUniqueViolation(e)) return c.json({ error: "duplicate" }, 409);
+        throw e;
+      }
+    }
+  )
+  // 付与タグの置換（渡された tagId 集合に丸ごと入れ替える）
+  .put(
+    "/:id/tags",
+    zValidator("param", paramSchema),
+    zValidator("json", z.object({ tagIds: z.array(z.uuid()).max(50) })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { tagIds } = c.req.valid("json");
+      const uniqueTagIds = [...new Set(tagIds)];
+      try {
+        const done = await adminQuery(async (tx) => {
+          const [bill] = await tx
+            .select({ id: bills.id })
+            .from(bills)
+            .where(eq(bills.id, id));
+          if (!bill) return false;
+          await tx.delete(billsTags).where(eq(billsTags.billId, id));
+          if (uniqueTagIds.length > 0) {
+            await tx
+              .insert(billsTags)
+              .values(uniqueTagIds.map((tagId) => ({ billId: id, tagId })));
+          }
+          return true;
+        });
+        if (!done) return c.json({ error: "not_found" }, 404);
+        return c.json({ id });
+      } catch (e) {
+        // 存在しない tagId を渡された場合（FK 違反）。
+        if (isForeignKeyViolation(e)) {
+          return c.json({ error: "invalid_tag" }, 400);
+        }
         throw e;
       }
     }
