@@ -1,0 +1,217 @@
+import { zValidator } from "@hono/zod-validator";
+import { schema } from "@mirai-gikai/db";
+import { desc, eq } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
+import { adminQuery } from "../../lib/db";
+import { isUniqueViolation } from "../../lib/pg-errors";
+
+const { bills, councilSessions, committees } = schema;
+
+/**
+ * 管理 議案 CRUD（app_admin ロール）— 薄い初版。
+ *
+ * まずは基本スカラー項目（議案名・番号・審議状況/公開状態/提出区分・会期・委員会・
+ * 注目フラグ等）の参照/作成/更新/削除に絞る。タグ（M2M）・会派スタンス・本文
+ * （bill_contents）・knowledge_source などの関連は後続の PR で段階的に足す。
+ *
+ * /api/admin/* は requireAdminAccess 配下。app_admin は下書き議案も操作できる。
+ */
+
+// enum は DB の pgEnum と一致させる（値の追加時は両方を更新する）。
+const statusEnum = z.enum([
+  "preparing",
+  "submitted",
+  "in_committee",
+  "plenary_session",
+  "approved",
+  "rejected",
+  "adopted",
+  "partially_adopted",
+]);
+const publishStatusEnum = z.enum(["draft", "published", "coming_soon"]);
+const proposalTypeEnum = z.enum([
+  "mayor_bill",
+  "committee_bill",
+  "report",
+  "petition",
+  "member_bill",
+  "other",
+]);
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const dateField = z
+  .string()
+  .regex(DATE_RE, "YYYY-MM-DD 形式で入力してください");
+const slugField = z
+  .string()
+  .trim()
+  .regex(/^[a-z0-9-]+$/, "slug は半角英小文字・数字・ハイフンのみ使用できます")
+  .max(200);
+
+const createBodySchema = z.object({
+  name: z.string().trim().min(1).max(500),
+  billNumber: z.string().trim().max(100).default(""),
+  status: statusEnum.default("preparing"),
+  publishStatus: publishStatusEnum.default("draft"),
+  proposalType: proposalTypeEnum.default("mayor_bill"),
+  councilSessionId: z.uuid().nullable().optional(),
+  committeeId: z.uuid().nullable().optional(),
+  isFeatured: z.boolean().default(false),
+});
+
+// PATCH: 指定フィールドのみ更新（undefined=据え置き）。
+const updateBodySchema = z.object({
+  name: z.string().trim().min(1).max(500).optional(),
+  billNumber: z.string().trim().max(100).optional(),
+  status: statusEnum.optional(),
+  statusNote: z.string().trim().max(1000).nullable().optional(),
+  publishStatus: publishStatusEnum.optional(),
+  proposalType: proposalTypeEnum.optional(),
+  councilSessionId: z.uuid().nullable().optional(),
+  committeeId: z.uuid().nullable().optional(),
+  slug: slugField.nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isReviewCompleted: z.boolean().optional(),
+  submittedDate: dateField.nullable().optional(),
+});
+
+const paramSchema = z.object({ id: z.uuid() });
+
+export const adminBillsRoute = new Hono()
+  // 一覧（会期名・委員会名つき・作成日降順）
+  .get("/", async (c) => {
+    const rows = await adminQuery((tx) =>
+      tx
+        .select({
+          id: bills.id,
+          name: bills.name,
+          billNumber: bills.billNumber,
+          status: bills.status,
+          statusNote: bills.statusNote,
+          publishStatus: bills.publishStatus,
+          proposalType: bills.proposalType,
+          isFeatured: bills.isFeatured,
+          isReviewCompleted: bills.isReviewCompleted,
+          submittedDate: bills.submittedDate,
+          slug: bills.slug,
+          councilSessionId: bills.councilSessionId,
+          committeeId: bills.committeeId,
+          councilSessionName: councilSessions.name,
+          committeeName: committees.name,
+        })
+        .from(bills)
+        .leftJoin(
+          councilSessions,
+          eq(councilSessions.id, bills.councilSessionId)
+        )
+        .leftJoin(committees, eq(committees.id, bills.committeeId))
+        .orderBy(desc(bills.createdAt))
+    );
+    return c.json({ bills: rows });
+  })
+  // 作成
+  .post("/", zValidator("json", createBodySchema), async (c) => {
+    const body = c.req.valid("json");
+    try {
+      const rows = await adminQuery((tx) =>
+        tx
+          .insert(bills)
+          .values({
+            name: body.name,
+            billNumber: body.billNumber,
+            status: body.status,
+            publishStatus: body.publishStatus,
+            proposalType: body.proposalType,
+            councilSessionId: body.councilSessionId ?? null,
+            committeeId: body.committeeId ?? null,
+            isFeatured: body.isFeatured,
+          })
+          .returning({ id: bills.id })
+      );
+      const row = rows[0];
+      if (!row) throw new Error("議案の作成に失敗しました");
+      return c.json({ id: row.id }, 201);
+    } catch (e) {
+      if (isUniqueViolation(e)) return c.json({ error: "duplicate" }, 409);
+      throw e;
+    }
+  })
+  // 更新（PATCH: 指定フィールドのみ）
+  .patch(
+    "/:id",
+    zValidator("param", paramSchema),
+    zValidator("json", updateBodySchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const body = c.req.valid("json");
+      const values: {
+        name?: string;
+        billNumber?: string;
+        status?: z.infer<typeof statusEnum>;
+        statusNote?: string | null;
+        publishStatus?: z.infer<typeof publishStatusEnum>;
+        proposalType?: z.infer<typeof proposalTypeEnum>;
+        councilSessionId?: string | null;
+        committeeId?: string | null;
+        slug?: string | null;
+        isFeatured?: boolean;
+        isReviewCompleted?: boolean;
+        submittedDate?: string | null;
+      } = {};
+      if (body.name !== undefined) values.name = body.name;
+      if (body.billNumber !== undefined) values.billNumber = body.billNumber;
+      if (body.status !== undefined) values.status = body.status;
+      if (body.statusNote !== undefined) values.statusNote = body.statusNote;
+      if (body.publishStatus !== undefined) {
+        values.publishStatus = body.publishStatus;
+      }
+      if (body.proposalType !== undefined) {
+        values.proposalType = body.proposalType;
+      }
+      if (body.councilSessionId !== undefined) {
+        values.councilSessionId = body.councilSessionId;
+      }
+      if (body.committeeId !== undefined) {
+        values.committeeId = body.committeeId;
+      }
+      if (body.slug !== undefined) values.slug = body.slug;
+      if (body.isFeatured !== undefined) values.isFeatured = body.isFeatured;
+      if (body.isReviewCompleted !== undefined) {
+        values.isReviewCompleted = body.isReviewCompleted;
+      }
+      if (body.submittedDate !== undefined) {
+        values.submittedDate = body.submittedDate;
+      }
+      if (Object.keys(values).length === 0) {
+        return c.json({ error: "no_fields" }, 400);
+      }
+      try {
+        const rows = await adminQuery((tx) =>
+          tx
+            .update(bills)
+            .set(values)
+            .where(eq(bills.id, id))
+            .returning({ id: bills.id })
+        );
+        const row = rows[0];
+        if (!row) return c.json({ error: "not_found" }, 404);
+        return c.json({ id: row.id });
+      } catch (e) {
+        if (isUniqueViolation(e)) return c.json({ error: "duplicate" }, 409);
+        throw e;
+      }
+    }
+  )
+  // 削除
+  .delete("/:id", zValidator("param", paramSchema), async (c) => {
+    const { id } = c.req.valid("param");
+    const rows = await adminQuery((tx) =>
+      tx.delete(bills).where(eq(bills.id, id)).returning({ id: bills.id })
+    );
+    const row = rows[0];
+    if (!row) return c.json({ error: "not_found" }, 404);
+    return c.json({ id: row.id });
+  });
+
+export type AdminBillsRouteType = typeof adminBillsRoute;
