@@ -78,3 +78,19 @@ export function useDeleteBill() {
     onSuccess: () => qc.invalidateQueries({ queryKey: BILLS_KEY }),
   });
 }
+
+/** 議案に付与するタグ集合を丸ごと置き換える。 */
+export function useSetBillTags() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; tagIds: string[] }) => {
+      const res = await billsApi[":id"].tags.$put({
+        param: { id: vars.id },
+        json: { tagIds: vars.tagIds },
+      });
+      if (!res.ok) throw new Error("タグの更新に失敗しました");
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BILLS_KEY }),
+  });
+}
