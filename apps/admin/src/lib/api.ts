@@ -6,6 +6,7 @@ import type {
   AdminCommitteesRouteType,
   AdminCouncilSessionsRouteType,
   AdminFactionsRouteType,
+  AdminInterviewReportsRouteType,
   AdminTagsRouteType,
 } from "api";
 import { hc } from "hono/client";
@@ -28,3 +29,6 @@ export const adminCouncilSessionsApi = hc<AdminCouncilSessionsRouteType>(
   "/api/admin/council-sessions"
 );
 export const adminBillsApi = hc<AdminBillsRouteType>("/api/admin/bills");
+export const adminInterviewReportsApi = hc<AdminInterviewReportsRouteType>(
+  "/api/admin/interview-reports"
+);
