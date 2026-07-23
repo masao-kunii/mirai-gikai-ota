@@ -100,6 +100,8 @@ const updateBodySchema = z.object({
   councilSessionId: z.uuid().nullable().optional(),
   committeeId: z.uuid().nullable().optional(),
   slug: slugField.nullable().optional(),
+  knowledgeSource: z.string().max(50000).nullable().optional(),
+  useKnowledgeSourceInChat: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   isReviewCompleted: z.boolean().optional(),
   submittedDate: dateField.nullable().optional(),
@@ -126,6 +128,8 @@ export const adminBillsRoute = new Hono()
           isReviewCompleted: bills.isReviewCompleted,
           submittedDate: bills.submittedDate,
           slug: bills.slug,
+          knowledgeSource: bills.knowledgeSource,
+          useKnowledgeSourceInChat: bills.useKnowledgeSourceInChat,
           councilSessionId: bills.councilSessionId,
           committeeId: bills.committeeId,
           councilSessionName: councilSessions.name,
@@ -243,6 +247,8 @@ export const adminBillsRoute = new Hono()
         councilSessionId?: string | null;
         committeeId?: string | null;
         slug?: string | null;
+        knowledgeSource?: string | null;
+        useKnowledgeSourceInChat?: boolean;
         isFeatured?: boolean;
         isReviewCompleted?: boolean;
         submittedDate?: string | null;
@@ -264,6 +270,12 @@ export const adminBillsRoute = new Hono()
         values.committeeId = body.committeeId;
       }
       if (body.slug !== undefined) values.slug = body.slug;
+      if (body.knowledgeSource !== undefined) {
+        values.knowledgeSource = body.knowledgeSource;
+      }
+      if (body.useKnowledgeSourceInChat !== undefined) {
+        values.useKnowledgeSourceInChat = body.useKnowledgeSourceInChat;
+      }
       if (body.isFeatured !== undefined) values.isFeatured = body.isFeatured;
       if (body.isReviewCompleted !== undefined) {
         values.isReviewCompleted = body.isReviewCompleted;
