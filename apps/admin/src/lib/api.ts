@@ -3,6 +3,7 @@
 // admin ルート型を使い、Hono RPC で型安全に叩く。
 import type {
   AdminCommitteesRouteType,
+  AdminCouncilSessionsRouteType,
   AdminFactionsRouteType,
   AdminTagsRouteType,
 } from "api";
@@ -21,4 +22,7 @@ export const adminFactionsApi = hc<AdminFactionsRouteType>(
 );
 export const adminCommitteesApi = hc<AdminCommitteesRouteType>(
   "/api/admin/committees"
+);
+export const adminCouncilSessionsApi = hc<AdminCouncilSessionsRouteType>(
+  "/api/admin/council-sessions"
 );

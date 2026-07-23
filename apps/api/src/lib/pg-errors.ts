@@ -25,3 +25,8 @@ export function isUniqueViolation(e: unknown): boolean {
 export function isForeignKeyViolation(e: unknown): boolean {
   return codeOf(e) === "23503";
 }
+
+/** チェック制約違反（23514）。日付範囲などの不正入力の判定に使う。 */
+export function isCheckViolation(e: unknown): boolean {
+  return codeOf(e) === "23514";
+}
