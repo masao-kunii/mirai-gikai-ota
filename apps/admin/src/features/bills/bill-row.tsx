@@ -1,4 +1,5 @@
-import { Check, Pencil, Star, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Check, FileText, Pencil, Star, X } from "lucide-react";
 import { useState } from "react";
 import { Field } from "../../components/field";
 import { InlineDeleteConfirm } from "../../components/inline-delete-confirm";
@@ -127,6 +128,15 @@ export function BillRow({ bill }: { bill: AdminBill }) {
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center justify-end gap-1">
+          <Link
+            to="/bill-contents/$billId"
+            params={{ billId: bill.id }}
+            className={iconButtonClass}
+            aria-label="本文編集"
+            title="本文編集"
+          >
+            <FileText className="size-4" />
+          </Link>
           <button
             type="button"
             onClick={() => setEditing(true)}

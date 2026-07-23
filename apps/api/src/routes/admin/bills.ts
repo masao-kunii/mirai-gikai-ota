@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { adminQuery } from "../../lib/db";
@@ -14,7 +14,18 @@ const {
   tags,
   factionStances,
   factions,
+  billContents,
 } = schema;
+
+const DIFFICULTY_LEVELS = ["normal", "hard"] as const;
+
+// bill_contents は title/summary/content とも NOT NULL。空欄は空文字で保存し、
+// 3項目すべて空ならその難易度の行を削除する（作成しない）。
+const contentSchema = z.object({
+  title: z.string().max(200).default(""),
+  summary: z.string().max(500).default(""),
+  content: z.string().max(50000).default(""),
+});
 
 const stanceTypeEnum = z.enum([
   "for",
@@ -371,6 +382,92 @@ export const adminBillsRoute = new Hono()
         }
         throw e;
       }
+    }
+  )
+  // 本文（bill_contents）取得。難易度別（normal/hard）に title/summary/content を返す。
+  .get("/:id/contents", zValidator("param", paramSchema), async (c) => {
+    const { id } = c.req.valid("param");
+    const result = await adminQuery(async (tx) => {
+      const [bill] = await tx
+        .select({ id: bills.id, name: bills.name })
+        .from(bills)
+        .where(eq(bills.id, id));
+      if (!bill) return null;
+      const rows = await tx
+        .select({
+          difficultyLevel: billContents.difficultyLevel,
+          title: billContents.title,
+          summary: billContents.summary,
+          content: billContents.content,
+        })
+        .from(billContents)
+        .where(eq(billContents.billId, id));
+      return { bill, rows };
+    });
+    if (!result) return c.json({ error: "not_found" }, 404);
+    const pick = (level: (typeof DIFFICULTY_LEVELS)[number]) => {
+      const row = result.rows.find((r) => r.difficultyLevel === level);
+      return row
+        ? { title: row.title, summary: row.summary, content: row.content }
+        : null;
+    };
+    return c.json({
+      name: result.bill.name,
+      contents: { normal: pick("normal"), hard: pick("hard") },
+    });
+  })
+  // 本文の更新。難易度ごとに upsert（3項目すべて空ならその行を削除）。
+  .put(
+    "/:id/contents",
+    zValidator("param", paramSchema),
+    zValidator(
+      "json",
+      z.object({ normal: contentSchema, hard: contentSchema })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const body = c.req.valid("json");
+      const done = await adminQuery(async (tx) => {
+        const [bill] = await tx
+          .select({ id: bills.id })
+          .from(bills)
+          .where(eq(bills.id, id));
+        if (!bill) return false;
+        for (const level of DIFFICULTY_LEVELS) {
+          const d = body[level];
+          const isEmpty =
+            d.title.trim() === "" &&
+            d.summary.trim() === "" &&
+            d.content.trim() === "";
+          if (isEmpty) {
+            await tx
+              .delete(billContents)
+              .where(
+                and(
+                  eq(billContents.billId, id),
+                  eq(billContents.difficultyLevel, level)
+                )
+              );
+          } else {
+            await tx
+              .insert(billContents)
+              .values({
+                billId: id,
+                difficultyLevel: level,
+                title: d.title,
+                summary: d.summary,
+                content: d.content,
+              })
+              .onConflictDoUpdate({
+                target: [billContents.billId, billContents.difficultyLevel],
+                set: { title: d.title, summary: d.summary, content: d.content },
+              });
+          }
+        }
+        return true;
+      });
+      if (!done) return c.json({ error: "not_found" }, 404);
+      return c.json({ id });
     }
   )
   // 削除
