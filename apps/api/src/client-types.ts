@@ -6,6 +6,7 @@
  * 混入するため禁止する（TARGET_ARCHITECTURE §6「型のみの依存」）。
  */
 export type { AdminCommitteesRouteType } from "./routes/admin/committees";
+export type { AdminCouncilSessionsRouteType } from "./routes/admin/council-sessions";
 export type { AdminFactionsRouteType } from "./routes/admin/factions";
 export type { AdminTagsRouteType } from "./routes/admin/tags";
 export type { BillsRouteType } from "./routes/bills";

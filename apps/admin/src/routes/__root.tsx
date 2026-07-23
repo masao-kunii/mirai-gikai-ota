@@ -4,7 +4,7 @@ import {
   Link,
   Outlet,
 } from "@tanstack/react-router";
-import { Building2, Tags, Users } from "lucide-react";
+import { Building2, CalendarDays, Tags, Users } from "lucide-react";
 
 // loader から queryClient を使えるよう context に型を通す。
 export interface RouterContext {
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { to: "/tags", label: "タグ管理", icon: Tags },
   { to: "/factions", label: "会派管理", icon: Users },
   { to: "/committees", label: "委員会管理", icon: Building2 },
+  { to: "/council-sessions", label: "議会会期管理", icon: CalendarDays },
 ] as const;
 
 function RootLayout() {
