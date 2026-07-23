@@ -199,6 +199,12 @@ function EditBillRow({
   const [isReviewCompleted, setIsReviewCompleted] = useState(
     bill.isReviewCompleted
   );
+  const [knowledgeSource, setKnowledgeSource] = useState(
+    bill.knowledgeSource ?? ""
+  );
+  const [useKnowledgeSourceInChat, setUseKnowledgeSourceInChat] = useState(
+    bill.useKnowledgeSourceInChat
+  );
   const [tagIds, setTagIds] = useState<string[]>(bill.tags.map((t) => t.id));
   const [stances, setStances] = useState<Record<string, StanceDraft>>(() => {
     const init: Record<string, StanceDraft> = {};
@@ -251,6 +257,8 @@ function EditBillRow({
         statusNote: statusNote.trim() || null,
         slug: slug.trim() || null,
         submittedDate: submittedDate || null,
+        knowledgeSource: knowledgeSource.trim() || null,
+        useKnowledgeSourceInChat,
         isFeatured,
         isReviewCompleted,
       },
@@ -400,6 +408,28 @@ function EditBillRow({
               onCommentChange={setStanceComment}
             />
           </Field>
+          <Field
+            label="AIチャット参照ソース（knowledge_source）"
+            className="col-span-2 md:col-span-3"
+          >
+            <textarea
+              className={`${inputClass} font-mono`}
+              rows={4}
+              value={knowledgeSource}
+              onChange={(e) => setKnowledgeSource(e.target.value)}
+              placeholder="チャットが参照する補足情報（任意）"
+              maxLength={50000}
+            />
+          </Field>
+          <label className="flex items-center gap-2 self-end pb-2">
+            <input
+              type="checkbox"
+              checked={useKnowledgeSourceInChat}
+              onChange={(e) => setUseKnowledgeSourceInChat(e.target.checked)}
+              className="size-4"
+            />
+            <span className="text-slate-600 text-sm">チャットで参照する</span>
+          </label>
           <label className="flex items-center gap-2 self-end pb-2">
             <input
               type="checkbox"
