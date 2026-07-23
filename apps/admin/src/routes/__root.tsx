@@ -8,6 +8,7 @@ import {
   Building2,
   CalendarDays,
   FileText,
+  MessagesSquare,
   ShieldCheck,
   Tags,
   Users,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { to: "/factions", label: "会派管理", icon: Users },
   { to: "/committees", label: "委員会管理", icon: Building2 },
   { to: "/council-sessions", label: "議会会期管理", icon: CalendarDays },
+  { to: "/interview-configs", label: "インタビュー設定", icon: MessagesSquare },
   { to: "/review-queue", label: "審査キュー", icon: ShieldCheck },
 ] as const;
 
