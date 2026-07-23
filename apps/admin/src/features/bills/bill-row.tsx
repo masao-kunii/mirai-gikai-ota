@@ -5,6 +5,7 @@ import { InlineDeleteConfirm } from "../../components/inline-delete-confirm";
 import { iconButtonClass, inputClass, primaryButtonClass } from "../../lib/ui";
 import { useCommittees } from "../committees/committees-queries";
 import { useCouncilSessions } from "../council-sessions/council-sessions-queries";
+import { useFactions } from "../factions/factions-queries";
 import { useTags } from "../tags/tags-queries";
 import {
   BILL_STATUS_LABELS,
@@ -18,10 +19,13 @@ import {
   PUBLISH_STATUS_OPTIONS,
   type PublishStatus,
 } from "./bill-labels";
+import { BillStanceEditor, type StanceDraft } from "./bill-stance-editor";
 import {
   type AdminBill,
+  type StanceInput,
   type UpdateBillInput,
   useDeleteBill,
+  useSetBillStances,
   useSetBillTags,
   useUpdateBill,
 } from "./bills-queries";
@@ -34,14 +38,21 @@ export function BillRow({ bill }: { bill: AdminBill }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const updateBill = useUpdateBill();
   const setBillTags = useSetBillTags();
+  const setBillStances = useSetBillStances();
   const deleteBill = useDeleteBill();
 
-  // スカラー更新とタグ置換を順に行う（どちらかが失敗したらエラー表示のまま留まる）。
-  const handleSave = async (input: UpdateBillInput, tagIds: string[]) => {
+  // スカラー更新・タグ置換・会派スタンス置換を順に行う
+  // （いずれかが失敗したらエラー表示のまま編集に留まる）。
+  const handleSave = async (
+    input: UpdateBillInput,
+    tagIds: string[],
+    stances: StanceInput[]
+  ) => {
     setSaveError(null);
     try {
       await updateBill.mutateAsync({ id: bill.id, input });
       await setBillTags.mutateAsync({ id: bill.id, tagIds });
+      await setBillStances.mutateAsync({ id: bill.id, stances });
       setEditing(false);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "保存に失敗しました");
@@ -52,7 +63,11 @@ export function BillRow({ bill }: { bill: AdminBill }) {
     return (
       <EditBillRow
         bill={bill}
-        pending={updateBill.isPending || setBillTags.isPending}
+        pending={
+          updateBill.isPending ||
+          setBillTags.isPending ||
+          setBillStances.isPending
+        }
         error={saveError}
         onCancel={() => {
           setSaveError(null);
@@ -85,6 +100,11 @@ export function BillRow({ bill }: { bill: AdminBill }) {
                 {t.label}
               </span>
             ))}
+          </div>
+        ) : null}
+        {bill.stances.length > 0 ? (
+          <div className="mt-1 text-slate-400 text-xs">
+            会派見解 {bill.stances.length}件
           </div>
         ) : null}
       </td>
@@ -136,12 +156,17 @@ function EditBillRow({
   bill: AdminBill;
   pending: boolean;
   error: string | null;
-  onSave: (input: UpdateBillInput, tagIds: string[]) => void;
+  onSave: (
+    input: UpdateBillInput,
+    tagIds: string[],
+    stances: StanceInput[]
+  ) => void;
   onCancel: () => void;
 }) {
   const sessions = useCouncilSessions();
   const committees = useCommittees();
   const allTags = useTags();
+  const allFactions = useFactions();
   const [name, setName] = useState(bill.name);
   const [billNumber, setBillNumber] = useState(bill.billNumber);
   const [status, setStatus] = useState<BillStatus>(bill.status as BillStatus);
@@ -165,13 +190,45 @@ function EditBillRow({
     bill.isReviewCompleted
   );
   const [tagIds, setTagIds] = useState<string[]>(bill.tags.map((t) => t.id));
+  const [stances, setStances] = useState<Record<string, StanceDraft>>(() => {
+    const init: Record<string, StanceDraft> = {};
+    for (const s of bill.stances) {
+      init[s.factionId] = { type: s.type, comment: s.comment ?? "" };
+    }
+    return init;
+  });
 
   const toggleTag = (id: string) =>
     setTagIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
-  const save = () =>
+  const setStanceType = (factionId: string, type: string) =>
+    setStances((prev) => {
+      if (!type) {
+        const { [factionId]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [factionId]: { type, comment: prev[factionId]?.comment ?? "" },
+      };
+    });
+
+  const setStanceComment = (factionId: string, comment: string) =>
+    setStances((prev) => ({
+      ...prev,
+      [factionId]: { type: prev[factionId]?.type ?? "", comment },
+    }));
+
+  const save = () => {
+    const stanceInputs: StanceInput[] = Object.entries(stances)
+      .filter(([, v]) => v.type !== "")
+      .map(([factionId, v]) => ({
+        factionId,
+        type: v.type as StanceInput["type"],
+        comment: v.comment.trim() || null,
+      }));
     onSave(
       {
         name: name.trim(),
@@ -187,8 +244,10 @@ function EditBillRow({
         isFeatured,
         isReviewCompleted,
       },
-      tagIds
+      tagIds,
+      stanceInputs
     );
+  };
 
   return (
     <tr className="border-slate-100 border-b bg-slate-50">
@@ -322,6 +381,14 @@ function EditBillRow({
                 );
               })}
             </div>
+          </Field>
+          <Field label="会派スタンス" className="col-span-2 md:col-span-3">
+            <BillStanceEditor
+              factions={allFactions.data ?? []}
+              stances={stances}
+              onTypeChange={setStanceType}
+              onCommentChange={setStanceComment}
+            />
           </Field>
           <label className="flex items-center gap-2 self-end pb-2">
             <input
