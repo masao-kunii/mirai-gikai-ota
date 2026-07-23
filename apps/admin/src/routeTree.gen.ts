@@ -15,6 +15,7 @@ import { Route as CommitteesRouteImport } from './routes/committees'
 import { Route as CouncilSessionsRouteImport } from './routes/council-sessions'
 import { Route as FactionsRouteImport } from './routes/factions'
 import { Route as TagsRouteImport } from './routes/tags'
+import { Route as BillContentsBillIdRouteImport } from './routes/bill-contents.$billId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const TagsRoute = TagsRouteImport.update({
   path: '/tags',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BillContentsBillIdRoute = BillContentsBillIdRouteImport.update({
+  id: '/bill-contents/$billId',
+  path: '/bill-contents/$billId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
   '/tags': typeof TagsRoute
+  '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
   '/tags': typeof TagsRoute
+  '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,14 +79,27 @@ export interface FileRoutesById {
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
   '/tags': typeof TagsRoute
+  '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/bills' | '/committees' | '/council-sessions' | '/factions' | '/tags'
+    | '/'
+    | '/bills'
+    | '/committees'
+    | '/council-sessions'
+    | '/factions'
+    | '/tags'
+    | '/bill-contents/$billId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/bills' | '/committees' | '/council-sessions' | '/factions' | '/tags'
+    | '/'
+    | '/bills'
+    | '/committees'
+    | '/council-sessions'
+    | '/factions'
+    | '/tags'
+    | '/bill-contents/$billId'
   id:
     | '__root__'
     | '/'
@@ -87,6 +108,7 @@ export interface FileRouteTypes {
     | '/council-sessions'
     | '/factions'
     | '/tags'
+    | '/bill-contents/$billId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -96,6 +118,7 @@ export interface RootRouteChildren {
   CouncilSessionsRoute: typeof CouncilSessionsRoute
   FactionsRoute: typeof FactionsRoute
   TagsRoute: typeof TagsRoute
+  BillContentsBillIdRoute: typeof BillContentsBillIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -142,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TagsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bill-contents/$billId': {
+      id: '/bill-contents/$billId'
+      path: '/bill-contents/$billId'
+      fullPath: '/bill-contents/$billId'
+      preLoaderRoute: typeof BillContentsBillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -152,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   CouncilSessionsRoute: CouncilSessionsRoute,
   FactionsRoute: FactionsRoute,
   TagsRoute: TagsRoute,
+  BillContentsBillIdRoute: BillContentsBillIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
