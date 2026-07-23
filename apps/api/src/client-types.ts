@@ -9,6 +9,7 @@ export type { AdminBillsRouteType } from "./routes/admin/bills";
 export type { AdminCommitteesRouteType } from "./routes/admin/committees";
 export type { AdminCouncilSessionsRouteType } from "./routes/admin/council-sessions";
 export type { AdminFactionsRouteType } from "./routes/admin/factions";
+export type { AdminInterviewReportsRouteType } from "./routes/admin/interview-reports";
 export type { AdminTagsRouteType } from "./routes/admin/tags";
 export type { BillsRouteType } from "./routes/bills";
 export type { ChatRouteType } from "./routes/chat";

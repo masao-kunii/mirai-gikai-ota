@@ -14,6 +14,7 @@ import { Route as BillsRouteImport } from './routes/bills'
 import { Route as CommitteesRouteImport } from './routes/committees'
 import { Route as CouncilSessionsRouteImport } from './routes/council-sessions'
 import { Route as FactionsRouteImport } from './routes/factions'
+import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as TagsRouteImport } from './routes/tags'
 import { Route as BillContentsBillIdRouteImport } from './routes/bill-contents.$billId'
 
@@ -42,6 +43,11 @@ const FactionsRoute = FactionsRouteImport.update({
   path: '/factions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewQueueRoute = ReviewQueueRouteImport.update({
+  id: '/review-queue',
+  path: '/review-queue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TagsRoute = TagsRouteImport.update({
   id: '/tags',
   path: '/tags',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
   '/factions': typeof FactionsRoute
+  '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/committees'
     | '/council-sessions'
     | '/factions'
+    | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/committees'
     | '/council-sessions'
     | '/factions'
+    | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/committees'
     | '/council-sessions'
     | '/factions'
+    | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   CommitteesRoute: typeof CommitteesRoute
   CouncilSessionsRoute: typeof CouncilSessionsRoute
   FactionsRoute: typeof FactionsRoute
+  ReviewQueueRoute: typeof ReviewQueueRoute
   TagsRoute: typeof TagsRoute
   BillContentsBillIdRoute: typeof BillContentsBillIdRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review-queue': {
+      id: '/review-queue'
+      path: '/review-queue'
+      fullPath: '/review-queue'
+      preLoaderRoute: typeof ReviewQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tags': {
       id: '/tags'
       path: '/tags'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommitteesRoute: CommitteesRoute,
   CouncilSessionsRoute: CouncilSessionsRoute,
   FactionsRoute: FactionsRoute,
+  ReviewQueueRoute: ReviewQueueRoute,
   TagsRoute: TagsRoute,
   BillContentsBillIdRoute: BillContentsBillIdRoute,
 }
