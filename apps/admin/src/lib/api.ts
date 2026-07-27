@@ -6,6 +6,7 @@ import type {
   AdminCommitteesRouteType,
   AdminCouncilSessionsRouteType,
   AdminFactionsRouteType,
+  AdminInterviewConfigsRouteType,
   AdminInterviewReportsRouteType,
   AdminTagsRouteType,
 } from "api";
@@ -31,4 +32,7 @@ export const adminCouncilSessionsApi = hc<AdminCouncilSessionsRouteType>(
 export const adminBillsApi = hc<AdminBillsRouteType>("/api/admin/bills");
 export const adminInterviewReportsApi = hc<AdminInterviewReportsRouteType>(
   "/api/admin/interview-reports"
+);
+export const adminInterviewConfigsApi = hc<AdminInterviewConfigsRouteType>(
+  "/api/admin/interview-configs"
 );
