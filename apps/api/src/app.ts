@@ -8,6 +8,7 @@ import { adminFactionsRoute } from "./routes/admin/factions";
 import { adminInterviewConfigsRoute } from "./routes/admin/interview-configs";
 import { adminInterviewReportsRoute } from "./routes/admin/interview-reports";
 import { adminMinutesRoute } from "./routes/admin/minutes";
+import { adminReportFlagsRoute } from "./routes/admin/report-flags";
 import { adminTagsRoute } from "./routes/admin/tags";
 import { billsRoute } from "./routes/bills";
 import { createChatRoute } from "./routes/chat";
@@ -33,7 +34,8 @@ const adminApp = new Hono()
   .route("/interview-reports", adminInterviewReportsRoute)
   .route("/interview-configs", adminInterviewConfigsRoute)
   .route("/minutes", adminMinutesRoute)
-  .route("/experts", adminExpertsRoute);
+  .route("/experts", adminExpertsRoute)
+  .route("/report-flags", adminReportFlagsRoute);
 
 /**
  * 公開 API（apps/api）の組み立て。
