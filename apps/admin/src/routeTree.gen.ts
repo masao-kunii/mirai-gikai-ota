@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BillsRouteImport } from './routes/bills'
 import { Route as CommitteesRouteImport } from './routes/committees'
 import { Route as CouncilSessionsRouteImport } from './routes/council-sessions'
+import { Route as ExpertsRouteImport } from './routes/experts'
 import { Route as FactionsRouteImport } from './routes/factions'
 import { Route as InterviewConfigsRouteImport } from './routes/interview-configs'
 import { Route as MinutesRouteImport } from './routes/minutes'
@@ -39,6 +40,11 @@ const CommitteesRoute = CommitteesRouteImport.update({
 const CouncilSessionsRoute = CouncilSessionsRouteImport.update({
   id: '/council-sessions',
   path: '/council-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpertsRoute = ExpertsRouteImport.update({
+  id: '/experts',
+  path: '/experts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FactionsRoute = FactionsRouteImport.update({
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/bills': typeof BillsRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
+  '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/bills': typeof BillsRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
+  '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/bills': typeof BillsRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
+  '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/bills'
     | '/committees'
     | '/council-sessions'
+    | '/experts'
     | '/factions'
     | '/interview-configs'
     | '/minutes'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/bills'
     | '/committees'
     | '/council-sessions'
+    | '/experts'
     | '/factions'
     | '/interview-configs'
     | '/minutes'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/bills'
     | '/committees'
     | '/council-sessions'
+    | '/experts'
     | '/factions'
     | '/interview-configs'
     | '/minutes'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   BillsRoute: typeof BillsRoute
   CommitteesRoute: typeof CommitteesRoute
   CouncilSessionsRoute: typeof CouncilSessionsRoute
+  ExpertsRoute: typeof ExpertsRoute
   FactionsRoute: typeof FactionsRoute
   InterviewConfigsRoute: typeof InterviewConfigsRoute
   MinutesRoute: typeof MinutesRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/council-sessions'
       fullPath: '/council-sessions'
       preLoaderRoute: typeof CouncilSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experts': {
+      id: '/experts'
+      path: '/experts'
+      fullPath: '/experts'
+      preLoaderRoute: typeof ExpertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/factions': {
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillsRoute: BillsRoute,
   CommitteesRoute: CommitteesRoute,
   CouncilSessionsRoute: CouncilSessionsRoute,
+  ExpertsRoute: ExpertsRoute,
   FactionsRoute: FactionsRoute,
   InterviewConfigsRoute: InterviewConfigsRoute,
   MinutesRoute: MinutesRoute,

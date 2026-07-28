@@ -8,6 +8,7 @@ import {
   Building2,
   CalendarDays,
   FileText,
+  GraduationCap,
   MessagesSquare,
   ScrollText,
   ShieldCheck,
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { to: "/minutes", label: "議事録", icon: ScrollText },
   { to: "/interview-configs", label: "インタビュー設定", icon: MessagesSquare },
   { to: "/review-queue", label: "審査キュー", icon: ShieldCheck },
+  { to: "/experts", label: "専門家", icon: GraduationCap },
 ] as const;
 
 function RootLayout() {
