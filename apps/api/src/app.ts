@@ -3,6 +3,7 @@ import { requireAdminAccess } from "./lib/admin-auth";
 import { adminBillsRoute } from "./routes/admin/bills";
 import { adminCommitteesRoute } from "./routes/admin/committees";
 import { adminCouncilSessionsRoute } from "./routes/admin/council-sessions";
+import { adminExpertsRoute } from "./routes/admin/experts";
 import { adminFactionsRoute } from "./routes/admin/factions";
 import { adminInterviewConfigsRoute } from "./routes/admin/interview-configs";
 import { adminInterviewReportsRoute } from "./routes/admin/interview-reports";
@@ -31,7 +32,8 @@ const adminApp = new Hono()
   .route("/council-sessions", adminCouncilSessionsRoute)
   .route("/interview-reports", adminInterviewReportsRoute)
   .route("/interview-configs", adminInterviewConfigsRoute)
-  .route("/minutes", adminMinutesRoute);
+  .route("/minutes", adminMinutesRoute)
+  .route("/experts", adminExpertsRoute);
 
 /**
  * 公開 API（apps/api）の組み立て。

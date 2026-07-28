@@ -5,6 +5,7 @@ import type {
   AdminBillsRouteType,
   AdminCommitteesRouteType,
   AdminCouncilSessionsRouteType,
+  AdminExpertsRouteType,
   AdminFactionsRouteType,
   AdminInterviewConfigsRouteType,
   AdminInterviewReportsRouteType,
@@ -38,3 +39,4 @@ export const adminInterviewConfigsApi = hc<AdminInterviewConfigsRouteType>(
   "/api/admin/interview-configs"
 );
 export const adminMinutesApi = hc<AdminMinutesRouteType>("/api/admin/minutes");
+export const adminExpertsApi = hc<AdminExpertsRouteType>("/api/admin/experts");
