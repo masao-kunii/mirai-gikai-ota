@@ -10,6 +10,7 @@ import type {
   AdminInterviewConfigsRouteType,
   AdminInterviewReportsRouteType,
   AdminMinutesRouteType,
+  AdminReportFlagsRouteType,
   AdminTagsRouteType,
 } from "api";
 import { hc } from "hono/client";
@@ -40,3 +41,6 @@ export const adminInterviewConfigsApi = hc<AdminInterviewConfigsRouteType>(
 );
 export const adminMinutesApi = hc<AdminMinutesRouteType>("/api/admin/minutes");
 export const adminExpertsApi = hc<AdminExpertsRouteType>("/api/admin/experts");
+export const adminReportFlagsApi = hc<AdminReportFlagsRouteType>(
+  "/api/admin/report-flags"
+);

@@ -13,6 +13,7 @@ export type { AdminFactionsRouteType } from "./routes/admin/factions";
 export type { AdminInterviewConfigsRouteType } from "./routes/admin/interview-configs";
 export type { AdminInterviewReportsRouteType } from "./routes/admin/interview-reports";
 export type { AdminMinutesRouteType } from "./routes/admin/minutes";
+export type { AdminReportFlagsRouteType } from "./routes/admin/report-flags";
 export type { AdminTagsRouteType } from "./routes/admin/tags";
 export type { BillsRouteType } from "./routes/bills";
 export type { ChatRouteType } from "./routes/chat";

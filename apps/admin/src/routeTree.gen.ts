@@ -17,6 +17,7 @@ import { Route as ExpertsRouteImport } from './routes/experts'
 import { Route as FactionsRouteImport } from './routes/factions'
 import { Route as InterviewConfigsRouteImport } from './routes/interview-configs'
 import { Route as MinutesRouteImport } from './routes/minutes'
+import { Route as ReportFlagsRouteImport } from './routes/report-flags'
 import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as TagsRouteImport } from './routes/tags'
 import { Route as BillContentsBillIdRouteImport } from './routes/bill-contents.$billId'
@@ -62,6 +63,11 @@ const MinutesRoute = MinutesRouteImport.update({
   path: '/minutes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportFlagsRoute = ReportFlagsRouteImport.update({
+  id: '/report-flags',
+  path: '/report-flags',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewQueueRoute = ReviewQueueRouteImport.update({
   id: '/review-queue',
   path: '/review-queue',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
+  '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
+  '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
   '/minutes': typeof MinutesRoute
+  '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/factions'
     | '/interview-configs'
     | '/minutes'
+    | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/factions'
     | '/interview-configs'
     | '/minutes'
+    | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/factions'
     | '/interview-configs'
     | '/minutes'
+    | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   FactionsRoute: typeof FactionsRoute
   InterviewConfigsRoute: typeof InterviewConfigsRoute
   MinutesRoute: typeof MinutesRoute
+  ReportFlagsRoute: typeof ReportFlagsRoute
   ReviewQueueRoute: typeof ReviewQueueRoute
   TagsRoute: typeof TagsRoute
   BillContentsBillIdRoute: typeof BillContentsBillIdRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MinutesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/report-flags': {
+      id: '/report-flags'
+      path: '/report-flags'
+      fullPath: '/report-flags'
+      preLoaderRoute: typeof ReportFlagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review-queue': {
       id: '/review-queue'
       path: '/review-queue'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   FactionsRoute: FactionsRoute,
   InterviewConfigsRoute: InterviewConfigsRoute,
   MinutesRoute: MinutesRoute,
+  ReportFlagsRoute: ReportFlagsRoute,
   ReviewQueueRoute: ReviewQueueRoute,
   TagsRoute: TagsRoute,
   BillContentsBillIdRoute: BillContentsBillIdRoute,
