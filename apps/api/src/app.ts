@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { requireAdminAccess } from "./lib/admin-auth";
 import { adminBillsRoute } from "./routes/admin/bills";
+import { adminBillsExtractRoute } from "./routes/admin/bills-extract";
 import { adminBillsMergeRoute } from "./routes/admin/bills-merge";
 import { adminCommitteesRoute } from "./routes/admin/committees";
 import { adminCouncilSessionsRoute } from "./routes/admin/council-sessions";
@@ -29,6 +30,7 @@ const adminApp = new Hono()
   .use("*", requireAdminAccess)
   .route("/bills", adminBillsRoute)
   .route("/bills-merge", adminBillsMergeRoute)
+  .route("/bills-extract", adminBillsExtractRoute)
   .route("/tags", adminTagsRoute)
   .route("/factions", adminFactionsRoute)
   .route("/committees", adminCommitteesRoute)

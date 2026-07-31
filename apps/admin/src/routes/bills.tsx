@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { GitMerge } from "lucide-react";
+import { GitMerge, Sparkles } from "lucide-react";
 import { BillRow } from "../features/bills/bill-row";
 import { useBills } from "../features/bills/bills-queries";
 import { CreateBillForm } from "../features/bills/create-bill-form";
@@ -22,13 +22,22 @@ function BillsPage() {
             議案の基本情報（審議状況・公開状態・会期・委員会など）を管理します。
           </p>
         </div>
-        <Link
-          to="/bills-merge"
-          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100"
-        >
-          <GitMerge className="size-4" />
-          議案をマージ
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            to="/bills-extract"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100"
+          >
+            <Sparkles className="size-4" />
+            議事録から抽出
+          </Link>
+          <Link
+            to="/bills-merge"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100"
+          >
+            <GitMerge className="size-4" />
+            議案をマージ
+          </Link>
+        </div>
       </header>
 
       <CreateBillForm />

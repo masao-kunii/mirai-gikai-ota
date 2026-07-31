@@ -2,6 +2,7 @@
 // （TARGET_ARCHITECTURE §6「型のみの依存」）。管理フロントは apps/api の
 // admin ルート型を使い、Hono RPC で型安全に叩く。
 import type {
+  AdminBillsExtractRouteType,
   AdminBillsMergeRouteType,
   AdminBillsRouteType,
   AdminCommitteesRouteType,
@@ -36,6 +37,9 @@ export const adminCouncilSessionsApi = hc<AdminCouncilSessionsRouteType>(
 export const adminBillsApi = hc<AdminBillsRouteType>("/api/admin/bills");
 export const adminBillsMergeApi = hc<AdminBillsMergeRouteType>(
   "/api/admin/bills-merge"
+);
+export const adminBillsExtractApi = hc<AdminBillsExtractRouteType>(
+  "/api/admin/bills-extract"
 );
 export const adminInterviewReportsApi = hc<AdminInterviewReportsRouteType>(
   "/api/admin/interview-reports"
