@@ -1,8 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
+import { generateBillContents } from "../../lib/bills/generate-contents";
 import { adminQuery } from "../../lib/db";
 import { isForeignKeyViolation, isUniqueViolation } from "../../lib/pg-errors";
 
@@ -15,6 +16,7 @@ const {
   factionStances,
   factions,
   billContents,
+  councilSessionMinutes,
 } = schema;
 
 const DIFFICULTY_LEVELS = ["normal", "hard"] as const;
@@ -480,6 +482,71 @@ export const adminBillsRoute = new Hono()
       });
       if (!done) return c.json({ error: "not_found" }, 404);
       return c.json({ id });
+    }
+  )
+  // 本文の AI 生成（保存はしない。難易度別 normal/hard を返し画面でレビュー→保存）。
+  .post(
+    "/:id/generate-contents",
+    zValidator("param", paramSchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      // 生成の材料（議案メタ＋紐づく会期の議事録本文）を先に集める。
+      const source = await adminQuery(async (tx) => {
+        const [bill] = await tx
+          .select({
+            name: bills.name,
+            billNumber: bills.billNumber,
+            status: bills.status,
+            statusNote: bills.statusNote,
+            knowledgeSource: bills.knowledgeSource,
+            councilSessionId: bills.councilSessionId,
+          })
+          .from(bills)
+          .where(eq(bills.id, id));
+        if (!bill) return null;
+        const minutes = bill.councilSessionId
+          ? await tx
+              .select({
+                title: councilSessionMinutes.title,
+                meetingDate: councilSessionMinutes.meetingDate,
+                markdownText: councilSessionMinutes.markdownText,
+              })
+              .from(councilSessionMinutes)
+              .where(
+                and(
+                  eq(
+                    councilSessionMinutes.councilSessionId,
+                    bill.councilSessionId
+                  ),
+                  isNotNull(councilSessionMinutes.markdownText),
+                  ne(councilSessionMinutes.markdownText, "")
+                )
+              )
+          : [];
+        return { bill, minutes };
+      });
+      if (!source) return c.json({ error: "not_found" }, 404);
+      // LLM 呼び出しはトランザクション外で（遅い＆接続を長く握らない）。
+      try {
+        const contents = await generateBillContents({
+          bill: {
+            name: source.bill.name,
+            billNumber: source.bill.billNumber,
+            status: source.bill.status,
+            statusNote: source.bill.statusNote,
+            knowledgeSource: source.bill.knowledgeSource,
+          },
+          minutes: source.minutes.map((m) => ({
+            title: m.title,
+            meetingDate: m.meetingDate,
+            markdownText: m.markdownText ?? "",
+          })),
+        });
+        return c.json({ contents });
+      } catch (e) {
+        console.error("generate-contents failed:", e);
+        return c.json({ error: "generation_failed" }, 502);
+      }
     }
   )
   // 削除
