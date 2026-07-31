@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BillsRouteImport } from './routes/bills'
 import { Route as BillsExtractRouteImport } from './routes/bills-extract'
+import { Route as BillsImportRouteImport } from './routes/bills-import'
 import { Route as BillsMergeRouteImport } from './routes/bills-merge'
 import { Route as CommitteesRouteImport } from './routes/committees'
 import { Route as CouncilSessionsRouteImport } from './routes/council-sessions'
@@ -38,6 +39,11 @@ const BillsRoute = BillsRouteImport.update({
 const BillsExtractRoute = BillsExtractRouteImport.update({
   id: '/bills-extract',
   path: '/bills-extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillsImportRoute = BillsImportRouteImport.update({
+  id: '/bills-import',
+  path: '/bills-import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillsMergeRoute = BillsMergeRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
   '/bills-extract': typeof BillsExtractRoute
+  '/bills-import': typeof BillsImportRoute
   '/bills-merge': typeof BillsMergeRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
   '/bills-extract': typeof BillsExtractRoute
+  '/bills-import': typeof BillsImportRoute
   '/bills-merge': typeof BillsMergeRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/bills': typeof BillsRoute
   '/bills-extract': typeof BillsExtractRoute
+  '/bills-import': typeof BillsImportRoute
   '/bills-merge': typeof BillsMergeRoute
   '/committees': typeof CommitteesRoute
   '/council-sessions': typeof CouncilSessionsRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/'
     | '/bills'
     | '/bills-extract'
+    | '/bills-import'
     | '/bills-merge'
     | '/committees'
     | '/council-sessions'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/bills'
     | '/bills-extract'
+    | '/bills-import'
     | '/bills-merge'
     | '/committees'
     | '/council-sessions'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/bills'
     | '/bills-extract'
+    | '/bills-import'
     | '/bills-merge'
     | '/committees'
     | '/council-sessions'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BillsRoute: typeof BillsRoute
   BillsExtractRoute: typeof BillsExtractRoute
+  BillsImportRoute: typeof BillsImportRoute
   BillsMergeRoute: typeof BillsMergeRoute
   CommitteesRoute: typeof CommitteesRoute
   CouncilSessionsRoute: typeof CouncilSessionsRoute
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/bills-extract'
       fullPath: '/bills-extract'
       preLoaderRoute: typeof BillsExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bills-import': {
+      id: '/bills-import'
+      path: '/bills-import'
+      fullPath: '/bills-import'
+      preLoaderRoute: typeof BillsImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bills-merge': {
@@ -339,6 +359,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BillsRoute: BillsRoute,
   BillsExtractRoute: BillsExtractRoute,
+  BillsImportRoute: BillsImportRoute,
   BillsMergeRoute: BillsMergeRoute,
   CommitteesRoute: CommitteesRoute,
   CouncilSessionsRoute: CouncilSessionsRoute,

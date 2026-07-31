@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { GitMerge, Sparkles } from "lucide-react";
+import { Download, GitMerge, Sparkles } from "lucide-react";
 import { BillRow } from "../features/bills/bill-row";
 import { useBills } from "../features/bills/bills-queries";
 import { CreateBillForm } from "../features/bills/create-bill-form";
@@ -23,6 +23,13 @@ function BillsPage() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            to="/bills-import"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100"
+          >
+            <Download className="size-4" />
+            一括取り込み
+          </Link>
           <Link
             to="/bills-extract"
             className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100"
