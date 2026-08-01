@@ -63,3 +63,66 @@ resource "cloudflare_dns_record" "preview" {
   proxied = true
   ttl     = 1
 }
+
+# --- 管理画面（apps/admin）: ホスト全体を Cloudflare Access で保護する ---
+# 構成（ADR 0002 §2 と同じ「同一オリジンでパス分割」）:
+#   admin.<zone>/api/*  → mirai-gikai-api  （管理 API。requireAdminAccess が効く）
+#   admin.<zone>/*      → mirai-gikai-admin（SPA。Workers Static Assets）
+# SPA は相対 /api を叩くため、api と同一オリジンに載せる必要がある。
+# 公開サイト側の /api/* には Access を掛けない（住民のチャット・インタビューが通らなくなるため）。
+
+resource "cloudflare_dns_record" "admin" {
+  count   = var.admin_enabled ? 1 : 0
+  zone_id = var.zone_id
+  name    = var.admin_hostname
+  type    = "AAAA"
+  content = "100::" # Workers ルート用のダミー（プロキシ ON で Worker が応答）
+  proxied = true
+  ttl     = 1
+}
+
+resource "cloudflare_workers_route" "admin_api" {
+  count   = var.admin_enabled ? 1 : 0
+  zone_id = var.zone_id
+  pattern = "${var.admin_hostname}/api/*"
+  script  = "mirai-gikai-api"
+}
+
+resource "cloudflare_workers_route" "admin_spa" {
+  count   = var.admin_enabled ? 1 : 0
+  zone_id = var.zone_id
+  pattern = "${var.admin_hostname}/*"
+  script  = "mirai-gikai-admin"
+}
+
+# Access アプリ（Self-hosted）。ホスト全体を保護し、通過したリクエストにだけ
+# Cf-Access-Jwt-Assertion が付く。api 側 requireAdminAccess はこの JWT を JWKS 検証する。
+#
+# 管理者の追加・削除は下の include（許可メール / メールドメイン）を変更して apply する。
+# これがアプリ内の管理者管理の代わり（2026-08-01 決定・カットオーバー準備 §1-1 A）。
+resource "cloudflare_zero_trust_access_application" "admin" {
+  count            = var.admin_enabled ? 1 : 0
+  account_id       = var.cloudflare_account_id
+  name             = "mirai-gikai-admin"
+  type             = "self_hosted"
+  domain           = var.admin_hostname
+  session_duration = var.admin_session_duration
+
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.admin[0].id
+    precedence = 1
+  }]
+}
+
+resource "cloudflare_zero_trust_access_policy" "admin" {
+  count      = var.admin_enabled ? 1 : 0
+  account_id = var.cloudflare_account_id
+  name       = "mirai-gikai-admin-allow"
+  decision   = "allow"
+
+  # 許可メール（個別）と許可ドメインの和集合。どちらか一方でも運用できる。
+  include = concat(
+    [for email in var.admin_allowed_emails : { email = { email = email } }],
+    [for domain in var.admin_allowed_email_domains : { email_domain = { domain = domain } }],
+  )
+}
