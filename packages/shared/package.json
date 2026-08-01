@@ -114,6 +114,26 @@
     "./time/jst-day-range": {
       "types": "./src/time/jst-day-range.ts",
       "default": "./src/time/jst-day-range.ts"
+    },
+    "./bills-import/parse-teirei-pages": {
+      "types": "./src/bills-import/parse-teirei-pages.ts",
+      "default": "./src/bills-import/parse-teirei-pages.ts"
+    },
+    "./bills-import/teirei-mapping": {
+      "types": "./src/bills-import/teirei-mapping.ts",
+      "default": "./src/bills-import/teirei-mapping.ts"
+    },
+    "./bills-import/build-bill-content": {
+      "types": "./src/bills-import/build-bill-content.ts",
+      "default": "./src/bills-import/build-bill-content.ts"
+    },
+    "./bills-import/types": {
+      "types": "./src/bills-import/types.ts",
+      "default": "./src/bills-import/types.ts"
+    },
+    "./bills-import/enums": {
+      "types": "./src/bills-import/enums.ts",
+      "default": "./src/bills-import/enums.ts"
     }
   },
   "dependencies": {

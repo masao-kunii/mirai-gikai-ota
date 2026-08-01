@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
-import { and, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import {
@@ -8,9 +8,16 @@ import {
   type FactionRecord,
   findFactionByName,
 } from "../../lib/bills/extract-from-minutes";
+import { importTeireiBills } from "../../lib/bills/import-teirei";
 import { adminQuery } from "../../lib/db";
 
-const { bills, councilSessionMinutes, factions, factionStances } = schema;
+const {
+  bills,
+  councilSessionMinutes,
+  councilSessions,
+  factions,
+  factionStances,
+} = schema;
 
 /**
  * 管理 議事録からの議案抽出（app_admin ロール）— ai-collection の残りを移植。
@@ -180,6 +187,55 @@ export const adminBillsExtractRoute = new Hono()
     });
 
     return c.json(result);
-  });
+  })
+  // 定例会ページ（大田区議会サイト）から議案を一括取り込み
+  .post(
+    "/import-teirei",
+    zValidator(
+      "json",
+      z.object({
+        indexUrl: z.url().max(2000),
+        councilSessionId: z.uuid(),
+      })
+    ),
+    async (c) => {
+      const { indexUrl, councilSessionId } = c.req.valid("json");
+      // 会期名は bill_contents の本文に載せるため先に引く。
+      const [session] = await adminQuery((tx) =>
+        tx
+          .select({ id: councilSessions.id, name: councilSessions.name })
+          .from(councilSessions)
+          .where(eq(councilSessions.id, councilSessionId))
+      );
+      if (!session) return c.json({ error: "not_found" }, 404);
+
+      const fetchText = async (url: string): Promise<string> => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+        return res.text();
+      };
+
+      try {
+        const result = await adminQuery((tx) =>
+          importTeireiBills(tx, fetchText, {
+            indexUrl,
+            councilSessionId,
+            sessionName: session.name,
+          })
+        );
+        if (!result.ok) {
+          return c.json({ error: "import_failed", detail: result.error }, 502);
+        }
+        return c.json({
+          billsUpserted: result.billsUpserted,
+          stancesUpserted: result.stancesUpserted,
+          warnings: result.warnings,
+        });
+      } catch (e) {
+        console.error("import-teirei failed:", e);
+        return c.json({ error: "import_failed" }, 502);
+      }
+    }
+  );
 
 export type AdminBillsExtractRouteType = typeof adminBillsExtractRoute;
