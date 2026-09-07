@@ -10,3 +10,15 @@ supabase_db_user      = "postgres.sqjoswnprerzdkhcneni"
 # custom_domain_enabled = true
 # zone_id               = "..."
 # preview_hostname      = "preview.example.jp"
+
+# 管理画面（apps/admin）を Cloudflare Access の背後に立てるとき:
+#   admin_hostname 全体が Access で保護され、/api/* だけ api Worker に振られる。
+#   admin_allowed_emails / admin_allowed_email_domains が「誰が管理者か」の唯一の定義
+#   （アプリ側に管理者テーブルは持たない。docs/20260801_0758_adminカットオーバー準備.md §1-1）。
+#   管理者の追加・削除はこの値を変えて terraform apply する。
+# admin_enabled  = true
+# zone_id        = "..."               # custom_domain_enabled と共用
+# admin_hostname = "admin.example.jp"
+# admin_allowed_emails        = ["admin@example.co.jp"]
+# admin_allowed_email_domains = []      # 例: ["example.co.jp"]（ドメイン全員を許可する場合）
+# admin_session_duration      = "24h"
