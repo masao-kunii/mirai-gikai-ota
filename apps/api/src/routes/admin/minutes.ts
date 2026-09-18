@@ -12,9 +12,10 @@ const { councilSessionMinutes, councilSessions } = schema;
  * 管理 議事録（app_admin ロール）。
  *
  * council_session_minutes は会期に紐づく議事録。app_admin のみ（公開なし）。
- * PDF からの Markdown 抽出・速報サイト取込・議案抽出などの自動化は ai-collection
- * 相当で本 PR のスコープ外。ここでは基本項目の CRUD ＋ 本文（markdown_text）の
- * 手動編集に絞る。(council_session_id, meeting_date) は一意。
+ * 基本項目の CRUD、本文（markdown_text）の手動編集、PDF からの本文抽出の保存を扱う。
+ * PDF のテキスト抽出そのものは管理画面（ブラウザ）で行い、ここは元 PDF の中継と
+ * 抽出結果の保存だけを受け持つ（Workers の CPU 時間に PDF 解析を載せないため）。
+ * 速報サイトからの取込は未対応。(council_session_id, meeting_date) は一意。
  */
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -38,6 +39,16 @@ const updateBodySchema = z.object({
   sourcePdfUrl: z.string().trim().min(1).max(2000).optional(),
   markdownText: z.string().max(500000).nullable().optional(),
 });
+
+// 抽出本文は空を許さない（抽出に失敗した空文字で既存本文を消さないため）。
+const extractedTextBodySchema = z.object({
+  text: z.string().trim().min(1).max(500000),
+});
+
+/** 元 PDF 取得のタイムアウト。議事録 PDF は 1MB 前後。 */
+const SOURCE_PDF_TIMEOUT_MS = 30_000;
+/** 中継する PDF の上限。これを超える Content-Length は断る。 */
+const MAX_SOURCE_PDF_BYTES = 30 * 1024 * 1024;
 
 const paramSchema = z.object({ id: z.uuid() });
 const listQuerySchema = z.object({ sessionId: z.uuid().optional() });
@@ -168,6 +179,68 @@ export const adminMinutesRoute = new Hono()
         if (isUniqueViolation(e)) return c.json({ error: "duplicate" }, 409);
         throw e;
       }
+    }
+  )
+  // 元 PDF の中継。PDF からのテキスト抽出は管理画面（ブラウザ）で行うが、市のサイトは
+  // CORS を返さないためブラウザから直接取れない。取得先は DB に登録済みの URL に限る。
+  .get("/:id/source-pdf", zValidator("param", paramSchema), async (c) => {
+    const { id } = c.req.valid("param");
+    const rows = await adminQuery((tx) =>
+      tx
+        .select({ sourcePdfUrl: councilSessionMinutes.sourcePdfUrl })
+        .from(councilSessionMinutes)
+        .where(eq(councilSessionMinutes.id, id))
+    );
+    const row = rows[0];
+    if (!row) return c.json({ error: "not_found" }, 404);
+    if (
+      !URL.canParse(row.sourcePdfUrl) ||
+      new URL(row.sourcePdfUrl).protocol !== "https:"
+    ) {
+      return c.json({ error: "invalid_url" }, 422);
+    }
+
+    let upstream: Response;
+    try {
+      upstream = await fetch(row.sourcePdfUrl, {
+        signal: AbortSignal.timeout(SOURCE_PDF_TIMEOUT_MS),
+      });
+    } catch {
+      return c.json({ error: "upstream_unreachable" }, 502);
+    }
+    if (!upstream.ok || !upstream.body) {
+      return c.json({ error: "upstream_error", status: upstream.status }, 502);
+    }
+    const length = Number(upstream.headers.get("content-length"));
+    if (length > MAX_SOURCE_PDF_BYTES) {
+      return c.json({ error: "too_large" }, 413);
+    }
+    return c.body(upstream.body, 200, {
+      "content-type": "application/pdf",
+      "cache-control": "no-store",
+    });
+  })
+  // PDF から抽出した本文の保存。手動編集（PATCH）と分け、抽出日時を記録する。
+  .put(
+    "/:id/extracted-text",
+    zValidator("param", paramSchema),
+    zValidator("json", extractedTextBodySchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { text } = c.req.valid("json");
+      const rows = await adminQuery((tx) =>
+        tx
+          .update(councilSessionMinutes)
+          .set({ markdownText: text, extractedAt: sql`now()` })
+          .where(eq(councilSessionMinutes.id, id))
+          .returning({
+            id: councilSessionMinutes.id,
+            extractedAt: councilSessionMinutes.extractedAt,
+          })
+      );
+      const row = rows[0];
+      if (!row) return c.json({ error: "not_found" }, 404);
+      return c.json(row);
     }
   )
   // 削除

@@ -2,9 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { ExternalLink, Pencil } from "lucide-react";
 import { InlineDeleteConfirm } from "../../components/inline-delete-confirm";
 import { iconButtonClass } from "../../lib/ui";
+import { ExtractTextButton } from "./extract-text-button";
 import { type AdminMinute, useDeleteMinute } from "./minutes-queries";
 
-/** 議事録1行。基本情報を表示し、編集は詳細ページ（本文含む）で行う。 */
+/** 議事録1行。基本情報を表示し、PDF からの本文抽出と、詳細ページ（本文含む）での編集を行う。 */
 export function MinuteRow({ minute }: { minute: AdminMinute }) {
   const deleteMinute = useDeleteMinute();
 
@@ -43,7 +44,8 @@ export function MinuteRow({ minute }: { minute: AdminMinute }) {
         </a>
       </td>
       <td className="px-3 py-2">
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-start justify-end gap-1">
+          <ExtractTextButton minuteId={minute.id} hasText={minute.hasText} />
           <Link
             to="/minute-edit/$minuteId"
             params={{ minuteId: minute.id }}
