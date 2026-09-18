@@ -10,6 +10,12 @@ import { createRemoteJWKSet, type JWTVerifyGetKey, jwtVerify } from "jose";
  * aud / iss を確認して初めて後続ハンドラ（app_admin ロール）へ通す。
  * 自前のログイン/セッションは持たない（TARGET_ARCHITECTURE Phase 4）。
  *
+ * 認可モデル（2026-08-01 決定・docs/20260801_0758_adminカットオーバー準備.md §1-1）:
+ *   **誰が管理者かは Cloudflare Access のポリシーが唯一の真実**。アプリ側に管理者
+ *   テーブルや role は持たず、Access を通ったリクエストは app_admin として扱う。
+ *   管理者の追加・削除は Zero Trust のポリシー変更で行う。
+ *   → ここに role 判定を足す場合は、この決定自体の見直しとセットで行うこと。
+ *
  * フェイルクローズ方針:
  *   - ローカル開発だけ `ADMIN_AUTH_DEV_BYPASS=true` で素通しする。
  *   - 本番でこのフラグは設定しない。設定漏れ（team domain / aud 未設定）時は
