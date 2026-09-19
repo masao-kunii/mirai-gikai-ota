@@ -14,6 +14,7 @@ export type { AdminExpertsRouteType } from "./routes/admin/experts";
 export type { AdminFactionsRouteType } from "./routes/admin/factions";
 export type { AdminInterviewConfigsRouteType } from "./routes/admin/interview-configs";
 export type { AdminInterviewReportsRouteType } from "./routes/admin/interview-reports";
+export type { AdminInterviewSessionsRouteType } from "./routes/admin/interview-sessions";
 export type { AdminMinutesRouteType } from "./routes/admin/minutes";
 export type { AdminReportFlagsRouteType } from "./routes/admin/report-flags";
 export type { AdminTagsRouteType } from "./routes/admin/tags";

@@ -19,11 +19,13 @@ import { Route as CouncilSessionsRouteImport } from './routes/council-sessions'
 import { Route as ExpertsRouteImport } from './routes/experts'
 import { Route as FactionsRouteImport } from './routes/factions'
 import { Route as InterviewConfigsRouteImport } from './routes/interview-configs'
+import { Route as InterviewSessionsRouteImport } from './routes/interview-sessions'
 import { Route as MinutesRouteImport } from './routes/minutes'
 import { Route as ReportFlagsRouteImport } from './routes/report-flags'
 import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as TagsRouteImport } from './routes/tags'
 import { Route as BillContentsBillIdRouteImport } from './routes/bill-contents.$billId'
+import { Route as InterviewSessionSessionIdRouteImport } from './routes/interview-session.$sessionId'
 import { Route as MinuteEditMinuteIdRouteImport } from './routes/minute-edit.$minuteId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -76,6 +78,11 @@ const InterviewConfigsRoute = InterviewConfigsRouteImport.update({
   path: '/interview-configs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InterviewSessionsRoute = InterviewSessionsRouteImport.update({
+  id: '/interview-sessions',
+  path: '/interview-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MinutesRoute = MinutesRouteImport.update({
   id: '/minutes',
   path: '/minutes',
@@ -101,6 +108,12 @@ const BillContentsBillIdRoute = BillContentsBillIdRouteImport.update({
   path: '/bill-contents/$billId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InterviewSessionSessionIdRoute =
+  InterviewSessionSessionIdRouteImport.update({
+    id: '/interview-session/$sessionId',
+    path: '/interview-session/$sessionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MinuteEditMinuteIdRoute = MinuteEditMinuteIdRouteImport.update({
   id: '/minute-edit/$minuteId',
   path: '/minute-edit/$minuteId',
@@ -118,11 +131,13 @@ export interface FileRoutesByFullPath {
   '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
+  '/interview-sessions': typeof InterviewSessionsRoute
   '/minutes': typeof MinutesRoute
   '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
+  '/interview-session/$sessionId': typeof InterviewSessionSessionIdRoute
   '/minute-edit/$minuteId': typeof MinuteEditMinuteIdRoute
 }
 export interface FileRoutesByTo {
@@ -136,11 +151,13 @@ export interface FileRoutesByTo {
   '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
+  '/interview-sessions': typeof InterviewSessionsRoute
   '/minutes': typeof MinutesRoute
   '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
+  '/interview-session/$sessionId': typeof InterviewSessionSessionIdRoute
   '/minute-edit/$minuteId': typeof MinuteEditMinuteIdRoute
 }
 export interface FileRoutesById {
@@ -155,11 +172,13 @@ export interface FileRoutesById {
   '/experts': typeof ExpertsRoute
   '/factions': typeof FactionsRoute
   '/interview-configs': typeof InterviewConfigsRoute
+  '/interview-sessions': typeof InterviewSessionsRoute
   '/minutes': typeof MinutesRoute
   '/report-flags': typeof ReportFlagsRoute
   '/review-queue': typeof ReviewQueueRoute
   '/tags': typeof TagsRoute
   '/bill-contents/$billId': typeof BillContentsBillIdRoute
+  '/interview-session/$sessionId': typeof InterviewSessionSessionIdRoute
   '/minute-edit/$minuteId': typeof MinuteEditMinuteIdRoute
 }
 export interface FileRouteTypes {
@@ -175,11 +194,13 @@ export interface FileRouteTypes {
     | '/experts'
     | '/factions'
     | '/interview-configs'
+    | '/interview-sessions'
     | '/minutes'
     | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
+    | '/interview-session/$sessionId'
     | '/minute-edit/$minuteId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -193,11 +214,13 @@ export interface FileRouteTypes {
     | '/experts'
     | '/factions'
     | '/interview-configs'
+    | '/interview-sessions'
     | '/minutes'
     | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
+    | '/interview-session/$sessionId'
     | '/minute-edit/$minuteId'
   id:
     | '__root__'
@@ -211,11 +234,13 @@ export interface FileRouteTypes {
     | '/experts'
     | '/factions'
     | '/interview-configs'
+    | '/interview-sessions'
     | '/minutes'
     | '/report-flags'
     | '/review-queue'
     | '/tags'
     | '/bill-contents/$billId'
+    | '/interview-session/$sessionId'
     | '/minute-edit/$minuteId'
   fileRoutesById: FileRoutesById
 }
@@ -230,11 +255,13 @@ export interface RootRouteChildren {
   ExpertsRoute: typeof ExpertsRoute
   FactionsRoute: typeof FactionsRoute
   InterviewConfigsRoute: typeof InterviewConfigsRoute
+  InterviewSessionsRoute: typeof InterviewSessionsRoute
   MinutesRoute: typeof MinutesRoute
   ReportFlagsRoute: typeof ReportFlagsRoute
   ReviewQueueRoute: typeof ReviewQueueRoute
   TagsRoute: typeof TagsRoute
   BillContentsBillIdRoute: typeof BillContentsBillIdRoute
+  InterviewSessionSessionIdRoute: typeof InterviewSessionSessionIdRoute
   MinuteEditMinuteIdRoute: typeof MinuteEditMinuteIdRoute
 }
 
@@ -310,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterviewConfigsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/interview-sessions': {
+      id: '/interview-sessions'
+      path: '/interview-sessions'
+      fullPath: '/interview-sessions'
+      preLoaderRoute: typeof InterviewSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/minutes': {
       id: '/minutes'
       path: '/minutes'
@@ -345,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillContentsBillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/interview-session/$sessionId': {
+      id: '/interview-session/$sessionId'
+      path: '/interview-session/$sessionId'
+      fullPath: '/interview-session/$sessionId'
+      preLoaderRoute: typeof InterviewSessionSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/minute-edit/$minuteId': {
       id: '/minute-edit/$minuteId'
       path: '/minute-edit/$minuteId'
@@ -366,11 +407,13 @@ const rootRouteChildren: RootRouteChildren = {
   ExpertsRoute: ExpertsRoute,
   FactionsRoute: FactionsRoute,
   InterviewConfigsRoute: InterviewConfigsRoute,
+  InterviewSessionsRoute: InterviewSessionsRoute,
   MinutesRoute: MinutesRoute,
   ReportFlagsRoute: ReportFlagsRoute,
   ReviewQueueRoute: ReviewQueueRoute,
   TagsRoute: TagsRoute,
   BillContentsBillIdRoute: BillContentsBillIdRoute,
+  InterviewSessionSessionIdRoute: InterviewSessionSessionIdRoute,
   MinuteEditMinuteIdRoute: MinuteEditMinuteIdRoute,
 }
 export const routeTree = rootRouteImport

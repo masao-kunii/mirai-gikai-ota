@@ -9,6 +9,13 @@ export const REVIEW_STATUS_LABELS = {
 
 export type ReviewStatus = keyof typeof REVIEW_STATUS_LABELS;
 
+export const REVIEW_STATUS_BADGE: Record<string, string> = {
+  pending: "bg-amber-100 text-amber-700",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+  auto_approved: "bg-slate-100 text-slate-600",
+};
+
 // タブ表示順（承認待ちを先頭に）。「all」は全件。
 export const REVIEW_STATUS_TABS: {
   value: ReviewStatus | "all";
@@ -69,6 +76,14 @@ export const STANCE_LABELS: Record<string, string> = {
   conditional_against: "条件付き反対",
   considering: "検討中",
   continued_deliberation: "継続審査中",
+};
+
+// 回答者の立場タイプ（interview_report_role_enum）。
+export const ROLE_LABELS: Record<string, string> = {
+  subject_expert: "専門的な有識者",
+  work_related: "業務に関係",
+  daily_life_affected: "暮らしに影響",
+  general_citizen: "一般的な関心",
 };
 
 export const TARGET_TYPE_LABELS: Record<string, string> = {
