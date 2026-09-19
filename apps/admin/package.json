@@ -10,13 +10,15 @@
     "deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
+    "@mirai-gikai/shared": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-router": "^1.170.17",
     "api": "workspace:*",
     "hono": "^4.13.6",
     "lucide-react": "^1.25.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",

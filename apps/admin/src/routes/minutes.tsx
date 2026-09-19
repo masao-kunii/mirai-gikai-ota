@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreateMinuteForm } from "../features/minutes/create-minute-form";
+import { ExtractAllPanel } from "../features/minutes/extract-all-panel";
 import { MinuteRow } from "../features/minutes/minute-row";
 import { useMinutes } from "../features/minutes/minutes-queries";
 
@@ -17,12 +18,14 @@ function MinutesPage() {
       <header>
         <h1 className="font-bold text-slate-900 text-xl">議事録</h1>
         <p className="text-slate-500 text-sm">
-          会期に紐づく議事録を管理します。PDF の URL
-          と本文（Markdown）を保持します。
+          会期に紐づく議事録を管理します。PDF の URL と本文を保持し、本文は PDF
+          から抽出できます。
         </p>
       </header>
 
       <CreateMinuteForm />
+
+      {minutes ? <ExtractAllPanel minutes={minutes} /> : null}
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
@@ -33,7 +36,7 @@ function MinutesPage() {
               <th className="px-3 py-2 font-medium">タイトル／会期</th>
               <th className="w-16 px-3 py-2 text-center font-medium">本文</th>
               <th className="w-16 px-3 py-2 text-center font-medium">PDF</th>
-              <th className="w-24 px-3 py-2" />
+              <th className="w-32 px-3 py-2" />
             </tr>
           </thead>
           <tbody>

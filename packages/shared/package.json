@@ -134,6 +134,10 @@
     "./bills-import/enums": {
       "types": "./src/bills-import/enums.ts",
       "default": "./src/bills-import/enums.ts"
+    },
+    "./minutes/normalize-pdf-text": {
+      "types": "./src/minutes/normalize-pdf-text.ts",
+      "default": "./src/minutes/normalize-pdf-text.ts"
     }
   },
   "dependencies": {

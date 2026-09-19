@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { InferRequestType, InferResponseType } from "hono/client";
 import { adminMinutesApi as minutesApi } from "../../lib/api";
+import { extractAndSaveMinuteText } from "./extract-minute-text";
 
 type ListResponse = InferResponseType<typeof minutesApi.index.$get, 200>;
 export type AdminMinute = ListResponse["minutes"][number];
@@ -82,6 +83,20 @@ export function useUpdateMinute(id: string) {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: MINUTES_KEY }),
   });
+}
+
+export function useExtractMinuteText() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: extractAndSaveMinuteText,
+    onSuccess: () => qc.invalidateQueries({ queryKey: MINUTES_KEY }),
+  });
+}
+
+/** 一覧・詳細のキャッシュを捨てる（一括抽出で1件ごとに反映するため）。 */
+export function useInvalidateMinutes() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: MINUTES_KEY });
 }
 
 export function useDeleteMinute() {
