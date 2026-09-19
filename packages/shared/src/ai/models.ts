@@ -19,6 +19,10 @@ export const AI_MODELS = {
   /** Gemini 3.1 Flash-Lite。2.5-flash より新しく安価（$0.25/$1.50）。
    *  公開チャットで使用（Developer API キー経由）。 */
   gemini3_1_flash_lite: "gemini-3.1-flash-lite",
+  /** Gemini 3.8 Flash。住民インタビューと管理画面の AI 機能（議案本文の生成・
+   *  議事録からの議案抽出）で使用（Developer API キー経由）。
+   *  gemini-2.5-pro は Developer API の新規利用者に提供されないため置き換えた。 */
+  gemini3_8_flash: "gemini-3.8-flash",
 } as const;
 
 export type AiModel = (typeof AI_MODELS)[keyof typeof AI_MODELS];

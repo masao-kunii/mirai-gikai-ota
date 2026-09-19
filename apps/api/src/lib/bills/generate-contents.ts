@@ -84,7 +84,7 @@ ${minutesSection}
 上記の議案について、与えられた情報のみを根拠に、normal（一般市民向け）と hard（詳しく知りたい人向け）の解説本文を生成してください。`;
 
   const { object } = await generateObject({
-    model: getModel(AI_MODELS.pro),
+    model: getModel(AI_MODELS.gemini3_8_flash),
     system,
     prompt,
     schema: generatedSchema,

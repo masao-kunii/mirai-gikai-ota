@@ -42,6 +42,10 @@ describe("calculateUsageCostUsd", () => {
     expect(calculateUsageCostUsd(AI_MODELS.flash, usage)).toBeCloseTo(2.8);
     // Gemini 2.5 Flash Lite: $0.10 input + $0.40 output = $0.50
     expect(calculateUsageCostUsd(AI_MODELS.flash_lite, usage)).toBeCloseTo(0.5);
+    // Gemini 3.8 Flash（2027-01-01 以降の単価）: $1.50 input + $7.50 output = $9.00
+    expect(calculateUsageCostUsd(AI_MODELS.gemini3_8_flash, usage)).toBeCloseTo(
+      9
+    );
   });
 
   it("throws for unknown model", () => {
