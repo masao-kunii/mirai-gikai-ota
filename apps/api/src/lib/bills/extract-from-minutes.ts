@@ -101,7 +101,7 @@ export async function extractFromMinutes(
 ): Promise<MinutesExtractionResult> {
   const { system, prompt } = buildPrompt(minutes);
   const { object } = await generateObject({
-    model: getModel(AI_MODELS.pro),
+    model: getModel(AI_MODELS.gemini3_8_flash),
     system,
     prompt,
     schema: minutesExtractionSchema,

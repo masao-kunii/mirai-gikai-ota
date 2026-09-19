@@ -31,6 +31,13 @@ export const modelPricing: Record<string, ModelPricing> = {
     inputTokensPerMillionUsd: 0.25,
     outputTokensPerMillionUsd: 1.5,
   },
+  // 2026-12-31 までは $0.75 / $3.75 だが、2027-01-01 以降の単価で登録する。
+  // この表は日付で切り替わらないため、安いほうにすると年明けから費用を過小に
+  // 見積もり、1日の費用上限が効かなくなる。
+  "gemini-3.8-flash": {
+    inputTokensPerMillionUsd: 1.5,
+    outputTokensPerMillionUsd: 7.5,
+  },
   "gemini-2.5-pro": {
     inputTokensPerMillionUsd: 1.25,
     outputTokensPerMillionUsd: 10,
