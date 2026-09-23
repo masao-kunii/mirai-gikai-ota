@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Check, Pencil, Power, X } from "lucide-react";
 import { useState } from "react";
 import { Field } from "../../components/field";
@@ -78,7 +79,18 @@ export function ConfigRow({ config }: { config: AdminInterviewConfig }) {
         {MODE_LABELS[config.mode as InterviewMode] ?? config.mode}
       </td>
       <td className="px-3 py-2 text-center text-slate-600">
-        {config.sessionCount}
+        {config.sessionCount === 0 ? (
+          0
+        ) : (
+          <Link
+            to="/interview-sessions"
+            search={{ configId: config.id, status: "all" }}
+            className="underline decoration-slate-300 hover:decoration-slate-600"
+            title="この設定の回答を見る"
+          >
+            {config.sessionCount}
+          </Link>
+        )}
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center justify-end gap-1">

@@ -9,6 +9,7 @@ import { adminExpertsRoute } from "./routes/admin/experts";
 import { adminFactionsRoute } from "./routes/admin/factions";
 import { adminInterviewConfigsRoute } from "./routes/admin/interview-configs";
 import { adminInterviewReportsRoute } from "./routes/admin/interview-reports";
+import { adminInterviewSessionsRoute } from "./routes/admin/interview-sessions";
 import { adminMinutesRoute } from "./routes/admin/minutes";
 import { adminReportFlagsRoute } from "./routes/admin/report-flags";
 import { adminTagsRoute } from "./routes/admin/tags";
@@ -37,6 +38,7 @@ const adminApp = new Hono()
   .route("/council-sessions", adminCouncilSessionsRoute)
   .route("/interview-reports", adminInterviewReportsRoute)
   .route("/interview-configs", adminInterviewConfigsRoute)
+  .route("/interview-sessions", adminInterviewSessionsRoute)
   .route("/minutes", adminMinutesRoute)
   .route("/experts", adminExpertsRoute)
   .route("/report-flags", adminReportFlagsRoute);
