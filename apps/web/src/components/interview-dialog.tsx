@@ -67,6 +67,7 @@ export function InterviewDialog({
         setTimeout(() => {
           submitRef.current({
             ...interviewTargetBody(target),
+            topic: subject,
             stage: "summary",
             roleLabel: roleLabelRef.current,
           });
@@ -97,7 +98,12 @@ export function InterviewDialog({
     roleLabelRef.current = role;
     setRoleLabel(role);
     setPhase("chat");
-    submit({ ...interviewTargetBody(target), stage: "chat", roleLabel: role });
+    submit({
+      ...interviewTargetBody(target),
+      topic: subject,
+      stage: "chat",
+      roleLabel: role,
+    });
   };
 
   const sendAnswer = () => {
@@ -107,6 +113,7 @@ export function InterviewDialog({
     setInput("");
     submit({
       ...interviewTargetBody(target),
+      topic: subject,
       message: msg,
       stage: "chat",
       roleLabel: roleLabelRef.current,
@@ -117,6 +124,7 @@ export function InterviewDialog({
     if (isLoading) return;
     submit({
       ...interviewTargetBody(target),
+      topic: subject,
       stage: "summary",
       roleLabel: roleLabelRef.current,
     });
