@@ -138,6 +138,10 @@
     "./minutes/normalize-pdf-text": {
       "types": "./src/minutes/normalize-pdf-text.ts",
       "default": "./src/minutes/normalize-pdf-text.ts"
+    },
+    "./interviews/resume-request": {
+      "types": "./src/interviews/resume-request.ts",
+      "default": "./src/interviews/resume-request.ts"
     }
   },
   "dependencies": {

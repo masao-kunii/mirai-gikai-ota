@@ -8,6 +8,7 @@ import {
   interviewChatTextSchema,
   interviewChatWithReportSchema,
 } from "@mirai-gikai/shared/interview-schemas/schemas";
+import { isInterviewResumeRequest } from "@mirai-gikai/shared/interviews/resume-request";
 import { Hono } from "hono";
 import { z } from "zod";
 import { resolveAnonId } from "../lib/anon";
@@ -111,6 +112,29 @@ export const interviewsRoute = new Hono()
 
       // DB のメッセージ（id付き・時系列）をロード
       const stored = await getSessionMessages(sessionId, anonId);
+
+      // 新しい回答が無く、履歴が AI の質問で終わっている＝ダイアログを開き直して
+      // 対話を再開した場面。ここでモデルを呼ぶと Gemini 3 系が
+      // 「Requests ending with a model turn are not supported」で拒否するため、
+      // 直前の質問をそのまま返して続きから再開する（余分な生成も走らせない）。
+      const lastStored = stored.at(-1);
+      if (
+        lastStored &&
+        isInterviewResumeRequest({
+          stage: body.stage,
+          hasAnswer: Boolean(answer),
+          lastMessageRole: lastStored.role,
+        })
+      ) {
+        return withAnonCookie(
+          new Response(lastStored.content, {
+            headers: {
+              "content-type": "text/plain; charset=utf-8",
+              "x-interview-session-id": sessionId,
+            },
+          })
+        );
+      }
       const modelMessages = stored.map((m) => ({
         role: m.role,
         content: m.role === "assistant" ? assistantText(m.content) : m.content,
