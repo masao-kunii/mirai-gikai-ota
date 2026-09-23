@@ -1,6 +1,6 @@
 import { schema, withAppAdmin, withResident } from "@mirai-gikai/db";
 import type { InterviewSubjectInput } from "@mirai-gikai/shared/interview-prompts/subject-prompts";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { getDb, publicQuery } from "../db";
 
 const {
@@ -163,6 +163,27 @@ export async function ensureConfig(target: {
   );
   if (!created) throw new Error("Failed to create interview config");
   return created.id;
+}
+
+/**
+ * セッションをアーカイブする（本人のみ）。以後 getOrCreateSession の対象外になり、
+ * 次回は新しいセッションが始まる。送信されないまま残ったレポート案の片付けに使う。
+ */
+export async function archiveSession(
+  sessionId: string,
+  anonId: string
+): Promise<void> {
+  await withResident(getDb(), anonId, (tx) =>
+    tx
+      .update(interviewSessions)
+      .set({ archivedAt: sql`now()` })
+      .where(
+        and(
+          eq(interviewSessions.id, sessionId),
+          eq(interviewSessions.userId, anonId)
+        )
+      )
+  );
 }
 
 /**

@@ -10,6 +10,7 @@ import {
 } from "@mirai-gikai/shared/interview-schemas/schemas";
 import { getMessageDisplayText } from "@mirai-gikai/shared/interviews/message-display-text";
 import { isInterviewResumeRequest } from "@mirai-gikai/shared/interviews/resume-request";
+import { isSummaryDraftMessage } from "@mirai-gikai/shared/interviews/summary-draft";
 import { Hono } from "hono";
 import { z } from "zod";
 import { resolveAnonId } from "../lib/anon";
@@ -22,6 +23,7 @@ import {
 import { getDb } from "../lib/db";
 import { completeInterview } from "../lib/interviews/complete";
 import {
+  archiveSession,
   ensureConfig,
   getOrCreateSession,
   getSessionMessages,
@@ -62,6 +64,8 @@ const messagesBodySchema = targetSchema.extend({
   stage: z.enum(["chat", "summary"]).default("chat"),
   // 回答者が最初に選んだ立場ラベル（テーマ側で選択）。
   roleLabel: z.string().max(30).optional(),
+  // ユーザーが開いたカードの見出し（テーマ配下の施策など）。対話の切り口に使う。
+  topic: z.string().max(100).optional(),
 });
 
 export const interviewsRoute = new Hono()
@@ -92,10 +96,25 @@ export const interviewsRoute = new Hono()
         themeId: resolved.themeId,
         themeInitiativeId: resolved.themeInitiativeId,
       });
-      const sessionId = await getOrCreateSession(configId, anonId);
+      let sessionId = await getOrCreateSession(configId, anonId);
+      const answer = body.message?.trim();
+
+      // 送信されないままレポート案まで進んだセッションを開き直した場合は、
+      // 続きではなく新しい対話を始める（別の切り口を選んでも前回のレポート案が
+      // 出てくるのを避ける）。古いセッションはアーカイブして対象から外す。
+      if (!answer && body.stage === "chat") {
+        const previous = await getSessionMessages(sessionId, anonId);
+        const lastPrevious = previous.at(-1);
+        if (
+          lastPrevious?.role === "assistant" &&
+          isSummaryDraftMessage(lastPrevious.content)
+        ) {
+          await archiveSession(sessionId, anonId);
+          sessionId = await getOrCreateSession(configId, anonId);
+        }
+      }
 
       // 新しいユーザー回答を保存
-      const answer = body.message?.trim();
       if (answer) {
         await saveInterviewMessage(sessionId, anonId, "user", answer);
       }
@@ -146,10 +165,12 @@ export const interviewsRoute = new Hono()
             subject: resolved.subject,
             messages: promptMessages,
             respondentRole: body.roleLabel,
+            topic: body.topic,
           })
         : buildSubjectInterviewSystemPrompt({
             subject: resolved.subject,
             respondentRole: body.roleLabel,
+            topic: body.topic,
           });
       const schema = isSummary
         ? interviewChatWithReportSchema

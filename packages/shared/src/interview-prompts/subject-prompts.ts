@@ -50,19 +50,34 @@ function respondentRoleBlock(respondentRole?: string | null): string {
 }
 
 /**
+ * ユーザーが開いたカード（テーマ内の個別の施策など）を、対話の切り口として伝える
+ * ブロック。テーマ配下の施策は個別の ID を持たないため対象はテーマのままだが、
+ * どの話題から開いたかを渡して会話の軸をそろえる。
+ */
+function topicBlock(topic?: string | null): string {
+  const t = topic?.trim();
+  if (!t) return "";
+  return `
+
+## 今回の切り口
+ユーザーは「${t}」の説明を読んで意見を書こうとしています。最初の質問はこの話題から始め、対話全体もこの話題を軸にしてください（対象の範囲からは出ないこと）。ただしユーザーが関連する別の話に広げた場合は、対象の範囲内であれば受け止めて構いません。`;
+}
+
+/**
  * 対話（chat）フェーズのシステムプロンプト。
  */
 export function buildSubjectInterviewSystemPrompt(params: {
   subject: InterviewSubjectInput;
   respondentRole?: string | null;
+  topic?: string | null;
 }): string {
-  const { subject, respondentRole } = params;
+  const { subject, respondentRole, topic } = params;
   const label = subjectLabel(subject.kind);
 
   return `あなたは、区政について住民の声をていねいに聞く、熟練のインタビュアーです。
 今回の${label}について、住民であるユーザーの考え・困っていること・期待していることを、対話を通じて引き出してください。
 
-${subjectKnowledgeBlock(subject)}${respondentRoleBlock(respondentRole)}
+${subjectKnowledgeBlock(subject)}${topicBlock(topic)}${respondentRoleBlock(respondentRole)}
 
 **重要**: 質問は必ず上記の対象（${subject.name}）に関する話に限定してください。対象から外れた話題（別の分野の話題など）に逸れないでください。ユーザーの回答が対象から離れたら、やさしく対象の話に引き戻してください。
 
@@ -105,8 +120,9 @@ export function buildSubjectSummarySystemPrompt(params: {
   subject: InterviewSubjectInput;
   messages: Array<{ role: string; content: string; id?: string }>;
   respondentRole?: string | null;
+  topic?: string | null;
 }): string {
-  const { subject, messages, respondentRole } = params;
+  const { subject, messages, respondentRole, topic } = params;
   const label = subjectLabel(subject.kind);
 
   const conversationLog = messages
@@ -119,7 +135,7 @@ export function buildSubjectSummarySystemPrompt(params: {
 
   return `あなたは、区政について住民の声を聞く熟練のインタビュアーです。
 
-${subjectKnowledgeBlock(subject)}${respondentRoleBlock(respondentRole)}
+${subjectKnowledgeBlock(subject)}${topicBlock(topic)}${respondentRoleBlock(respondentRole)}
 
 ## あなたの役割
 以下の会話履歴を読み、インタビュー内容を要約してレポート案を生成してください。
