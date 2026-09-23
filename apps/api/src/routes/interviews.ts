@@ -8,6 +8,7 @@ import {
   interviewChatTextSchema,
   interviewChatWithReportSchema,
 } from "@mirai-gikai/shared/interview-schemas/schemas";
+import { getMessageDisplayText } from "@mirai-gikai/shared/interviews/message-display-text";
 import { isInterviewResumeRequest } from "@mirai-gikai/shared/interviews/resume-request";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -39,17 +40,6 @@ function getClientIp(headers: Headers): string {
     if (first) return first;
   }
   return headers.get("x-real-ip")?.trim() || "unknown";
-}
-
-/** 保存された assistant メッセージ（JSON文字列）から text を取り出す。 */
-function assistantText(content: string): string {
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed && typeof parsed.text === "string") return parsed.text;
-  } catch {
-    // JSON でなければそのまま
-  }
-  return content;
 }
 
 const targetSchema = z.object({
@@ -137,11 +127,13 @@ export const interviewsRoute = new Hono()
       }
       const modelMessages = stored.map((m) => ({
         role: m.role,
-        content: m.role === "assistant" ? assistantText(m.content) : m.content,
+        content:
+          m.role === "assistant" ? getMessageDisplayText(m.content) : m.content,
       }));
       const promptMessages = stored.map((m) => ({
         role: m.role,
-        content: m.role === "assistant" ? assistantText(m.content) : m.content,
+        content:
+          m.role === "assistant" ? getMessageDisplayText(m.content) : m.content,
         id: m.id,
       }));
 

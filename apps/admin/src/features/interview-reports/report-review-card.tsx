@@ -1,4 +1,5 @@
-import { Check, Flag, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Check, Flag, MessageSquareText, X } from "lucide-react";
 import type { AdminInterviewReport } from "./interview-reports-queries";
 import { useApproveReport, useRejectReport } from "./interview-reports-queries";
 import {
@@ -6,18 +7,12 @@ import {
   FLAG_REASON_LABELS,
   MODERATION_STATUS_BADGE,
   MODERATION_STATUS_LABELS,
+  REVIEW_STATUS_BADGE,
   REVIEW_STATUS_LABELS,
   type ReviewStatus,
   STANCE_LABELS,
   TARGET_TYPE_LABELS,
 } from "./moderation-labels";
-
-const REVIEW_STATUS_BADGE: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  auto_approved: "bg-slate-100 text-slate-600",
-};
 
 /** 審査キューの1レポート。内容・モデレーション・通報を示し、承認/却下する。 */
 export function ReportReviewCard({ report }: { report: AdminInterviewReport }) {
@@ -94,6 +89,14 @@ export function ReportReviewCard({ report }: { report: AdminInterviewReport }) {
       ) : null}
 
       <div className="flex items-center justify-end gap-2 border-slate-100 border-t pt-3">
+        <Link
+          to="/interview-session/$sessionId"
+          params={{ sessionId: report.sessionId }}
+          className="mr-auto inline-flex items-center gap-1 text-slate-500 text-sm hover:text-slate-800"
+        >
+          <MessageSquareText className="size-4" />
+          会話ログを見る
+        </Link>
         {errorMessage ? (
           <span className="text-red-600 text-sm">{errorMessage}</span>
         ) : null}

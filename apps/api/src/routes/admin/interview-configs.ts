@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
+import { resolveInterviewTarget } from "@mirai-gikai/shared/interviews/interview-target";
 import { count, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -87,25 +88,6 @@ export const adminInterviewConfigsRoute = new Hono()
     const countByConfig = new Map<string, number>();
     for (const s of sessionCounts) countByConfig.set(s.configId, s.n);
 
-    const resolveTarget = (r: (typeof configRows)[number]) => {
-      if (r.billId) {
-        return { type: "bill" as const, name: r.billName ?? "(不明な議案)" };
-      }
-      if (r.themeId) {
-        return {
-          type: "theme" as const,
-          name: r.themeName ?? "(不明なテーマ)",
-        };
-      }
-      if (r.themeInitiativeId) {
-        return {
-          type: "initiative" as const,
-          name: r.initiativeTitle ?? "(不明な取り組み)",
-        };
-      }
-      return null;
-    };
-
     const configs = configRows.map((r) => ({
       id: r.id,
       name: r.name,
@@ -114,7 +96,7 @@ export const adminInterviewConfigsRoute = new Hono()
       chatModel: r.chatModel,
       estimatedDuration: r.estimatedDuration,
       createdAt: r.createdAt,
-      target: resolveTarget(r),
+      target: resolveInterviewTarget(r),
       sessionCount: countByConfig.get(r.id) ?? 0,
     }));
 

@@ -142,6 +142,18 @@
     "./interviews/resume-request": {
       "types": "./src/interviews/resume-request.ts",
       "default": "./src/interviews/resume-request.ts"
+    },
+    "./interviews/message-display-text": {
+      "types": "./src/interviews/message-display-text.ts",
+      "default": "./src/interviews/message-display-text.ts"
+    },
+    "./interviews/interview-target": {
+      "types": "./src/interviews/interview-target.ts",
+      "default": "./src/interviews/interview-target.ts"
+    },
+    "./time/format-for-display": {
+      "types": "./src/time/format-for-display.ts",
+      "default": "./src/time/format-for-display.ts"
     }
   },
   "dependencies": {

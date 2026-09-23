@@ -34,9 +34,12 @@ function useReviewMutation(
       if (!res.ok) throw new Error(failMessage);
       return res.json();
     },
-    // 判定でステータスが移るため、全タブのキャッシュを無効化する。
+    // 判定でステータスが移るため、審査キューの全タブと回答一覧・詳細を更新する。
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["admin", "interview-reports"] }),
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["admin", "interview-reports"] }),
+        qc.invalidateQueries({ queryKey: ["admin", "interview-sessions"] }),
+      ]),
   });
 }
 
