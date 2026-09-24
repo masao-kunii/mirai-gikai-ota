@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useInterviewConfigs } from "../features/interview-configs/interview-configs-queries";
+import { BulkActionsPanel } from "../features/interview-sessions/bulk-actions-panel";
 import {
   useInterviewSessionStats,
   useInterviewSessions,
@@ -56,6 +57,8 @@ function InterviewSessionsPage() {
         configs={configs.data ?? []}
         onChange={update}
       />
+
+      <BulkActionsPanel configId={search.configId} />
 
       {stats.isError ? (
         <p className="text-red-600 text-sm">{stats.error.message}</p>
