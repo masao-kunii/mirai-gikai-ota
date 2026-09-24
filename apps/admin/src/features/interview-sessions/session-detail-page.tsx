@@ -3,7 +3,7 @@ import {
   formatJstDateTime,
 } from "@mirai-gikai/shared/time/format-for-display";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, EyeOff, Flag } from "lucide-react";
+import { ArrowLeft, Check, EyeOff, Flag, Loader2 } from "lucide-react";
 import {
   useApproveReport,
   useRejectReport,
@@ -20,6 +20,7 @@ import {
   STANCE_LABELS,
   TARGET_TYPE_LABELS,
 } from "../interview-reports/moderation-labels";
+import { useRescoreReport } from "./bulk-actions-queries";
 import {
   type AdminInterviewSessionDetail,
   useInterviewSession,
@@ -144,7 +145,10 @@ function ReportPanel({
       </section>
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
-        <h2 className="font-medium text-slate-800">判定</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-slate-800">判定</h2>
+          <RescoreButtons reportId={report.id} />
+        </div>
         <Judgement
           title="モデレーション"
           badge={
@@ -282,6 +286,32 @@ function PublishPanel({ report }: { report: Report }) {
         <p className="text-red-600 text-xs">{errorMessage}</p>
       ) : null}
     </section>
+  );
+}
+
+/** 1件だけ判定をやり直す。承認・却下済みなら数値だけ更新される。 */
+function RescoreButtons({ reportId }: { reportId: string }) {
+  const rescore = useRescoreReport();
+  return (
+    <div className="flex items-center gap-2">
+      {(["moderation", "richness"] as const).map((kind) => (
+        <button
+          key={kind}
+          type="button"
+          onClick={() => rescore.mutate({ reportId, kind })}
+          disabled={rescore.isPending}
+          className="rounded border border-slate-300 px-2 py-1 text-slate-600 text-xs hover:bg-slate-100 disabled:opacity-50"
+        >
+          {kind === "moderation" ? "モデレーション" : "充実度"}を再判定
+        </button>
+      ))}
+      {rescore.isPending ? (
+        <Loader2 className="size-3.5 animate-spin text-slate-400" />
+      ) : null}
+      {rescore.isError ? (
+        <span className="text-red-600 text-xs">{rescore.error.message}</span>
+      ) : null}
+    </div>
   );
 }
 
