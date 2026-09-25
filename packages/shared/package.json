@@ -158,6 +158,10 @@
     "./interviews/summary-draft": {
       "types": "./src/interviews/summary-draft.ts",
       "default": "./src/interviews/summary-draft.ts"
+    },
+    "./minutes/parse-sokuhou-page": {
+      "types": "./src/minutes/parse-sokuhou-page.ts",
+      "default": "./src/minutes/parse-sokuhou-page.ts"
     }
   },
   "dependencies": {
