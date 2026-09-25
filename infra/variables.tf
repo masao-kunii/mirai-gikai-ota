@@ -55,7 +55,9 @@ variable "admin_enabled" {
 }
 
 variable "admin_hostname" {
-  description = "管理画面のホスト名（例: admin.ota.aix.tokyo）。admin_enabled=true のとき必須"
+  # 無料証明書は 1 階層のサブドメインまでしか対象にしないため、2 階層
+  # （admin.ota.<zone>）にすると TLS を張れない。1 階層に収めること。
+  description = "管理画面のホスト名（例: ota-admin.aix.tokyo）。admin_enabled=true のとき必須"
   type        = string
   default     = ""
 }

@@ -3,6 +3,11 @@
   "name": "mirai-gikai-admin",
   "compatibility_date": "2025-04-01",
   "observability": { "enabled": true },
+  // workers.dev の URL を無効にする。管理画面は Cloudflare Access で守った
+  // 専用ホスト（ota-admin.<zone>）からだけ開けるようにする。workers.dev は
+  // Access の外側なので、有効なままだと管理画面の画面そのものが誰でも開けてしまう
+  // （API は同一オリジンに無いためデータは取得できないが、塞いでおく）。
+  "workers_dev": false,
   // 管理フロントは純 SPA（Vite ビルド）。Worker スクリプトは持たず、
   // ビルド成果物を Static Assets として配信するだけ。クライアントルーティング
   // （TanStack Router）のため、未知のパスは index.html へフォールバックする。
@@ -11,9 +16,11 @@
     "not_found_handling": "single-page-application"
   }
   // ルーティングとアクセス制御（本番）:
-  //   - 管理用ホスト（例 admin.<zone>）全体を Cloudflare Access の背後に置く。
-  //   - admin.<zone>/*     → この Worker（SPA）
-  //   - admin.<zone>/api/* → mirai-gikai-api（SPA は相対 /api を叩くため同一オリジンに載せる）
+  //   - 管理用ホスト（ota-admin.<zone>）全体を Cloudflare Access の背後に置く。
+  //   - ota-admin.<zone>/*     → この Worker（SPA）
+  //   - ota-admin.<zone>/api/* → mirai-gikai-api（SPA は相対 /api を叩くため同一オリジンに載せる）
+  //   ※ admin.<zone> のような2階層のサブドメインは Cloudflare の無料証明書
+  //     （aix.tokyo と *.aix.tokyo のみ）の対象外で TLS が張れない。
   // Routes は Cloudflare ダッシュボードか infra/（Terraform）で設定する。
   // 詳細は docs/20260801_0758_adminカットオーバー準備.md を参照。
 }

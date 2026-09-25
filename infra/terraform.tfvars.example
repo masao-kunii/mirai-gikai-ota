@@ -18,7 +18,11 @@ supabase_db_user      = "postgres.sqjoswnprerzdkhcneni"
 #   管理者の追加・削除はこの値を変えて terraform apply する。
 # admin_enabled  = true
 # zone_id        = "..."               # custom_domain_enabled と共用
-# admin_hostname = "admin.example.jp"
+# admin_hostname = "ota-admin.example.jp"
+#   ※ Cloudflare の無料証明書（Universal SSL）は「ゾーン名」と「1階層のサブドメイン」
+#      （example.jp と *.example.jp）しか対象にしない。admin.ota.example.jp のような
+#      2階層のサブドメインは TLS を張れず接続できない（実際に踏んだ）。
+#      1階層に収めるか、Advanced Certificate Manager（有料）を使うこと。
 # admin_allowed_emails        = ["admin@example.co.jp"]
 # admin_allowed_email_domains = []      # 例: ["example.co.jp"]（ドメイン全員を許可する場合）
 # admin_session_duration      = "24h"
