@@ -5,6 +5,11 @@ import { defineNitroConfig } from "nitro/config";
  * Cloudflare 向けビルドは `NITRO_PRESET=cloudflare_module vite build`。
  */
 export default defineNitroConfig({
+  // Workers の互換性日付を固定する。未指定だと Nitro がビルドした日（ローカル
+  // 時刻）を毎回入れるため、(1) デプロイのたびに実行時の挙動が変わりうる、
+  // (2) 日本時間 0〜9 時にビルドすると UTC ではまだ前日なので Cloudflare に
+  // 「未来の日付」として拒否される（code 10021）。上げるときは意図して変える。
+  compatibilityDate: "2026-09-24",
   cloudflare: {
     wrangler: {
       name: "mirai-gikai-web",
