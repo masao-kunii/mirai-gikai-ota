@@ -123,6 +123,12 @@ grep -oE '"(name|pattern)": *"[^"]+"' apps/web/.output/server/wrangler.json
 
 web の `NITRO_PRESET=cloudflare_module` は必須。付けないと Node 向けにビルドされる。
 
+ビルド結果の互換性日付（`compatibility_date`）が `apps/web/nitro.config.ts` の `compatibilityDate` と一致していることも確認する。未指定だと Nitro はビルドした日（ローカル時刻）を入れるため、日本時間 0〜9 時のビルドは UTC ではまだ前日となり、Cloudflare に「未来の日付」として拒否される（code 10021）。
+
+```bash
+grep -oE '"compatibility_date": *"[^"]+"' apps/web/.output/server/wrangler.json
+```
+
 ### デプロイ（ユーザーが実行）
 
 api → web の順に渡す。`--tag` に SHA を付けて、次回の手順 1 で差分を出せるようにする。
