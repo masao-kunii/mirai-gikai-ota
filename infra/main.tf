@@ -29,12 +29,18 @@ resource "cloudflare_hyperdrive_config" "db" {
   account_id = var.cloudflare_account_id
   name       = "mirai-gikai-db"
   origin = {
-    scheme   = "postgres"
+    scheme   = "postgresql"
     database = "postgres"
     host     = var.supabase_db_host
     port     = 5432
     user     = var.supabase_db_user
     password = var.supabase_db_password
+  }
+  # 既存（wrangler で作成 → import）の設定に合わせる。未指定にすると既定値へ
+  # 戻ってしまい、本番 DB への接続数やキャッシュの挙動が変わる。
+  origin_connection_limit = 20
+  caching = {
+    disabled = false
   }
 }
 
