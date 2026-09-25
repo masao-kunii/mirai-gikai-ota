@@ -21,8 +21,16 @@ export function SiteFooter() {
           </Link>
         </nav>
         <p className="text-mirai-text-secondary text-xs leading-relaxed">
-          本サイトはチームみらいが運営する公式サービスではなく、有志個人
-          (masao-kunii) による非公式プロジェクトです。
+          本サイトはチームみらいが運営する公式サービスではなく、有志個人 (
+          <a
+            href="https://www.masao-kunii.jp/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-primary-accent"
+          >
+            masao-kunii
+          </a>
+          ) による非公式プロジェクトです。
           <br />
           本家「みらい議会」は{" "}
           <a

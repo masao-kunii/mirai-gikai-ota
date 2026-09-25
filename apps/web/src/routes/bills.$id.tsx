@@ -158,7 +158,16 @@ function BillDetail() {
           </h3>
           <p className="text-sm leading-relaxed text-mirai-text-secondary">
             掲載されている議案情報は、大田区議会に提出された議案などの公開情報を基に、AIを活用しながら背景情報を整理したものです。本サイトはチームみらいが運営する公式サービスではなく、有志個人
-            (masao-kunii) による非公式プロジェクトです。
+            (
+            <a
+              href="https://www.masao-kunii.jp/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-primary-accent"
+            >
+              masao-kunii
+            </a>
+            ) による非公式プロジェクトです。
           </p>
         </section>
         <section className="flex flex-col gap-2">
