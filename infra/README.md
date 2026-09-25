@@ -73,3 +73,30 @@ pnpm --filter admin-web deploy
 ## 注意
 - `terraform.tfvars` と `*.tfstate` は **gitignore**（機密・状態）。
 - `state` はローカル。R2 バックエンドへの移行は必要時に（ADR 0003）。
+
+## state と import（2026-09-25 時点）
+
+Terraform を使い始める前に作られたリソースがあるため、state の状況を記録しておく。
+
+| リソース | 管理 |
+|---|---|
+| `cloudflare_hyperdrive_config.db` | Terraform（wrangler で作成したものを `terraform import` で取り込み済み） |
+| 管理画面の DNS・Workers ルート・Access アプリ/ポリシー | Terraform |
+| 公開サイト（`ota.aix.tokyo`）の Workers ルート | **wrangler**（`apps/web/nitro.config.ts` の `cloudflare.wrangler.routes`）。Terraform では管理しない |
+
+import の例:
+
+```bash
+terraform import cloudflare_hyperdrive_config.db "<account_id>/<hyperdrive_id>"
+```
+
+### plan に毎回出る差分（既知・無視してよい）
+
+`cloudflare_hyperdrive_config.db` の `origin.password` は Cloudflare の API から読み戻せないため、`plan` では常に「設定する」と表示される（同じ値を入れ直すだけ）。`mtls` と `restarted_on` も同様の表示上の差分。
+
+**この差分のためだけに apply しないこと。** 同じ値でも更新すると接続プールが再起動し、本番 DB への接続が一瞬切れる。
+
+### 必要な API トークンの権限
+
+- Account: Cloudflare Zero Trust（Edit）、Workers Scripts（Edit）、Hyperdrive（Edit）
+- Zone（対象ゾーン）: DNS（Edit）、Workers Routes（Edit）

@@ -1,7 +1,11 @@
 # cp terraform.tfvars.example terraform.tfvars して埋める（terraform.tfvars は gitignore）。
 # cloudflare_api_token は環境変数 TF_VAR_cloudflare_api_token で渡すのが安全。
 cloudflare_account_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-supabase_db_host      = "aws-0-ap-northeast-1.pooler.supabase.com"
+# プーラーのホストはプロジェクトごとに異なる（aws-0 / aws-1 …）。
+# Supabase ダッシュボードの接続情報か、既存の Hyperdrive 設定
+#   npx wrangler hyperdrive get <id>
+# で実際の値を確認すること。
+supabase_db_host      = "aws-1-ap-northeast-1.pooler.supabase.com"
 supabase_db_user      = "postgres.sqjoswnprerzdkhcneni"
 # supabase_db_password は TF_VAR_supabase_db_password で渡すのを推奨
 # supabase_db_password = "..."
