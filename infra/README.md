@@ -60,7 +60,7 @@ pnpm --filter admin-web deploy
 | `custom_domain_enabled` | 独自ドメインで Routes/DNS を作るか（workers.dev 先行では `false`） |
 | `zone_id` / `preview_hostname` | 独自ドメイン移行時に必要 |
 | `admin_enabled` | 管理画面のホスト・Routes・Access を作るか |
-| `admin_hostname` | 管理画面のホスト名（例 `admin.example.jp`）。`zone_id` も必要 |
+| `admin_hostname` | 管理画面のホスト名（例 `ota-admin.example.jp`）。`zone_id` も必要。**1階層のサブドメインにすること**（無料証明書が `example.jp` と `*.example.jp` しか対象にしないため、`admin.ota.example.jp` は TLS を張れない） |
 | `admin_allowed_emails` / `admin_allowed_email_domains` | **管理者の許可リスト**（どちらか一方でも可） |
 | `admin_session_duration` | Access セッションの有効期間（既定 `24h`） |
 
