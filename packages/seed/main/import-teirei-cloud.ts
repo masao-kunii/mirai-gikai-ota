@@ -39,6 +39,12 @@ const TARGETS: { sessionName: string; indexUrl: string }[] = [
     indexUrl:
       "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/index.html",
   },
+  {
+    // 会期 2026-09-15〜2026-10-15。会期中は議決結果と会派の態度表が順次公開される。
+    sessionName: "令和8年第3回定例会",
+    indexUrl:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/3teirei/index.html",
+  },
 ];
 
 async function main() {
