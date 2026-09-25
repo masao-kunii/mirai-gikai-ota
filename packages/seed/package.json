@@ -8,15 +8,18 @@
     "seed:demo-opinions": "tsx main/demo-opinions.ts",
     "seed:themes-cloud": "tsx main/seed-themes-cloud.ts",
     "import:teirei": "tsx main/import-teirei-cloud.ts",
+    "sync:minutes": "tsx main/sync-minutes-cloud.ts",
     "publish:session": "tsx main/publish-session.ts",
     "check:ai-cost": "tsx main/check-ai-cost.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@mirai-gikai/db": "workspace:*",
+    "@mirai-gikai/shared": "workspace:*",
     "@mirai-gikai/supabase": "workspace:*",
     "@supabase/supabase-js": "^2.57.0",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",
