@@ -49,6 +49,11 @@ const TARGETS: { sessionName: string; indexUrl: string }[] = [
     indexUrl:
       "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/2teirei/index.html",
   },
+  {
+    sessionName: "令和8年第3回定例会",
+    indexUrl:
+      "https://www.city.ota.tokyo.jp/gikai/kugikai_katsudou/honkaigi/r_8/3teirei/index.html",
+  },
 ];
 
 const DRY_RUN = process.env.DRY_RUN === "1";
