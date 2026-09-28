@@ -162,6 +162,10 @@
     "./minutes/parse-sokuhou-page": {
       "types": "./src/minutes/parse-sokuhou-page.ts",
       "default": "./src/minutes/parse-sokuhou-page.ts"
+    },
+    "./prompt/kusei-chat-context": {
+      "types": "./src/prompt/kusei-chat-context.ts",
+      "default": "./src/prompt/kusei-chat-context.ts"
     }
   },
   "dependencies": {

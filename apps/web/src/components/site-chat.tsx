@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { useParams } from "@tanstack/react-router";
+import { useMatch, useParams } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
 import { Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +13,8 @@ import { Markdown } from "./markdown";
  * 現在のルートに応じて文脈を切り替える:
  *   - トップ（/）      : billId なし = 大田区議会・議案全般
  *   - 議案詳細（/bills/$id）: billId あり = その議案について
+ *   - 区政一覧（/kusei）: 区政テーマ全体について
+ *   - 区政テーマ（/kusei/$theme）: そのテーマについて
  *
  * - variant="sidebar":  デスクトップ右カラムに常時オープン（カード・枠線なし）
  * - variant="floating": モバイルで右下フローティング → ボトムシート
@@ -26,46 +28,121 @@ const BILL_SUGGESTIONS = [
   "この議案のポイントは？",
   "この議案は私にどんな影響がある？",
 ];
+const KUSEI_SUGGESTIONS = [
+  "大田区はどんな分野に取り組んでいる？",
+  "子育て支援にはどんな取り組みがある？",
+  "区の計画はどこで見られる？",
+];
+const THEME_SUGGESTIONS = [
+  "このテーマで区は何に取り組んでいる？",
+  "私の暮らしにどう関係する？",
+  "最近の取り組みを教えて",
+];
+
+/** チャットの文脈。ページごとに AI に渡す情報と表示を切り替える。 */
+type ChatContext =
+  | { kind: "home" }
+  | { kind: "bill"; billId: string }
+  | { kind: "kusei" }
+  | { kind: "theme"; slug: string; name: string };
+
+function contextKey(context: ChatContext): string {
+  switch (context.kind) {
+    case "bill":
+      return `bill:${context.billId}`;
+    case "theme":
+      return `theme:${context.slug}`;
+    default:
+      return context.kind;
+  }
+}
 
 export function SiteChat({ variant }: { variant: "sidebar" | "floating" }) {
   // strict:false で現在ルートの params を緩く取得（/bills/$id のとき id が入る）
   const params = useParams({ strict: false }) as { id?: string };
-  const billId = params.id;
+  // 区政テーマは、ページが読み込んだテーマ名を見出しに使う
+  const themeMatch = useMatch({ from: "/kusei/$theme", shouldThrow: false });
+  const kuseiIndex = useMatch({ from: "/kusei/", shouldThrow: false });
   const { level } = useDifficulty();
-  // 文脈（トップ / 議案 / 別議案）や難易度が変わったら会話をリセットする
+
+  const context: ChatContext = themeMatch?.loaderData
+    ? {
+        kind: "theme",
+        slug: themeMatch.loaderData.slug,
+        name: themeMatch.loaderData.theme.name,
+      }
+    : kuseiIndex
+      ? { kind: "kusei" }
+      : params.id
+        ? { kind: "bill", billId: params.id }
+        : { kind: "home" };
+
+  // 文脈（トップ / 議案 / 区政 / テーマ）や難易度が変わったら会話をリセットする
   return (
     <ChatPane
-      key={`${billId ?? "home"}:${level}`}
-      billId={billId}
+      key={`${contextKey(context)}:${level}`}
+      context={context}
       difficultyLevel={level}
       variant={variant}
     />
   );
 }
 
+/** 文脈ごとの見出し・質問候補・API に送る値。 */
+function chatSettings(context: ChatContext): {
+  heading: string;
+  suggestions: string[];
+  body: Record<string, string>;
+} {
+  switch (context.kind) {
+    case "bill":
+      return {
+        heading: "この議案について、AIに質問してください。",
+        suggestions: BILL_SUGGESTIONS,
+        body: { billId: context.billId },
+      };
+    case "kusei":
+      return {
+        heading: "大田区の区政について、気になることをAIに質問してください。",
+        suggestions: KUSEI_SUGGESTIONS,
+        body: { scope: "kusei" },
+      };
+    case "theme":
+      return {
+        heading: `「${context.name}」について、気になることをAIに質問してください。`,
+        suggestions: THEME_SUGGESTIONS,
+        body: { themeSlug: context.slug },
+      };
+    case "home":
+      return {
+        heading:
+          "大田区議会や議案について、気になることをAIに質問してください。",
+        suggestions: HOME_SUGGESTIONS,
+        body: {},
+      };
+  }
+}
+
 function ChatPane({
-  billId,
+  context,
   difficultyLevel,
   variant,
 }: {
-  billId?: string;
+  context: ChatContext;
   difficultyLevel: DifficultyLevel;
   variant: "sidebar" | "floating";
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const { heading, suggestions, body } = chatSettings(context);
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      body: billId ? { billId, difficultyLevel } : { difficultyLevel },
+      body: { ...body, difficultyLevel },
     }),
   });
 
   const isBusy = status === "submitted" || status === "streaming";
-  const heading = billId
-    ? "この議案について、AIに質問してください。"
-    : "大田区議会や議案について、気になることをAIに質問してください。";
-  const suggestions = billId ? BILL_SUGGESTIONS : HOME_SUGGESTIONS;
 
   const send = (text: string) => {
     const trimmed = text.trim();

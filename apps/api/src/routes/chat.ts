@@ -13,6 +13,8 @@ import { z } from "zod";
 import { resolveAnonId } from "../lib/anon";
 import {
   fetchBillChatContext,
+  fetchKuseiChatContext,
+  fetchThemeChatContext,
   fetchTopChatContext,
   recordChatUsage,
 } from "../lib/chat/context-and-usage";
@@ -58,6 +60,9 @@ const uiMessageSchema = z.looseObject({
 const chatBodySchema = z.object({
   // billId 無し = トップ（議案未選択）チャット。有り = 議案チャット。
   billId: z.uuid().optional(),
+  // 区政ページのチャット。scope=kusei でテーマ一覧、themeSlug 付きでそのテーマ。
+  scope: z.enum(["kusei"]).optional(),
+  themeSlug: z.string().min(1).max(100).optional(),
   difficultyLevel: z.enum(["normal", "hard"]).default("normal"),
   messages: z.array(uiMessageSchema).min(1).max(50),
 });
@@ -73,7 +78,15 @@ const chatBodySchema = z.object({
 export function createChatRoute(deps?: ChatRouteDeps) {
   return new Hono().post("/", zValidator("json", chatBodySchema), async (c) => {
     const { anonId, setCookie } = await resolveAnonId(c.req.raw);
-    const { billId, difficultyLevel, messages } = c.req.valid("json");
+    const { billId, scope, themeSlug, difficultyLevel, messages } =
+      c.req.valid("json");
+    const context = themeSlug
+      ? "theme"
+      : scope === "kusei"
+        ? "kusei"
+        : billId
+          ? "bill"
+          : "home";
     const db = getDb();
 
     // ストリーミング応答は素の Response のため、クッキーは明示付与する
@@ -90,9 +103,23 @@ export function createChatRoute(deps?: ChatRouteDeps) {
       const promptProvider =
         deps?.promptProvider ?? new FallbackPromptProvider();
 
-      // billId 有り = 議案チャット、無し = トップチャット（議案一覧を文脈に）
+      // 区政テーマ → テーマの内容、区政一覧 → テーマ一覧、議案 → その議案、
+      // どれでもなければトップ（議案一覧を文脈に）
       let prompt: Awaited<ReturnType<PromptProvider["getPrompt"]>>;
-      if (billId) {
+      if (themeSlug) {
+        const themeContext = await fetchThemeChatContext(db, themeSlug);
+        if (!themeContext) {
+          return withAnonCookie(c.json({ error: "not_found" as const }, 404));
+        }
+        prompt = await promptProvider.getPrompt("theme-chat-system", {
+          ...themeContext,
+        });
+      } else if (scope === "kusei") {
+        const kuseiContext = await fetchKuseiChatContext(db);
+        prompt = await promptProvider.getPrompt("kusei-chat-system", {
+          ...kuseiContext,
+        });
+      } else if (billId) {
         const billContext = await fetchBillChatContext(
           db,
           billId,
@@ -137,8 +164,9 @@ export function createChatRoute(deps?: ChatRouteDeps) {
               usage: event.totalUsage,
               metadata: {
                 billId: billId ?? null,
+                themeSlug: themeSlug ?? null,
                 difficultyLevel,
-                context: billId ? "bill" : "home",
+                context,
               },
             });
           } catch (usageError) {

@@ -1,13 +1,24 @@
 import type { DbClient } from "@mirai-gikai/db";
-import { schema, withAppAdmin } from "@mirai-gikai/db";
+import { schema, withAppAdmin, withPublicReader } from "@mirai-gikai/db";
 import {
   calculateUsageCostUsd,
   sanitizeUsage,
 } from "@mirai-gikai/shared/ai/calculate-cost";
 import type { LanguageModelUsage } from "@mirai-gikai/shared/ai/sdk";
-import { and, desc, eq } from "drizzle-orm";
+import {
+  formatKuseiOverview,
+  formatKuseiThemeDetail,
+} from "@mirai-gikai/shared/prompt/kusei-chat-context";
+import { and, asc, desc, eq } from "drizzle-orm";
 
-const { bills, billContents, chatUsageEvents } = schema;
+const {
+  bills,
+  billContents,
+  chatUsageEvents,
+  themes,
+  themeContents,
+  themeInitiatives,
+} = schema;
 
 export type BillChatContext = {
   billName: string;
@@ -105,6 +116,71 @@ export async function fetchTopChatContext(
 
     return {
       billSummary: billSummary || "（現在公開中の議案はありません）",
+    };
+  });
+}
+
+/**
+ * 区政テーマ一覧（/kusei）のチャット用に、公開中のテーマ名と一行説明を並べる。
+ * 区政テーマは公開情報なので public_reader で読む（非公開テーマは RLS で見えない）。
+ */
+export async function fetchKuseiChatContext(
+  db: DbClient
+): Promise<{ themeOverview: string }> {
+  const rows = await withPublicReader(db, (tx) =>
+    tx
+      .select({ name: themes.name, lead: themes.lead })
+      .from(themes)
+      .orderBy(asc(themes.sortOrder))
+  );
+  return { themeOverview: formatKuseiOverview(rows) };
+}
+
+/**
+ * 区政テーマ詳細（/kusei/:theme）のチャット用に、そのテーマの内容をまとめる。
+ * テーマが無い・非公開なら null（呼び出し側で 404）。
+ */
+export async function fetchThemeChatContext(
+  db: DbClient,
+  slug: string
+): Promise<{ themeDetail: string } | null> {
+  return withPublicReader(db, async (tx) => {
+    const [theme] = await tx
+      .select({ id: themes.id, name: themes.name, lead: themes.lead })
+      .from(themes)
+      .where(eq(themes.slug, slug));
+    if (!theme) return null;
+
+    const [content] = await tx
+      .select({
+        overview: themeContents.overview,
+        policies: themeContents.policies,
+        numbers: themeContents.numbers,
+        plans: themeContents.plans,
+      })
+      .from(themeContents)
+      .where(eq(themeContents.themeId, theme.id));
+
+    const initiatives = await tx
+      .select({
+        title: themeInitiatives.title,
+        body: themeInitiatives.body,
+        dateLabel: themeInitiatives.dateLabel,
+      })
+      .from(themeInitiatives)
+      .where(eq(themeInitiatives.themeId, theme.id))
+      .orderBy(asc(themeInitiatives.sortOrder));
+
+    return {
+      themeDetail: formatKuseiThemeDetail({
+        name: theme.name,
+        lead: theme.lead,
+        overview: content?.overview ?? null,
+        policies: content?.policies ?? null,
+        numbers: content?.numbers ?? null,
+        plans: content?.plans ?? null,
+        initiatives,
+      }),
     };
   });
 }
