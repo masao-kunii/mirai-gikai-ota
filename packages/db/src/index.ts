@@ -7,5 +7,5 @@
  */
 
 export { createDbClient, type DbClient, type DbTx } from "./client";
-export { withAppAdmin, withPublicReader, withResident } from "./roles";
 export * as schema from "./generated/schema";
+export { withAppAdmin, withPublicReader, withResident } from "./roles";

@@ -9,6 +9,7 @@
     "seed:themes-cloud": "tsx main/seed-themes-cloud.ts",
     "import:teirei": "tsx main/import-teirei-cloud.ts",
     "sync:minutes": "tsx main/sync-minutes-cloud.ts",
+    "tag:bills-by-theme": "tsx main/tag-bills-by-theme-cloud.ts",
     "publish:session": "tsx main/publish-session.ts",
     "check:ai-cost": "tsx main/check-ai-cost.ts",
     "typecheck": "tsc --noEmit"

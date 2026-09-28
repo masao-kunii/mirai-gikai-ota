@@ -166,6 +166,10 @@
     "./prompt/kusei-chat-context": {
       "types": "./src/prompt/kusei-chat-context.ts",
       "default": "./src/prompt/kusei-chat-context.ts"
+    },
+    "./bills/classify-themes": {
+      "types": "./src/bills/classify-themes.ts",
+      "default": "./src/bills/classify-themes.ts"
     }
   },
   "dependencies": {
