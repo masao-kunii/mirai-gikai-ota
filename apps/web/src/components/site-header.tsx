@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useDifficulty } from "../lib/difficulty";
@@ -80,10 +80,45 @@ function DifficultyToggle() {
 
 const MENU_LINKS = [
   { to: "/", label: "トップ" },
+  { to: "/kusei", label: "区政をテーマで知る" },
   { to: "/archive", label: "アーカイブ" },
   { to: "/terms", label: "利用規約" },
   { to: "/privacy", label: "プライバシーポリシー" },
 ] as const;
+
+/**
+ * 議会（議案）と区政（テーマ）の切り替え。いまいる側を塗りで示す。
+ * /kusei 配下が区政、それ以外（トップ・議案・アーカイブなど）は議会とする。
+ */
+function SectionSwitch() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const inKusei = pathname === "/kusei" || pathname.startsWith("/kusei/");
+  const items = [
+    { to: "/", label: "議会", active: !inKusei },
+    { to: "/kusei", label: "区政", active: inKusei },
+  ] as const;
+  return (
+    <nav
+      aria-label="議会と区政の切り替え"
+      className="flex rounded-full bg-mirai-surface-grouped p-1"
+    >
+      {items.map((item) => (
+        <Link
+          key={item.to}
+          to={item.to}
+          aria-current={item.active ? "true" : undefined}
+          className={`rounded-full px-3 py-1 font-bold text-sm transition-colors sm:px-4 ${
+            item.active
+              ? "bg-primary text-primary-foreground"
+              : "text-mirai-text-secondary hover:text-mirai-text"
+          }`}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 /**
  * 公開サイトのヘッダー（白い角丸バー）。ロゴ＋「みらい議会」＋難易度トグル（sm+）
@@ -106,10 +141,13 @@ export function SiteHeader() {
               unofficial fork
             </span>
           </span>
-          <span className="font-bold text-mirai-text text-xl tracking-tight sm:text-2xl">
+          <span className="hidden font-bold text-mirai-text text-xl tracking-tight sm:inline sm:text-2xl">
             みらい議会
           </span>
         </Link>
+
+        {/* 議会 ⇄ 区政 */}
+        <SectionSwitch />
 
         {/* 右: 難易度トグル(sm+) + メニュー */}
         <div className="flex items-center gap-3 sm:gap-5">
