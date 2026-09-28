@@ -45,6 +45,8 @@ type Stats = {
   alreadyRegistered: number;
   noSession: number;
   extracted: number;
+  /** 本文が空だが、PDF が速報版から消えていて抽出できないもの */
+  unlisted: number;
   /** ジョブを失敗させる警告（定例会の会期が無い・本文抽出の失敗） */
   warnings: number;
 };
@@ -65,6 +67,7 @@ async function main() {
     alreadyRegistered: 0,
     noSession: 0,
     extracted: 0,
+    unlisted: 0,
     warnings: 0,
   };
 
@@ -126,15 +129,30 @@ async function main() {
   }
 
   // 3. 本文が空のものを抽出
+  // 速報版の PDF は、正式な会議録ができると公式サイトから消える（404）。
+  // 取りに行けるのは「いま速報版ページに載っているもの」だけなので、それ以外は
+  // 掲載終了として表示するにとどめる（毎日失敗し続けないように）。
   const { data: empty, error: mErr } = await supabase
     .from("council_session_minutes")
     .select("id, title, meeting_date, source_pdf_url, markdown_text")
     .or("markdown_text.is.null,markdown_text.eq.")
-    .order("meeting_date", { ascending: true })
-    .limit(MAX_EXTRACT_PER_RUN);
+    .order("meeting_date", { ascending: true });
   if (mErr) throw new Error(`未抽出の議事録の取得失敗: ${mErr.message}`);
 
-  for (const minute of empty ?? []) {
+  const listedUrls = new Set(scraped.map((m) => m.pdfUrl));
+  const extractable = (empty ?? []).filter((m) =>
+    listedUrls.has(m.source_pdf_url)
+  );
+  for (const minute of (empty ?? []).filter(
+    (m) => !listedUrls.has(m.source_pdf_url)
+  )) {
+    stats.unlisted++;
+    console.log(
+      `ℹ️  本文なし・速報版の掲載終了のため抽出できません: ${minute.title ?? minute.meeting_date}`
+    );
+  }
+
+  for (const minute of extractable.slice(0, MAX_EXTRACT_PER_RUN)) {
     const label = minute.title ?? minute.meeting_date;
     try {
       await sleep(FETCH_INTERVAL_MS);
@@ -155,7 +173,7 @@ async function main() {
   }
 
   console.log(
-    `\n一覧 ${stats.listed} 件 / 追加 ${stats.inserted} / 登録済み ${stats.alreadyRegistered} / 会期なし ${stats.noSession} / 抽出 ${stats.extracted} / 警告 ${stats.warnings}`
+    `\n一覧 ${stats.listed} 件 / 追加 ${stats.inserted} / 登録済み ${stats.alreadyRegistered} / 会期なし ${stats.noSession} / 抽出 ${stats.extracted} / 掲載終了 ${stats.unlisted} / 警告 ${stats.warnings}`
   );
   // 静かなスキップ禁止（sync_teirei と同じ方針）。警告があればジョブを失敗させる。
   if (stats.warnings > 0) process.exit(1);
