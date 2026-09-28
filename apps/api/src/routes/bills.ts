@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { schema } from "@mirai-gikai/db";
 import { summarizeReports } from "@mirai-gikai/shared/interview-aggregation/summarize-reports";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { publicQuery } from "../lib/db";
@@ -16,6 +16,9 @@ const {
   interviewReport,
   interviewSessions,
   interviewConfigs,
+  tags,
+  themes,
+  themeContents,
 } = schema;
 
 /**
@@ -124,7 +127,29 @@ export const billsRoute = new Hono()
           .innerJoin(factions, eq(factionStances.factionId, factions.id))
           .where(eq(factionStances.billId, bill.id));
 
-        return { bill, contents, stances };
+        // 関連する区政テーマ: 議案のタグが、テーマの bill_tag_label と一致するもの。
+        // テーマ詳細の「関連する議案」と同じ結び付け方の逆向き。
+        const relatedThemes = await tx
+          .selectDistinct({
+            slug: themes.slug,
+            emoji: themes.emoji,
+            name: themes.name,
+            lead: themes.lead,
+            sortOrder: themes.sortOrder,
+          })
+          .from(billsTags)
+          .innerJoin(tags, eq(tags.id, billsTags.tagId))
+          .innerJoin(themeContents, eq(themeContents.billTagLabel, tags.label))
+          .innerJoin(themes, eq(themes.id, themeContents.themeId))
+          .where(and(eq(billsTags.billId, bill.id), eq(themes.isActive, true)))
+          .orderBy(asc(themes.sortOrder));
+
+        return {
+          bill,
+          contents,
+          stances,
+          relatedThemes: relatedThemes.map(({ sortOrder: _, ...t }) => t),
+        };
       });
       if (!result) {
         return c.json({ error: "not_found" as const }, 404);

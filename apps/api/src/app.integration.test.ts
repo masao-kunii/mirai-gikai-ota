@@ -23,6 +23,8 @@ const {
   interviewConfigs,
   interviewSessions,
   interviewReport,
+  themes,
+  themeContents,
 } = schema;
 
 const stamp = Date.now();
@@ -38,6 +40,8 @@ let publishedId: string;
 let draftId: string;
 let featuredId: string;
 let featuredTagId: string;
+const themeIds: string[] = [];
+const activeThemeSlug = `api-test-theme-${stamp}`;
 let interviewConfigId: string;
 const billIds: string[] = [];
 const tagIds: string[] = [];
@@ -142,6 +146,37 @@ beforeAll(async () => {
       .insert(billsTags)
       .values({ billId: featuredId, tagId: featuredTagId });
 
+    // 区政テーマ: 非注目タグの名前を bill_tag_label に持つテーマ（公開中と非公開）。
+    // 公開議案に非注目タグを付け、議案詳細の関連テーマを検証する。
+    const plainTag = insertedTags.find((t) => t.label === plainTagLabel);
+    if (!plainTag) throw new Error("タグのシードに失敗");
+    await tx
+      .insert(billsTags)
+      .values({ billId: publishedId, tagId: plainTag.id });
+    const insertedThemes = await tx
+      .insert(themes)
+      .values([
+        {
+          slug: activeThemeSlug,
+          emoji: "🧪",
+          name: "APIテストテーマ",
+          lead: "テスト用",
+        },
+        {
+          slug: `api-test-theme-inactive-${stamp}`,
+          name: "APIテスト非公開テーマ",
+          isActive: false,
+        },
+      ])
+      .returning({ id: themes.id });
+    themeIds.push(...insertedThemes.map((t) => t.id));
+    await tx.insert(themeContents).values(
+      insertedThemes.map((t) => ({
+        themeId: t.id,
+        billTagLabel: plainTagLabel,
+      }))
+    );
+
     // 住民意見（公開インタビュー）の集約検証用。published 議案に config を作り、
     // 公開レポート2件（賛成/反対・役割違い）＋非公開1件を作る。
     const [cfg] = await tx
@@ -220,6 +255,10 @@ afterAll(async () => {
     }
     if (tagIds.length > 0) {
       await tx.delete(tags).where(inArray(tags.id, tagIds));
+    }
+    // themes 削除で theme_contents は cascade。
+    if (themeIds.length > 0) {
+      await tx.delete(themes).where(inArray(themes.id, themeIds));
     }
     if (sessionId) {
       await tx.delete(councilSessions).where(eq(councilSessions.id, sessionId));
@@ -371,6 +410,27 @@ describe("GET /api/bills/:id", () => {
     expect(Array.isArray(body.stances)).toBe(true);
     // 公開境界: knowledge_source はレスポンス形状にも存在しない
     expect("knowledgeSource" in body.bill).toBe(false);
+  });
+
+  it("タグでつながる公開中の区政テーマを返し、非公開テーマは含めない", async () => {
+    const res = await app.request(`/api/bills/${publishedId}`);
+    const body = await json<{
+      relatedThemes: { slug: string; name: string; emoji: string | null }[];
+    }>(res);
+    expect(body.relatedThemes).toEqual([
+      {
+        slug: activeThemeSlug,
+        emoji: "🧪",
+        name: "APIテストテーマ",
+        lead: "テスト用",
+      },
+    ]);
+  });
+
+  it("テーマのタグが無い議案の関連テーマは空", async () => {
+    const res = await app.request(`/api/bills/${featuredId}`);
+    const body = await json<{ relatedThemes: unknown[] }>(res);
+    expect(body.relatedThemes).toEqual([]);
   });
 
   it("draft 議案は 404（RLS で行として存在しない）", async () => {

@@ -54,7 +54,8 @@ export const Route = createFileRoute("/bills/$id")({
 });
 
 function BillDetail() {
-  const { bill, contents, stances, opinions } = Route.useLoaderData();
+  const { bill, contents, stances, relatedThemes, opinions } =
+    Route.useLoaderData();
   const { level } = useDifficulty();
   // ヘッダーの難易度トグルに応じた本文。無ければ normal にフォールバック。
   const content =
@@ -123,6 +124,38 @@ function BillDetail() {
         <p className="text-mirai-text-secondary">
           この議案のわかりやすい解説は準備中です。
         </p>
+      )}
+
+      {/* 関連する区政テーマ（区政側と接続） */}
+      {relatedThemes.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-bold text-[22px] text-mirai-text">
+            🏛 関連する区政テーマ
+          </h2>
+          <p className="text-sm text-mirai-text-secondary">
+            この議案に関係する、大田区の計画や取り組みをテーマごとにまとめています。
+          </p>
+          <div className="flex flex-col gap-3">
+            {relatedThemes.map((theme) => (
+              <Link
+                key={theme.slug}
+                to="/kusei/$theme"
+                params={{ theme: theme.slug }}
+                className="flex items-start gap-4 rounded-2xl border border-mirai-border-light bg-card p-5 transition-colors hover:bg-mirai-surface-grouped"
+              >
+                <span className="text-3xl leading-none">{theme.emoji}</span>
+                <div className="flex flex-col gap-1">
+                  <span className="font-bold text-base text-mirai-text">
+                    {theme.name}
+                  </span>
+                  <span className="text-xs leading-relaxed text-mirai-text-secondary">
+                    {theme.lead}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* 会派の見解 */}
