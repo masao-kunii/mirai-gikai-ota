@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { CompactBillCard } from "../components/compact-bill-card";
 import { Container } from "../components/container";
 import { Markdown } from "../components/markdown";
@@ -46,6 +46,41 @@ export const Route = createFileRoute("/kusei/$theme")({
   }),
   component: KuseiThemeDetail,
 });
+
+/** 関連する議案を最初に出す件数（新しい順）。残りは「もっと見る」で開く。 */
+const INITIAL_BILL_COUNT = 5;
+
+type RelatedBill = Parameters<typeof CompactBillCard>[0]["bill"];
+
+/** テーマの関連議案。新しい順に数件だけ出し、残りは「もっと見る」で表示する。 */
+function RelatedBills({ bills }: { bills: RelatedBill[] }) {
+  const [expanded, setExpanded] = useState(false);
+  if (bills.length === 0) {
+    return (
+      <p className="text-sm text-mirai-text-secondary">
+        このテーマに紐づく議案はまだありません。
+      </p>
+    );
+  }
+  const shown = expanded ? bills : bills.slice(0, INITIAL_BILL_COUNT);
+  const rest = bills.length - shown.length;
+  return (
+    <div className="flex flex-col gap-3">
+      {shown.map((bill) => (
+        <CompactBillCard key={bill.id} bill={bill} />
+      ))}
+      {rest > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="rounded-full border border-mirai-border-muted bg-card px-6 py-3 font-bold text-mirai-text text-sm transition-colors hover:bg-mirai-surface-grouped"
+        >
+          もっと見る（残り{rest}件）
+        </button>
+      )}
+    </div>
+  );
+}
 
 function KuseiThemeDetail() {
   const { theme, slug, bills, opinions } = Route.useLoaderData();
@@ -198,17 +233,7 @@ function KuseiThemeDetail() {
             <h2 className="font-bold text-[22px] text-mirai-text">
               関連する議案
             </h2>
-            {bills.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {bills.map((bill) => (
-                  <CompactBillCard key={bill.id} bill={bill} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-mirai-text-secondary">
-                このテーマに紐づく議案はまだありません。
-              </p>
-            )}
+            <RelatedBills bills={bills} />
           </section>
 
           {/* 住民の声（公開インタビューの集約。テーマ全体にも意見できる） */}
