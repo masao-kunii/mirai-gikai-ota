@@ -3,9 +3,12 @@ import path from "path";
 import { coverageExclude } from "./vitest.shared";
 
 export default defineConfig({
-  esbuild: {
-    jsx: "automatic",
-    jsxImportSource: "react",
+  // vitest 4（vite 8）は esbuild ではなく oxc で変換するため、JSX の設定は oxc に書く
+  oxc: {
+    jsx: {
+      runtime: "automatic",
+      importSource: "react",
+    },
   },
   test: {
     globals: true,

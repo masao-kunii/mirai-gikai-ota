@@ -10,11 +10,9 @@ export default defineConfig({
     include: ["**/*.test.ts"],
     // テスト間のデータ干渉を防ぐためシーケンシャル実行
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    // vitest 4 で poolOptions.forks.singleFork は廃止。同等の設定（1プロセスで順に実行）
+    maxWorkers: 1,
+    isolate: false,
     globalSetup: [path.resolve(testsDir, "setup.ts")],
     testTimeout: 30000,
   },
