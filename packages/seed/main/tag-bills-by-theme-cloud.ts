@@ -39,6 +39,10 @@ async function main() {
   if (!url || !key) {
     throw new Error("SUPABASE_URL / SUPABASE_SECRET_KEY が必要です");
   }
+  // GitHub Actions では Vertex（ADC）が使えないため、キーが無ければ最初に止める
+  if (process.env.CI && !process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY が必要です（GitHub Secrets を確認）");
+  }
   const apply = process.argv.includes("--apply");
   const limitArg = process.argv.find((a) => a.startsWith("--limit="));
   const limit = limitArg ? Number(limitArg.split("=")[1]) : Infinity;
@@ -163,7 +167,13 @@ async function main() {
     console.log(`  ${theme.name}: ${counts.get(theme.slug) ?? 0}`);
   }
   console.log(`  どれにも当てはまらない: ${none}`);
-  if (missing > 0) console.log(`  AI の結果が返らなかった: ${missing}`);
+  if (missing > 0) {
+    // 静かなスキップ禁止（sync_teirei と同じ方針）。次回の実行で再分類される。
+    console.log(
+      `::warning title=tag-bills-by-theme::AI の結果が返らなかった議案が ${missing} 件あります`
+    );
+    process.exitCode = 1;
+  }
   if (!apply) console.log("\n（DRY-RUN のため書き込んでいません）");
 }
 
