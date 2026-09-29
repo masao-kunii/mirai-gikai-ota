@@ -12,10 +12,13 @@ const mocks = vi.hoisted(() => ({
   getReportOgData: vi.fn(),
   // ImageResponse は new で呼ばれる。vitest 4 ではアロー関数の実装を new できないため
   // function で書く（コンストラクタが Response を返せば、それが new の結果になる）。
-  imageResponse: vi.fn((
+  // biome-ignore lint/complexity/useArrowFunction: new で呼ぶため function が必要
+  imageResponse: vi.fn(function (
     element: ReactElement,
     _init: ConstructorParameters<typeof Response>[1]
-  ) => new Response(JSON.stringify(element), { status: 200 })),
+  ) {
+    return new Response(JSON.stringify(element), { status: 200 });
+  }),
 }));
 
 vi.mock(
