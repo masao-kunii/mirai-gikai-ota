@@ -96,6 +96,7 @@ export type Database = {
           status_note: string | null
           status_order: number | null
           submitted_date: string | null
+          theme_classified_at: string | null
           thumbnail_url: string | null
           updated_at: string
           use_knowledge_source_in_chat: boolean
@@ -120,6 +121,7 @@ export type Database = {
           status_note?: string | null
           status_order?: number | null
           submitted_date?: string | null
+          theme_classified_at?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           use_knowledge_source_in_chat?: boolean
@@ -144,6 +146,7 @@ export type Database = {
           status_note?: string | null
           status_order?: number | null
           submitted_date?: string | null
+          theme_classified_at?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           use_knowledge_source_in_chat?: boolean

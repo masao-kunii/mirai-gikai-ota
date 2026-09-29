@@ -20,6 +20,7 @@ const baseBill: BillWithContent = {
   status: "in_committee",
   is_featured: false,
   is_review_completed: true,
+  theme_classified_at: null,
   thumbnail_url: null,
   share_thumbnail_url: null,
   published_at: "2026-02-15",

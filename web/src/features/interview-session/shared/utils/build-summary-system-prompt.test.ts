@@ -25,6 +25,7 @@ const makeBill = (
   status_note: null,
   status_order: BILL_STATUS_ORDER.submitted,
   publish_status_order: 2,
+  theme_classified_at: null,
   thumbnail_url: null,
   knowledge_source: null,
   use_knowledge_source_in_chat: false,

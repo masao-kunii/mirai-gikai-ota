@@ -574,6 +574,7 @@ export const bills = pgTable("bills", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	thumbnailUrl: text("thumbnail_url"),
+	themeClassifiedAt: timestamp("theme_classified_at", { withTimezone: true, mode: 'string' }),
 	publishStatus: billPublishStatus("publish_status").default('draft').notNull(),
 	isFeatured: boolean("is_featured").default(false).notNull(),
 	shareThumbnailUrl: text("share_thumbnail_url"),
