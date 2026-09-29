@@ -7,11 +7,14 @@
  *
  * 処理:
  *   1. bill_tag_label を持つテーマごとに、同じ名前のタグが無ければ作る
- *   2. テーマのタグがまだ1つも付いていない議案を、AI で最大2テーマに振り分ける
- *   3. 振り分けたテーマのタグを bills_tags に追加する
+ *   2. まだ振り分けていない議案（bills.theme_classified_at が null）を、AI で
+ *      最大2テーマに振り分ける
+ *   3. 振り分けたテーマのタグを bills_tags に追加し、theme_classified_at を記録する
  *
+ * 「どのテーマにも当てはまらない」と判定した議案も記録するので、毎日の実行で
+ * 振り分け直さない（AI の判断の揺れでタグが少しずつ増えるのを防ぐ）。
+ * 振り分け直したい議案は、theme_classified_at を null に戻す。
  * 既に付いているタグは変えない（管理画面で直したタグを上書きしないため）。
- * どのテーマにも当てはまらなかった議案は、次の実行でもう一度分類される。
  *
  * 既定は dry-run（分類結果を表示するだけ。AI は呼ぶ）。書き込むときは --apply。
  *
@@ -97,27 +100,14 @@ async function main() {
     tagIdByLabel.set(theme.tagLabel, data.id);
   }
 
-  // 2. まだテーマのタグが無い議案
-  const themeTagIds = new Set(
-    themes.flatMap((t) => tagIdByLabel.get(t.tagLabel) ?? [])
-  );
-  const { data: billTagRows, error: btErr } = await supabase
-    .from("bills_tags")
-    .select("bill_id, tag_id");
-  if (btErr) throw new Error(`bills_tags 取得: ${btErr.message}`);
-  const alreadyTagged = new Set(
-    (billTagRows ?? [])
-      .filter((r) => themeTagIds.has(r.tag_id))
-      .map((r) => r.bill_id)
-  );
-
+  // 2. まだ振り分けていない議案
   const { data: billRows, error: bErr } = await supabase
     .from("bills")
     .select("id, name, bill_contents(summary, difficulty_level)")
+    .is("theme_classified_at", null)
     .order("created_at");
   if (bErr) throw new Error(`bills 取得: ${bErr.message}`);
   const targets: BillForClassification[] = (billRows ?? [])
-    .filter((b) => !alreadyTagged.has(b.id))
     .slice(0, limit)
     .map((b) => ({
       id: b.id,
@@ -127,7 +117,7 @@ async function main() {
         null,
     }));
   console.log(
-    `議案 ${billRows?.length ?? 0} 件 / タグ付け済み ${alreadyTagged.size} 件 / 今回の対象 ${targets.length} 件`
+    `未振り分けの議案 ${billRows?.length ?? 0} 件 / 今回の対象 ${targets.length} 件`
   );
 
   // 3. 分類して保存
@@ -139,6 +129,7 @@ async function main() {
     const batch = targets.slice(i, i + BATCH_SIZE);
     const result = await classifyBillsIntoThemes(themes, batch);
     const inserts: { bill_id: string; tag_id: string }[] = [];
+    const classifiedIds: string[] = [];
     for (const bill of batch) {
       const slugs = result.get(bill.id);
       if (!slugs) {
@@ -146,6 +137,7 @@ async function main() {
         console.log(`⚠️  結果なし: ${bill.name}`);
         continue;
       }
+      classifiedIds.push(bill.id);
       if (slugs.length === 0) none++;
       const names = slugs.map((s) => themeBySlug.get(s)?.name ?? s);
       console.log(`${bill.name} → ${names.join("、") || "（なし）"}`);
@@ -156,9 +148,24 @@ async function main() {
         if (tagId) inserts.push({ bill_id: bill.id, tag_id: tagId });
       }
     }
-    if (apply && inserts.length > 0) {
-      const { error } = await supabase.from("bills_tags").insert(inserts);
+    if (!apply) continue;
+    if (inserts.length > 0) {
+      // 管理画面で先に同じタグが付けられていても失敗しないよう、重複は無視する
+      const { error } = await supabase
+        .from("bills_tags")
+        .upsert(inserts, {
+          onConflict: "bill_id,tag_id",
+          ignoreDuplicates: true,
+        });
       if (error) throw new Error(`bills_tags 追加: ${error.message}`);
+    }
+    // 結果が返らなかった議案は記録しない（次回もう一度振り分ける）
+    if (classifiedIds.length > 0) {
+      const { error } = await supabase
+        .from("bills")
+        .update({ theme_classified_at: new Date().toISOString() })
+        .in("id", classifiedIds);
+      if (error) throw new Error(`theme_classified_at 記録: ${error.message}`);
     }
   }
 
