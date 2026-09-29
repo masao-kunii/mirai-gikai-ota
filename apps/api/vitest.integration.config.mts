@@ -5,11 +5,9 @@ export default defineConfig({
     include: ["src/**/*.integration.test.ts"],
     // テスト間のデータ干渉を防ぐためシーケンシャル実行
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    // vitest 4 で poolOptions.forks.singleFork は廃止。同等の設定（1プロセスで順に実行）
+    maxWorkers: 1,
+    isolate: false,
     // システム全体のコスト上限（全ユーザーの当日/当月合計）は、統合テストが
     // web と同一 Supabase DB で並列実行され、双方が per-user 上限検証のため
     // 巨額コストをシードすることで誤発火する（SYSTEM_DAILY_COST_LIMIT_REACHED）。
