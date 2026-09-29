@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
-import { streamObject } from "@mirai-gikai/shared/ai/sdk";
+import { AI_MODELS } from "@mirai-gikai/shared/ai/models";
+import { generateText, streamObject } from "@mirai-gikai/shared/ai/sdk";
 import {
   buildSubjectInterviewSystemPrompt,
   buildSubjectSummarySystemPrompt,
@@ -11,6 +12,12 @@ import {
 import { getMessageDisplayText } from "@mirai-gikai/shared/interviews/message-display-text";
 import { isInterviewResumeRequest } from "@mirai-gikai/shared/interviews/resume-request";
 import { isSummaryDraftMessage } from "@mirai-gikai/shared/interviews/summary-draft";
+import {
+  cleanTranscript,
+  MAX_AUDIO_BYTES,
+  normalizeAudioType,
+  TRANSCRIBE_SYSTEM,
+} from "@mirai-gikai/shared/interviews/transcribe";
 import { Hono } from "hono";
 import { z } from "zod";
 import { resolveAnonId } from "../lib/anon";
@@ -226,6 +233,71 @@ export const interviewsRoute = new Hono()
         return withAnonCookie(chatErrorToResponse(error));
       }
       console.error("Interview messages error:", error);
+      return withAnonCookie(c.json({ error: "internal" as const }, 500));
+    }
+  })
+  // 音声の文字起こし。声で答えたい人のための入力補助で、対話そのものには
+  // 関わらない（起こした文字は入力欄に入り、本人が直してから送る）。
+  // 本文は音声そのものなので、リクエストボディを生のまま受け取る。
+  .post("/transcribe", async (c) => {
+    const { anonId, setCookie } = await resolveAnonId(c.req.raw);
+    const db = getDb();
+    const withAnonCookie = (res: Response): Response => {
+      if (setCookie) res.headers.append("set-cookie", setCookie);
+      return res;
+    };
+
+    try {
+      await enforceChatRateLimit(db, getClientIp(c.req.raw.headers), anonId);
+      await assertWithinCostLimits(db, anonId);
+
+      const mediaType = normalizeAudioType(
+        c.req.header("content-type") ?? null
+      );
+      if (!mediaType) {
+        return withAnonCookie(
+          c.json({ error: "unsupported_audio" as const }, 415)
+        );
+      }
+      const audio = await c.req.arrayBuffer();
+      if (audio.byteLength === 0) {
+        return withAnonCookie(c.json({ error: "empty_audio" as const }, 400));
+      }
+      if (audio.byteLength > MAX_AUDIO_BYTES) {
+        return withAnonCookie(
+          c.json({ error: "audio_too_large" as const }, 413)
+        );
+      }
+
+      const model = process.env.TRANSCRIBE_MODEL ?? AI_MODELS.gemini3_8_flash;
+      const result = await generateText({
+        model,
+        system: TRANSCRIBE_SYSTEM,
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "file", data: audio, mediaType }],
+          },
+        ],
+        // 書き起こしは考える必要がないので thinking を切る（待ち時間と費用を抑える）
+        providerOptions: { google: { thinkingConfig: { thinkingBudget: 0 } } },
+      });
+
+      // 音声の入力トークンは文字より単価が高いが、価格表は文字の単価で計算する
+      // ため、ここで記録するコストは実際よりやや小さくなる。
+      await recordChatUsage(db, {
+        anonId,
+        model,
+        usage: result.usage,
+        metadata: { context: "interview", stage: "transcribe" },
+      });
+
+      return withAnonCookie(c.json({ text: cleanTranscript(result.text) }));
+    } catch (error) {
+      if (error instanceof ChatError) {
+        return withAnonCookie(chatErrorToResponse(error));
+      }
+      console.error("Interview transcribe error:", error);
       return withAnonCookie(c.json({ error: "internal" as const }, 500));
     }
   })

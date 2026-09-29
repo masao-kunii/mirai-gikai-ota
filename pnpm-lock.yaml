@@ -278,6 +278,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.3
         version: 3.0.3(react@19.2.7)(zod@4.4.3)
+      '@mirai-gikai/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@tanstack/react-router':
         specifier: ^1.170.17
         version: 1.170.17(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

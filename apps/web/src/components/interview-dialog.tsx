@@ -1,5 +1,5 @@
 import { experimental_useObject as useObject } from "@ai-sdk/react";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Mic, Send, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getRoleOptions } from "../lib/interview-roles";
@@ -9,6 +9,7 @@ import {
   interviewChatResponseSchema,
   interviewTargetBody,
 } from "../lib/interview-schema";
+import { useVoiceInput } from "../lib/use-voice-input";
 
 type Phase = "consent" | "role" | "chat" | "review" | "done";
 type Turn = { role: "assistant" | "user"; text: string };
@@ -42,6 +43,8 @@ export function InterviewDialog({
   const [input, setInput] = useState("");
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
+
+  const voice = useVoiceInput((update) => setInput(update));
 
   const scrollRef = useRef<HTMLDivElement>(null);
   // onFinish から常に最新の submit を呼べるよう ref に保持する。
@@ -278,6 +281,33 @@ export function InterviewDialog({
             ) : (
               <div className="flex flex-col gap-2 border-mirai-border-light border-t px-5 py-3">
                 <div className="flex items-end gap-2">
+                  {voice.supported && (
+                    <button
+                      type="button"
+                      onClick={
+                        voice.state === "recording" ? voice.stop : voice.start
+                      }
+                      disabled={isLoading || voice.state === "transcribing"}
+                      aria-label={
+                        voice.state === "recording"
+                          ? "録音を止める"
+                          : "声で話す"
+                      }
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors disabled:opacity-40 ${
+                        voice.state === "recording"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-mirai-border-muted bg-card text-mirai-text hover:bg-mirai-surface-grouped"
+                      }`}
+                    >
+                      {voice.state === "transcribing" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : voice.state === "recording" ? (
+                        <Square className="h-4 w-4" />
+                      ) : (
+                        <Mic className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
                   <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -306,6 +336,16 @@ export function InterviewDialog({
                     )}
                   </button>
                 </div>
+                {(voice.state !== "idle" || voice.error) && (
+                  <p
+                    className={`text-xs ${voice.error ? "text-red-600" : "text-mirai-text-secondary"}`}
+                  >
+                    {voice.error ??
+                      (voice.state === "recording"
+                        ? "録音しています。話し終わったら停止を押すと、文字にして入力欄に入れます。"
+                        : "文字にしています…")}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={requestSummary}
