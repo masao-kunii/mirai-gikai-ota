@@ -255,8 +255,8 @@ importers:
         specifier: ^5.20260705.1
         version: 5.20260705.1
       '@hono/node-server':
-        specifier: ^2.1.1
-        version: 2.1.1(hono@4.13.10)
+        specifier: ^2.1.2
+        version: 2.1.2(hono@4.13.10)
       '@types/node':
         specifier: ^22.5.5
         version: 22.18.8
@@ -1535,8 +1535,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/node-server@2.1.1':
-    resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
+  '@hono/node-server@2.1.2':
+    resolution: {integrity: sha512-w0tqJ/ilmggKokOSvbp9y+F91Y4ROTyCTL/8EKj9B4qOhOZzNm/tyKElzxrz+9+4fJKQrBSaahIuCGRye5RJYg==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
@@ -7877,7 +7877,7 @@ snapshots:
     dependencies:
       hono: 4.13.0
 
-  '@hono/node-server@2.1.1(hono@4.13.10)':
+  '@hono/node-server@2.1.2(hono@4.13.10)':
     dependencies:
       hono: 4.13.10
 
