@@ -170,6 +170,10 @@
     "./bills/classify-themes": {
       "types": "./src/bills/classify-themes.ts",
       "default": "./src/bills/classify-themes.ts"
+    },
+    "./interviews/transcribe": {
+      "types": "./src/interviews/transcribe.ts",
+      "default": "./src/interviews/transcribe.ts"
     }
   },
   "dependencies": {
