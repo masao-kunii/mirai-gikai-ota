@@ -119,11 +119,11 @@ git merge upstream/develop --no-ff -m "merge: upstream develop（YYYY-MM-DD取�
   - `web/public/manifest.json` — 大田区版
   - `web/package.json`, `admin/package.json` の port 設定（web:3010, admin:3011）
 
-- **Cloud Run 関連**
-  - `web/Dockerfile`, `admin/Dockerfile`, `.dockerignore`
-  - `cloudbuild.web.yaml`, `cloudbuild.admin.yaml`
+- **ホスティング関連**
+  - `apps/*/wrangler.jsonc`, `apps/web/nitro.config.ts` — Cloudflare Workers 向け設定
+  - `web/Dockerfile`, `admin/Dockerfile`, `.dockerignore` — 旧 Cloud Run 向け（撤去予定）
   - `web/next.config.ts`, `admin/next.config.ts` の `output: "standalone"` と
-    `outputFileTracingRoot`
+    `outputFileTracingRoot` — 同上
   - `.env.example` の Vertex AI 環境変数
 
 - **README / FORK_GUIDELINES**
