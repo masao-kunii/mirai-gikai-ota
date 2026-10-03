@@ -112,6 +112,7 @@ export const factions: FactionInsert[] = [
     name: "jimin-musho",
     display_name: "自民党・無所属の会",
     alternative_names: [
+      "自民・無所属",
       "自由民主党大田区議団・無所属の会",
       "自由民主党大田区議団",
       "自民党大田区議団",
@@ -122,7 +123,7 @@ export const factions: FactionInsert[] = [
   {
     name: "komei",
     display_name: "公明党",
-    alternative_names: ["大田区議会公明党", "公明党大田区議団"],
+    alternative_names: ["公明", "大田区議会公明党", "公明党大田区議団"],
     sort_order: 2,
     is_active: true,
   },
@@ -138,14 +139,19 @@ export const factions: FactionInsert[] = [
   {
     name: "kyosan",
     display_name: "共産党",
-    alternative_names: ["日本共産党大田区議団", "日本共産党"],
+    alternative_names: ["共産", "日本共産党大田区議団", "日本共産党"],
     sort_order: 4,
     is_active: true,
   },
   {
     name: "rikken",
     display_name: "立憲民主党",
-    alternative_names: ["立憲民主党大田区議団", "立憲民主党・無所属"],
+    alternative_names: [
+      "立憲・無所属",
+      "立憲民主党・無所属大田区議団",
+      "立憲民主党大田区議団",
+      "立憲民主党・無所属",
+    ],
     sort_order: 5,
     is_active: true,
   },
@@ -153,6 +159,7 @@ export const factions: FactionInsert[] = [
     name: "ishin",
     display_name: "維新の会",
     alternative_names: [
+      "維新",
       "日本維新の会大田区議団",
       "日本維新の会",
       "維新の会大田区議団",
@@ -174,7 +181,7 @@ export const factions: FactionInsert[] = [
   {
     name: "fair-min",
     display_name: "フェアな民主主義",
-    alternative_names: ["フェアな民主主義大田区議団"],
+    alternative_names: ["フェア民", "フェアな民主主義大田区議団"],
     sort_order: 8,
     is_active: true,
   },
@@ -192,15 +199,23 @@ export const factions: FactionInsert[] = [
   {
     name: "kodomo-bosai",
     display_name: "子ども防災会",
-    alternative_names: ["大田子ども防災会"],
+    alternative_names: ["子ども防災", "大田子ども防災会"],
     sort_order: 10,
     is_active: true,
   },
   {
     name: "soshi",
     display_name: "未来創志会",
-    alternative_names: ["おおた未来創志会", "大田未来創志会"],
+    alternative_names: ["創志", "おおた未来創志会", "大田未来創志会"],
     sort_order: 11,
+    is_active: true,
+  },
+  {
+    // 令和8年第3回定例会の会派態度ページで初出。凡例は「いのち：OTAいのちの党」。
+    name: "inochi",
+    display_name: "OTAいのちの党",
+    alternative_names: ["いのち", "ＯＴＡいのちの党"],
+    sort_order: 12,
     is_active: true,
   },
   {
@@ -208,7 +223,7 @@ export const factions: FactionInsert[] = [
     name: "kokumin",
     display_name: "大田区議会国民民主党",
     alternative_names: ["国民"],
-    sort_order: 12,
+    sort_order: 13,
     is_active: true,
   },
 ];
