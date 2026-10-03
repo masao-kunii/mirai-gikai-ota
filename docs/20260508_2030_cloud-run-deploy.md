@@ -1,5 +1,9 @@
 # Cloud Run デプロイ手順
 
+> [!NOTE]
+> この文書は Cloud Run 時代（〜2026-08）の記録です。現在の本番は Cloudflare Workers で、
+> `cloudbuild.*.yaml` は削除済みです。現行の手順は README とデプロイ手順の skill を参照してください。
+
 みらい議会ー大田区版を Vertex AI Gemini + Cloud Run で動かすための初期セットアップと
 デプロイ手順をまとめる。
 
