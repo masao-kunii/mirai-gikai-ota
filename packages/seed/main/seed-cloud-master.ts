@@ -17,6 +17,11 @@
  *
  * 既にデータが入っている場合はスキップする (idempotent ではないが、
  * UNIQUE 制約に引っかかった行はエラーログで知らせるだけ)。
+ *
+ * ただし factions の alternative_names だけは、既存行にも**不足分を足す**。
+ * 会派態度ページの表記ゆれ（略称・名称変更）はここが唯一の照合先で、
+ * 足りないと取り込みが「会派が見つからず」で失敗するため。既存の別名や
+ * display_name は変えない（管理画面で直したものを上書きしないため）。
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -44,18 +49,38 @@ async function main() {
   // factions (UNIQUE 制約は無いので「既存 name は skip」で insert)
   const { data: existingFactions } = await supabase
     .from("factions")
-    .select("name");
-  const existingFactionNames = new Set(
-    (existingFactions ?? []).map((f) => f.name)
+    .select("id, name, alternative_names");
+  const existingByName = new Map(
+    (existingFactions ?? []).map((f) => [f.name, f])
   );
-  const newFactions = factions.filter(
-    (f) => !existingFactionNames.has(f.name)
-  );
+  const newFactions = factions.filter((f) => !existingByName.has(f.name));
   if (newFactions.length > 0) {
     const { error: fErr } = await supabase.from("factions").insert(newFactions);
     if (fErr) throw new Error(`factions: ${fErr.message}`);
   }
   console.log(`✅ factions: inserted ${newFactions.length} new rows`);
+
+  // 既存会派に不足している別名を足す（既存の別名は消さない）
+  let aliasUpdated = 0;
+  for (const faction of factions) {
+    const current = existingByName.get(faction.name);
+    if (!current) continue;
+    const have = current.alternative_names ?? [];
+    const missing = (faction.alternative_names ?? []).filter(
+      (alt) => !have.includes(alt)
+    );
+    if (missing.length === 0) continue;
+    const { error } = await supabase
+      .from("factions")
+      .update({ alternative_names: [...have, ...missing] })
+      .eq("id", current.id);
+    if (error) {
+      throw new Error(`factions alternative_names (${faction.name}): ${error.message}`);
+    }
+    console.log(`   ${faction.name} に別名を追加: ${missing.join("、")}`);
+    aliasUpdated++;
+  }
+  console.log(`✅ factions: added aliases to ${aliasUpdated} existing rows`);
 
   // committees (UNIQUE 制約は無いので insert + 既存スキップ)
   const { data: existingCommittees } = await supabase
