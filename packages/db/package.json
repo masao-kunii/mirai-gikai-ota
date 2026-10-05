@@ -16,12 +16,12 @@
     "db:pull": "drizzle-kit pull"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.45.3",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
-    "@types/node": "^22.5.5",
-    "drizzle-kit": "^0.31.1",
+    "@types/node": "^20.19.43",
+    "drizzle-kit": "^0.31.11",
     "typescript": "^5.0.0"
   }
 }
