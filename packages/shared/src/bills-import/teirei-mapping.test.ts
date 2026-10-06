@@ -73,6 +73,10 @@ describe("factionColumnToDisplayName", () => {
     expect(factionColumnToDisplayName("れ新")).toBe("れいわ新選組");
     expect(factionColumnToDisplayName("創志")).toBe("未来創志会");
   });
+  it("令和8年第3回定例会で変わった表記・増えた会派も変換する", () => {
+    expect(factionColumnToDisplayName("立憲・無所属")).toBe("立憲民主党");
+    expect(factionColumnToDisplayName("いのち")).toBe("OTAいのちの党");
+  });
   it("マップに無い場合はそのまま返す", () => {
     expect(factionColumnToDisplayName("つばさ")).toBe("つばさ");
     expect(factionColumnToDisplayName("未知会派")).toBe("未知会派");
