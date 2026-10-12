@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@mirai-gikai/shared": "workspace:*",
-    "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.41",
     "api": "workspace:*",
     "hono": "^4.13.13",
