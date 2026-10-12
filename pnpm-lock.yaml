@@ -222,7 +222,7 @@ importers:
         version: 8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
       wrangler:
         specifier: ^4.111.0
-        version: 4.111.0(@cloudflare/workers-types@5.20260705.1)
+        version: 4.111.0(@cloudflare/workers-types@5.20261004.1)
 
   apps/api:
     dependencies:
@@ -240,7 +240,7 @@ importers:
         version: 6.0.3(zod@4.1.12)
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+        version: 0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       hono:
         specifier: ^4.13.13
         version: 4.13.13
@@ -252,8 +252,8 @@ importers:
         version: 4.1.12
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^5.20260705.1
-        version: 5.20260705.1
+        specifier: ^5.20261004.1
+        version: 5.20261004.1
       '@hono/node-server':
         specifier: ^2.1.3
         version: 2.1.3(hono@4.13.13)
@@ -271,7 +271,7 @@ importers:
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@20.19.43)(@vitest/coverage-v8@4.1.11)(@vitest/ui@4.1.11)(jsdom@28.1.0)(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
       wrangler:
         specifier: ^4.111.0
-        version: 4.111.0(@cloudflare/workers-types@5.20260705.1)
+        version: 4.111.0(@cloudflare/workers-types@5.20261004.1)
 
   apps/web:
     dependencies:
@@ -341,10 +341,10 @@ importers:
         version: 5.2.0(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+        version: 0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       nitro:
         specifier: 3.0.260610-beta
-        version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9))(jiti@2.7.0)(lru-cache@11.2.6)(miniflare@4.20260710.0)(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.111.0)
+        version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9))(jiti@2.7.0)(lru-cache@11.2.6)(miniflare@4.20260710.0)(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.111.0(@cloudflare/workers-types@5.20261004.1))
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -356,13 +356,13 @@ importers:
         version: 8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
       wrangler:
         specifier: ^4.111.0
-        version: 4.111.0(@cloudflare/workers-types@5.20260705.1)
+        version: 4.111.0(@cloudflare/workers-types@5.20261004.1)
 
   packages/db:
     dependencies:
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+        version: 0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -393,7 +393,7 @@ importers:
         version: 2.74.0
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+        version: 0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       unpdf:
         specifier: ^1.8.1
         version: 1.8.1
@@ -965,8 +965,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@5.20260705.1':
-    resolution: {integrity: sha512-My4wQdN7ZkM9PzPC92mdCRbdJivtcEiyCr5Qi5cgKxMk3hrULkmiIoI7ZrhGei+QHDlok+g5HSPMuDm62sdaMQ==}
+  '@cloudflare/workers-types@5.20261004.1':
+    resolution: {integrity: sha512-K9D4/Y6bSIDNYFzjqzFMNoWK99pLgfgFxqSa76kfW++3VCkTSzJbzsQRffir366G3kmNyjoigC6ekp7DxIkxkw==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -7467,7 +7467,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260710.1':
     optional: true
 
-  '@cloudflare/workers-types@5.20260705.1': {}
+  '@cloudflare/workers-types@5.20261004.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -10660,9 +10660,9 @@ snapshots:
 
   dayjs@1.11.18: {}
 
-  db0@0.3.4(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9)):
+  db0@0.3.4(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)):
     optionalDependencies:
-      drizzle-orm: 0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+      drizzle-orm: 0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)
 
   debug@4.4.3:
     dependencies:
@@ -10722,9 +10722,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.3(@cloudflare/workers-types@5.20260705.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9):
+  drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9):
     optionalDependencies:
-      '@cloudflare/workers-types': 5.20260705.1
+      '@cloudflare/workers-types': 5.20261004.1
       '@opentelemetry/api': 1.9.1
       postgres: 3.4.9
 
@@ -10767,7 +10767,7 @@ snapshots:
 
   entities@6.0.1: {}
 
-  env-runner@0.1.16(miniflare@4.20260710.0)(wrangler@4.111.0):
+  env-runner@0.1.16(miniflare@4.20260710.0)(wrangler@4.111.0(@cloudflare/workers-types@5.20261004.1)):
     dependencies:
       crossws: 0.4.9(srvx@0.11.20)
       exsolve: 1.1.0
@@ -10775,7 +10775,7 @@ snapshots:
       srvx: 0.11.20
     optionalDependencies:
       miniflare: 4.20260710.0
-      wrangler: 4.111.0(@cloudflare/workers-types@5.20260705.1)
+      wrangler: 4.111.0(@cloudflare/workers-types@5.20261004.1)
 
   environment@1.1.0: {}
 
@@ -12195,12 +12195,12 @@ snapshots:
 
   nf3@0.3.19: {}
 
-  nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9))(jiti@2.7.0)(lru-cache@11.2.6)(miniflare@4.20260710.0)(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.111.0):
+  nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9))(jiti@2.7.0)(lru-cache@11.2.6)(miniflare@4.20260710.0)(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.111.0(@cloudflare/workers-types@5.20261004.1)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.9(srvx@0.11.20)
-      db0: 0.3.4(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9))
-      env-runner: 0.1.16(miniflare@4.20260710.0)(wrangler@4.111.0)
+      db0: 0.3.4(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9))
+      env-runner: 0.1.16(miniflare@4.20260710.0)(wrangler@4.111.0(@cloudflare/workers-types@5.20261004.1))
       h3: 2.0.1-rc.22(crossws@0.4.9(srvx@0.11.20))
       hookable: 6.1.1
       nf3: 0.3.19
@@ -12210,7 +12210,7 @@ snapshots:
       rolldown: 1.1.4
       srvx: 0.11.20
       unenv: 2.0.0-rc.24
-      unstorage: 2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9)))(lru-cache@11.2.6)(ofetch@2.0.0-alpha.3)
+      unstorage: 2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)))(lru-cache@11.2.6)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
       dotenv: 17.4.2
       jiti: 2.7.0
@@ -13216,10 +13216,10 @@ snapshots:
       rollup: 4.52.4
       vite: 8.1.5(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
 
-  unstorage@2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9)))(lru-cache@11.2.6)(ofetch@2.0.0-alpha.3):
+  unstorage@2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9)))(lru-cache@11.2.6)(ofetch@2.0.0-alpha.3):
     optionalDependencies:
       chokidar: 5.0.0
-      db0: 0.3.4(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(postgres@3.4.9))
+      db0: 0.3.4(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261004.1)(@opentelemetry/api@1.9.1)(postgres@3.4.9))
       lru-cache: 11.2.6
       ofetch: 2.0.0-alpha.3
 
@@ -13436,7 +13436,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260710.1
       '@cloudflare/workerd-windows-64': 1.20260710.1
 
-  wrangler@4.111.0(@cloudflare/workers-types@5.20260705.1):
+  wrangler@4.111.0(@cloudflare/workers-types@5.20261004.1):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260710.1)
@@ -13447,7 +13447,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260710.1
     optionalDependencies:
-      '@cloudflare/workers-types': 5.20260705.1
+      '@cloudflare/workers-types': 5.20261004.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
