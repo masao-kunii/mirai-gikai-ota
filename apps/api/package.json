@@ -21,7 +21,7 @@
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.14",
     "jose": "^6.2.12",
-    "zod": "^4.1.12"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260705.1",
